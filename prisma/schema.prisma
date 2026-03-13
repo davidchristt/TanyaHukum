@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ... (sisanya biarkan tetap sama) ...
+
+// --- Tipe Data Pilihan ---
+enum Tier {
+  FREE
+  PRO
+}
+
+enum Role {
+  USER
+  AI
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+// --- Tabel-tabel Utama ---
+model User {
+  id            String          @id @default(uuid())
+  email         String          @unique
+  passwordHash  String
+  tier          Tier            @default(FREE)
+  promptLimit   Int             @default(50) 
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  chats         ChatHistory[]
+  transactions  Transaction[]
+}
+
+model ChatHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     
+  content   String   @db.Text 
+  createdAt DateTime @default(now())
+}
+
+model Transaction {
+  id          String            @id @default(uuid())
+  orderId     String            @unique 
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount      Int               
+  status      TransactionStatus @default(PENDING)
+  paymentUrl  String?           
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
