@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
+<<<<<<< HEAD
 import Sidebar from "@/components/features/layout/Sidebar"; 
+=======
+import Sidebar from "@/components/layout/Sidebar";
+>>>>>>> bb12632 (checkpoint: after merge main & restore local changes)
 import ChatArea from "@/components/features/chat/ChatArea";
 import SubscriptionList from "@/components/features/subscription/SubscriptionList"; 
 
