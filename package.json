@@ -17,6 +17,7 @@
     "@pinecone-database/pinecone": "^7.1.0",
     "@prisma/client": "6.19.2",
     "dotenv": "^17.3.1",
+    "google-auth-library": "^10.6.2",
     "langchain": "^1.2.35",
     "llama-cloud-services": "^0.5.4",
     "llamaindex": "^0.12.1",
