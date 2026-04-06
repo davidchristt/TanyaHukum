@@ -11,11 +11,12 @@ export const metadata = {
   description: "AI Chatbot Hukum",
 };
 
-export default function RootLayout({ children }) {
+export default function RootLayout({ children, modal }) {
   return (
-    <html lang="en">
-      <body className={`${poppins.className} antialiased`}>
+    <html>
+      <body className="bg-[#eaf1fb]">
         {children}
+        {modal}
       </body>
     </html>
   );
