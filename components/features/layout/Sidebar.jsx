@@ -1,8 +1,14 @@
 "use client";
-import { useRouter } from "next/navigation";
+
+import { usePathname } from "next/navigation";
 
 export default function Sidebar({ isOpen, setIsOpen }) {
-  const router = useRouter();
+  const pathname = usePathname();
+
+  const go = (path) => {
+    console.log("GO:", path);
+    window.location.href = path;
+  };
 
   return (
     <div
@@ -12,62 +18,50 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     >
       {/* TOP */}
       <div className="w-full">
-        
-        {/* ===== HEADER ===== */}
+
+        {/* HEADER */}
         {isOpen ? (
           <div className="flex items-center justify-between mb-6">
-            <img src="/icons/logo.svg" className="w-14 h-14" alt="Logo" />
+            <img src="/icons/logo.svg" className="w-14 h-14" />
             <button
               onClick={() => setIsOpen(false)}
-              className="p-2 rounded-lg border border-blue-300 hover:bg-blue-50 transition"
+              className="p-2 rounded-lg border border-blue-300 hover:bg-blue-100"
             >
-              <img src="/icons/sidebar.svg" className="w-5 h-5" alt="Collapse" />
+              ☰
             </button>
           </div>
         ) : (
           <div className="flex justify-center mb-6">
-            <div className="relative group/logo">
-              <img src="/icons/logo.svg" className="w-14 h-14" alt="Logo" />
-              <button
-                onClick={() => setIsOpen(true)}
-                className="absolute inset-0 flex items-center justify-center 
-                opacity-0 group-hover/logo:opacity-100 transition z-50
-                rounded-lg bg-white/90 border border-blue-300"
-              >
-                <img src="/icons/sidebar.svg" className="w-5 h-5" alt="Expand" />
-              </button>
-              <span className="absolute left-12 top-1/2 -translate-y-1/2 
-              opacity-0 group-hover/logo:opacity-100 transition z-50
-              bg-gray-900 text-white text-xs px-2 py-1 rounded-md whitespace-nowrap">
-                Open sidebar
-              </span>
-            </div>
+            <button onClick={() => setIsOpen(true)}>
+              <img src="/icons/logo.svg" className="w-14 h-14" />
+            </button>
           </div>
         )}
 
-        {/* ===== MENU ===== */}
+        {/* MENU */}
         <div className="space-y-3">
-          <MenuItem 
-            icon="/icons/newChat.svg" 
-            label="Obrolan Baru" 
-            isOpen={isOpen} 
-            onClick={() => router.push('/chatbot')}
+
+          <MenuItem
+            label="Obrolan Baru"
+            active={pathname === "/chatbot"}
+            onClick={() => go("/chatbot")}
           />
-          <MenuItem 
-            icon="/icons/dashboardStatistik.svg" 
-            label="Dashboard Statistik" 
-            isOpen={isOpen} 
-            onClick={() => router.push('/statistik')}
+
+          <MenuItem
+            label="Dashboard Statistik"
+            active={pathname === "/dashboard"}
+            onClick={() => go("/dashboard")}
           />
-          <MenuItem 
-            icon="/icons/pusatDataSidebar.svg" 
-            label="Pusat Data Hukum" 
-            isOpen={isOpen} 
-            onClick={() => router.push('/pusat-data')}
+
+          <MenuItem
+            label="Pusat Data Hukum"
+            active={pathname === "/pusat-data"}
+            onClick={() => go("/pusat-data")}
           />
+
         </div>
 
-        {/* ===== CHAT LIST ===== */}
+        {/* CHAT LIST */}
         {isOpen && (
           <>
             <p className="text-xs text-gray-500 mt-6 mb-2 px-1">
@@ -81,9 +75,14 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         )}
       </div>
 
-      {/* ===== PROFILE ===== */}
-      <div className={`flex items-center ${isOpen ? "gap-3 px-2" : "justify-center"}`}>
-        <img src="/icons/profile.svg" className="w-9 h-9" alt="Profile" />
+      {/* PROFILE */}
+      <div
+        onClick={() => go("/profile")}
+        className={`flex items-center cursor-pointer ${
+          isOpen ? "gap-3 px-2" : "justify-center"
+        }`}
+      >
+        <img src="/icons/profile.svg" className="w-9 h-9" />
         {isOpen && (
           <div>
             <p className="text-sm font-medium text-gray-900">David</p>
@@ -95,35 +94,28 @@ export default function Sidebar({ isOpen, setIsOpen }) {
   );
 }
 
-/* ===== MENU ITEM COMPONENT ===== */
-function MenuItem({ icon, label, isOpen, onClick }) {
+/* MENU ITEM */
+function MenuItem({ label, onClick, active }) {
   return (
-    <div className="relative group/item">
-      <button
-        onClick={onClick}
-        className={`w-full flex items-center ${
-          isOpen ? "justify-start px-3" : "justify-center"
-        } gap-3 py-3 border border-blue-200 rounded-xl hover:bg-blue-50 transition`}
-      >
-        <img src={icon} className="w-5 h-5" alt={label} />
-        {isOpen && <span className="text-gray-800 text-sm">{label}</span>}
-      </button>
+    <button
+      onClick={onClick}
+      className={`w-full py-3 rounded-xl border transition text-left px-3
 
-      {!isOpen && (
-        <span className="absolute left-14 top-1/2 -translate-y-1/2 
-        opacity-0 group-hover/item:opacity-100 transition z-50
-        bg-gray-900 text-white text-xs px-2 py-1 rounded-md whitespace-nowrap">
-          {label}
-        </span>
-      )}
-    </div>
+      ${
+        active
+          ? "bg-blue-500 text-white border-blue-500"
+          : "border-blue-200 hover:bg-blue-200 text-gray-800"
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 
-/* ===== CHAT ITEM COMPONENT ===== */
+/* CHAT ITEM */
 function ChatItem({ text }) {
   return (
-    <div className="p-2 border rounded-lg text-sm text-gray-700 hover:bg-gray-50 cursor-pointer transition">
+    <div className="p-2 border rounded-lg text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
       {text}
     </div>
   );

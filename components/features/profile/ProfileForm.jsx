@@ -71,7 +71,6 @@ export default function ProfileForm() {
       <button className="w-full py-3 bg-blue-400 text-white rounded-lg shadow">
         Simpan
       </button>
-
     </div>
   );
 }
