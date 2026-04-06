@@ -20,6 +20,14 @@ export async function POST(request) {
     });
 
     if (existingUser) {
+      // Tambahan logika cerdas:
+      if (existingUser.authProvider === 'GOOGLE') {
+        return NextResponse.json({ 
+          error: 'Email ini sudah terdaftar menggunakan Google. Silakan gunakan tombol Login with Google.' 
+        }, { status: 409 });
+      }
+      
+      // Jika daftarnya manual (CREDENTIALS)
       return NextResponse.json({ error: 'Email sudah digunakan' }, { status: 409 });
     }
 
