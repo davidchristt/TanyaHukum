@@ -1,4 +1,5 @@
 "use client";
+<<<<<<< HEAD
 import Header from "@/components/features/layout/Header"; 
 
 export default function ChatArea({ onOpenSub }) { // Terima props ini
@@ -11,6 +12,18 @@ export default function ChatArea({ onOpenSub }) { // Terima props ini
           isPro={false} 
           onOpenSubscription={onOpenSub} 
         />
+=======
+
+import Header from "@/components/layout/Header";
+
+export default function ChatArea() {
+  return (
+    <div className="h-full bg-white/70 backdrop-blur-md rounded-2xl shadow-lg flex flex-col">
+      
+      {/* Header (REUSE) */}
+      <div className="border-b border-gray-150">
+        <Header />
+>>>>>>> bb12632 (checkpoint: after merge main & restore local changes)
       </div>
 
       {/* Content Area (Tetap sama) */}
