@@ -29,16 +29,26 @@ enum TransactionStatus {
 
 // --- Tabel-tabel Utama ---
 model User {
-  id            String          @id @default(uuid())
-  email         String          @unique
-  passwordHash  String
-  tier          Tier            @default(FREE)
-  promptLimit   Int             @default(50) 
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id               String         @id @default(uuid())
+  email            String         @unique
+  
+  // Diubah menjadi opsional (?) karena user Google tidak punya password
+  passwordHash     String?        
+  
+  // Penanda jalur login: "CREDENTIALS" (manual) atau "GOOGLE"
+  authProvider     String         @default("CREDENTIALS") 
+  
+  // Tambahan untuk fitur Lupa Password
+  resetToken       String?        @unique
+  resetTokenExpiry DateTime?
 
-  chats         ChatHistory[]
-  transactions  Transaction[]
+  tier             Tier           @default(FREE)
+  promptLimit      Int            @default(50) 
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  chats            ChatHistory[]
+  transactions     Transaction[]
 }
 
 model ChatHistory {
