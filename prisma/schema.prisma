@@ -27,7 +27,7 @@ enum TransactionStatus {
   FAILED
 }
 
-// --- Tabel-tabel Utama ---
+// --- Tabel - tabel Utama ---
 model User {
   id               String         @id @default(uuid())
   email            String         @unique
