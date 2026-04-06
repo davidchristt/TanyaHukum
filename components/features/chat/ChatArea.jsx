@@ -1,19 +1,18 @@
 "use client";
-import Header from "@/components/features/layout/Header"; 
 
-export default function ChatArea({ onOpenSub }) { // Terima props ini
+import Header from "@/components/layout/Header";
+
+export default function ChatArea({ onOpenSub }) {
   return (
-    <div className="h-full bg-white/80 backdrop-blur-md rounded-2xl shadow-lg flex flex-col overflow-hidden relative">
+    <div className="h-full bg-white/70 backdrop-blur-md rounded-2xl shadow-lg flex flex-col">
       
-      {/* Teruskan fungsi buka modal ke Header */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-150">
         <Header 
-          isPro={false} 
-          onOpenSubscription={onOpenSub} 
+          isPro={false}
+          onOpenSubscription={onOpenSub}
         />
       </div>
 
-      {/* Content Area (Tetap sama) */}
       <div className="flex-1 flex flex-col items-center justify-center px-6">
         <h1 className="text-4xl font-semibold text-gray-900 mb-2 text-center">
           Halo Sobat Indonesia!!
