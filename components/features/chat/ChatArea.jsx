@@ -6,7 +6,7 @@ export default function ChatArea() {
       <div className="flex justify-between items-center p-4 border-b border-gray-200">
         
         <div className="flex items-center gap-2">
-          <img src="/icons/logo.svg" className="w-13 h-13" />
+          <img src="/logo.png" className="w-6 h-6" />
           <h1 className="font-semibold text-gray-900">TanyaHukum</h1>
         </div>
 
