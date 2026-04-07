@@ -10,6 +10,11 @@ export async function POST(req) {
     const body = await req.json();
     const { message } = body;
 
+
+    console.log("VOYAGE KEY:", process.env.VOYAGEAI_API_KEY);
+    console.log("MESSAGE:", message);
+
+
     if (!message) {
       return NextResponse.json({ error: "Pesan tidak boleh kosong" }, { status: 400 });
     }

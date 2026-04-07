@@ -1,13 +1,33 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+
+/* ===== MENU CONFIG ===== */
+const MENU = [
+  {
+    label: "Obrolan Baru",
+    icon: "/icons/newChat.svg",
+    path: "/chatbot",
+  },
+  {
+    label: "Dashboard Statistik",
+    icon: "/icons/dashboardStatistik.svg",
+    path: "/dashboard",
+  },
+  {
+    label: "Pusat Data Hukum",
+    icon: "/icons/pusatDataSidebar.svg",
+    path: "/pusat-data", // ✅ FIX
+  },
+];
 
 export default function Sidebar({ isOpen, setIsOpen }) {
-  const router = useRouter(); // ✅ WAJIB
+  const router = useRouter();
+  const pathname = usePathname();
 
   return (
     <div
-      className={`relative z-50 h-full bg-white/60 backdrop-blur-md rounded-2xl p-4 shadow-lg 
+      className={`relative z-10 h-full bg-white/60 backdrop-blur-md rounded-2xl p-4 shadow-lg 
       flex flex-col justify-between transition-all duration-300 
       ${isOpen ? "w-64" : "w-20 items-center"}`}
     >
@@ -52,9 +72,16 @@ export default function Sidebar({ isOpen, setIsOpen }) {
 
         {/* ===== MENU ===== */}
         <div className="space-y-3">
-          <MenuItem icon="/icons/newChat.svg" label="Obrolan Baru" isOpen={isOpen} />
-          <MenuItem icon="/icons/dashboardStatistik.svg" label="Dashboard Statistik" isOpen={isOpen} />
-          <MenuItem icon="/icons/pusatDataSidebar.svg" label="Pusat Data Hukum" isOpen={isOpen} />
+          {MENU.map((item) => (
+            <MenuItem
+              key={item.path}
+              icon={item.icon}
+              label={item.label}
+              isOpen={isOpen}
+              isActive={pathname === item.path}
+              onClick={() => router.push(item.path)}
+            />
+          ))}
         </div>
 
         {/* ===== CHAT LIST ===== */}
@@ -74,7 +101,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
 
       {/* ===== PROFILE ===== */}
       <div
-        onClick={() => router.push("/profile")} // ✅ INI YANG BUKA MODAL
+        onClick={() => router.push("/profile")}
         className={`flex items-center ${
           isOpen ? "gap-3 px-2" : "justify-center"
         } cursor-pointer hover:bg-blue-50 rounded-xl p-2 transition`}
@@ -94,13 +121,19 @@ export default function Sidebar({ isOpen, setIsOpen }) {
 
 /* ===== MENU ITEM ===== */
 
-function MenuItem({ icon, label, isOpen }) {
+function MenuItem({ icon, label, isOpen, isActive, onClick }) {
   return (
     <div className="relative group/item">
       <button
+        onClick={onClick}
         className={`w-full flex items-center ${
           isOpen ? "justify-start px-3" : "justify-center"
-        } gap-3 py-3 border border-blue-200 rounded-xl hover:bg-blue-50 transition`}
+        } gap-3 py-3 border rounded-xl transition
+        ${
+          isActive
+            ? "border-blue-600 bg-blue-50"
+            : "border-blue-200 hover:bg-blue-50"
+        }`}
       >
         <img
           src={icon}
