@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma';
+console.log("LOGIN API HIT");
 
 export async function POST(request) {
   try {

@@ -1,28 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+
 import Sidebar from "@/components/layout/Sidebar";
 import ChatArea from "@/components/features/chat/ChatArea";
 import SubscriptionList from "@/components/features/subscription/SubscriptionList";
 
 export default function ChatbotPage() {
+  const router = useRouter();
+
   const [isOpen, setIsOpen] = useState(true);
   const [showSubscription, setShowSubscription] = useState(false);
+
+  // ✅ PROTECTED ROUTE
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+
+    if (!user) {
+      router.push("/login");
+    }
+  }, []);
 
   return (
     <div className="h-screen bg-blue-100 p-6 flex gap-4 relative">
       
-      {/* Sidebar */}
       <div className={`transition-all duration-300 ${isOpen ? "w-[280px]" : "w-[80px]"}`}>
         <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
       </div>
 
-      {/* Chat Area */}
       <div className="flex-1">
         <ChatArea onOpenSub={() => setShowSubscription(true)} />
       </div>
 
-      {/* Modal Subscription */}
       {showSubscription && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
           <div className="relative max-h-[95vh] overflow-y-auto rounded-3xl shadow-2xl animate-in fade-in zoom-in duration-300">

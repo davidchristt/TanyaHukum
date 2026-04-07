@@ -14,6 +14,7 @@ export default function SubscriptionList({ user, onComplete }) {
       id: "basic",
       name: "Basic",
       price: "Gratis!",
+      color: "from-[#D3FBFF] to-white", // ✅ tambah ini
       benefits: [
         "Prompt chatbot terbatas",
         "Pencarian dokumen terbatas",
@@ -24,6 +25,7 @@ export default function SubscriptionList({ user, onComplete }) {
       id: "pro",
       name: "Pro",
       price: "Rp 49.900,00",
+      color: "from-[#B3E5FC] to-white", // beda warna
       benefits: [
         "Prompt chatbot tanpa batas",
         "Pencarian dokumen tanpa batas",
@@ -52,59 +54,89 @@ export default function SubscriptionList({ user, onComplete }) {
     <>
       {/* ================== STEP 1: SELECT (UI KAMU - TETAP) ================== */}
       {step === "select" && (
-        <div className="bg-white rounded-3xl shadow-xl px-12 py-10 w-[850px] text-center">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-2">
-            Pilih Paket Sesuai Kebutuhan Anda
-          </h1>
-          <p className="text-gray-600 mb-10">
-            Dapatkan Akses Hukum tidak terbatas dengan langganan Pro!
-          </p>
+        <div className="fixed inset-0 z-[999] flex items-center justify-center">
+          
+          {/* BACKDROP */}
+          <div className="absolute inset-0 bg-white/20 backdrop-blur-sm" />
 
-          <div className="flex justify-center gap-10">
-            {plans.map((plan) => {
-              const isSelected = selected === plan.id;
+          {/* MODAL */}
+          <div className="relative z-10 w-full max-w-[900px] mx-auto px-4">
+            
+            {/* CLOSE BUTTON */}
+            <button
+              onClick={() => {
+                if (onComplete) onComplete();
+                else router.back();
+              }}
+              className="absolute -top-3 -right-3 w-10 h-10 rounded-full 
+              bg-black shadow flex items-center justify-center hover:bg-gray-100"
+            >
+              ✕
+            </button>
 
-              return (
-                <div
-                  key={plan.id}
-                  onClick={() => setSelected(plan.id)}
-                  className={`w-[280px] p-6 rounded-2xl border-2 cursor-pointer transition
-                  ${
-                    isSelected
-                      ? "border-blue-500 scale-105 shadow-lg"
-                      : "border-blue-300"
-                  }
-                  bg-gradient-to-b from-[#D3FBFF] to-white`}
-                >
-                  <h2 className="text-xl font-semibold mb-2">{plan.name}</h2>
-                  <p className="text-lg font-semibold mb-4">{plan.price}</p>
+            <div className="bg-white rounded-3xl shadow-xl px-12 py-10 w-full text-center">
+              
+              <h1 className="text-3xl font-semibold text-gray-900 mb-2">
+                Pilih Paket Sesuai Kebutuhan Anda
+              </h1>
 
-                  <ul className="text-sm text-gray-700 text-left space-y-2 mb-8">
-                    {plan.benefits.map((b, i) => (
-                      <li key={i}>• {b}</li>
-                    ))}
-                  </ul>
+              <p className="text-gray-600 mb-10">
+                Dapatkan Akses Hukum tidak terbatas dengan langganan Pro!
+              </p>
 
-                  {plan.id === "basic" ? (
-                    <button className="w-full py-2 border border-blue-300 rounded-lg text-blue-400">
-                      Paket Saat Ini
-                    </button>
-                  ) : (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelected("pro"); // fix bug sebelumnya
-                        setStep("summary");
-                      }}
-                      className="w-full py-2 bg-[#78CDFF] hover:bg-[#5bbef5] 
-                      text-white rounded-lg shadow-md transition"
+              <div className="flex justify-center gap-10">
+                {plans.map((plan) => {
+                  const isSelected = selected === plan.id;
+
+                  return (
+                    <div
+                      key={plan.id}
+                      onClick={() => setSelected(plan.id)}
+                      className={`w-[280px] p-6 rounded-2xl border-2 cursor-pointer transition
+                      ${
+                        isSelected
+                          ? "border-blue-500 scale-105 shadow-lg"
+                          : "border-blue-300"
+                      }
+                      bg-gradient-to-b ${plan.color}`}
                     >
-                      Beli Sekarang
-                    </button>
-                  )}
-                </div>
-              );
-            })}
+                      <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                        {plan.name}
+                      </h2>
+
+                      <p className="text-lg font-semibold text-gray-900 mb-4">
+                        {plan.price}
+                      </p>
+
+                      <ul className="text-sm text-gray-700 text-left space-y-2 mb-8">
+                        {plan.benefits.map((b, i) => (
+                          <li key={i}>• {b}</li>
+                        ))}
+                      </ul>
+
+                      {plan.id === "basic" ? (
+                        <button className="w-full py-2 border border-blue-300 rounded-lg text-blue-400">
+                          Paket Saat Ini
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelected("pro");
+                            setStep("summary");
+                          }}
+                          className="w-full py-2 bg-[#78CDFF] hover:bg-[#5bbef5] 
+                          text-white rounded-lg shadow-md transition"
+                        >
+                          Beli Sekarang
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+            </div>
           </div>
         </div>
       )}
@@ -257,7 +289,7 @@ export default function SubscriptionList({ user, onComplete }) {
 
       {/* ================== POP-UP MODAL (MENUNGGU & SUKSES) ================== */}
       {popupStatus && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-10 backdrop-blur-sm">
           <div className="bg-white w-[400px] p-8 rounded-3xl shadow-2xl flex flex-col items-center text-center transform transition-all scale-100">
             
             {/* Tampilan saat Loading */}
