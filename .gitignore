@@ -21,6 +21,8 @@
 /build
 .vscode/
 *.txt
+*.html
+*.py
 
 # misc
 .DS_Store
