@@ -10,6 +10,8 @@ datasource db {
 
 model User {
   id               String         @id @default(uuid())
+  name             String?        // ✅ TAMBAHKAN INI: Untuk input "Nama"
+  avatarUrl        String?        // ✅ TAMBAHKAN INI: Untuk "Unggah Foto"
   email            String         @unique
   passwordHash     String?        
   authProvider     String         @default("CREDENTIALS")
