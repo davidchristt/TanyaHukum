@@ -10,6 +10,7 @@ datasource db {
 
 model User {
   id               String         @id @default(uuid())
+  supabaseId       String? @unique  // ← agar meski user ganti email atau password, semua data yang telah ada sebelumnya tidak error
   name             String?        // ✅ TAMBAHKAN INI: Untuk input "Nama"
   avatarUrl        String?        // ✅ TAMBAHKAN INI: Untuk "Unggah Foto"
   email            String         @unique
