@@ -70,7 +70,7 @@ export async function POST(request) {
 
     // 7. Simpan URL tersebut ke Database PostgreSQL via Prisma
     const updatedUser = await prisma.user.update({
-      where: { email: session.user.email },
+      where: { supabaseId: session.user.id },
       data: { avatarUrl: publicUrl },
       select: { id: true, name: true, avatarUrl: true } // Kembalikan data yang relevan
     });

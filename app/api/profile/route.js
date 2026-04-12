@@ -26,7 +26,7 @@ export async function GET(request) {
     // 3. Ambil data dari database PostgreSQL via Prisma
     const userProfile = await prisma.user.findUnique({
       where: {
-        email: session.user.email,
+        supabaseId: session.user.id,
       },
       // Hanya pilih kolom yang diizinkan dilihat oleh frontend
       select: {
