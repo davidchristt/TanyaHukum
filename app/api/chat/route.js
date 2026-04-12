@@ -4,22 +4,21 @@ import { VoyageEmbeddings } from "@langchain/community/embeddings/voyage";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-// [BARU] 1. Import Prisma Client
-// Pastikan path ini sesuai dengan letak file inisialisasi Prisma Anda di project (misal: lib/prisma.js atau prisma/client.js)
+// 1. Import Prisma Client
 import prisma from "@/lib/prisma"; 
 
 export async function POST(req) {
   try {
     // 1. Tangkap pesan dan identitas dari Frontend
     const body = await req.json();
-    // [BARU] 2. Tangkap userId dari body
+    // 2. Tangkap userId dari body
     const { message, userId } = body; 
 
     if (!message) {
       return NextResponse.json({ error: "Pesan tidak boleh kosong" }, { status: 400 });
     }
 
-    // [BARU] 3. Verifikasi Identitas & Pengecekan Limit
+    // 3. Verifikasi Identitas & Pengecekan Limit
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized. Identitas pengguna tidak ditemukan." }, { status: 401 });
     }
@@ -47,8 +46,13 @@ export async function POST(req) {
       }
     });
 
-    // Keputusan Gatekeeper: Tolak jika limit habis
-    if (chatsTodayCount >= user.promptLimit) {
+    // ==========================================================
+    // [MODIFIKASI PENTING]: Keputusan Gatekeeper dengan Jalur VIP
+    // ==========================================================
+    
+    // Tolak JIKA user adalah FREE dan limitnya habis.
+    // Jika user adalah PRO, blok if ini otomatis dilewati (Bypass)!
+    if (user.tier === "FREE" && chatsTodayCount >= user.promptLimit) {
       return NextResponse.json(
         { 
           error: "Limit pertanyaan harian Anda sudah habis. Silakan upgrade ke PRO untuk akses tanpa batas.",
@@ -105,7 +109,7 @@ ATURAN WAJIB:
     ]);
 
     // ==========================================================
-    // [BARU] 4. Rekam Jejak ke Database (Setelah AI sukses menjawab)
+    // 4. Rekam Jejak ke Database (Setelah AI sukses menjawab)
     // ==========================================================
     
     // Kita gunakan Promise.all agar penyimpanan ke DB berjalan paralel dan lebih cepat
