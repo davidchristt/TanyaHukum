@@ -18,21 +18,33 @@ export async function POST(request) {
 
     // 2. Tangkap Data File dari request (berupa FormData)
     const formData = await request.formData();
-    const file = formData.get("file"); // "file" adalah nama key yang harus dikirim frontend
+    const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+    if (file.size > MAX_SIZE) {
+      return NextResponse.json(
+        { error: "Ukuran file maksimal 2MB." }, 
+        { status: 400 }
+      );
+    } // "file" adalah nama key yang harus dikirim frontend
 
     if (!file) {
       return NextResponse.json({ error: "File tidak ditemukan." }, { status: 400 });
     }
 
     // 3. Validasi Tipe File (Pastikan hanya gambar)
-    if (!file.type.startsWith("image/")) {
-      return NextResponse.json({ error: "File harus berupa gambar (JPG, PNG, dll)." }, { status: 400 });
+    const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+    const ALLOWED_EXT = ["jpg", "jpeg", "png", "webp"];
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json({ error: "Format tidak didukung. Gunakan JPG, PNG, atau WebP." }, { status: 400 });
+    }
+    if (!ALLOWED_EXT.includes(fileExt.toLowerCase())) {
+      return NextResponse.json({ error: "Ekstensi file tidak valid." }, { status: 400 });
     }
 
     // 4. Siapkan Nama File yang Unik
     // Format: id_user-timestamp.ekstensi (agar tidak bentrok dengan user lain)
     const fileExt = file.name.split('.').pop();
-    const fileName = `${session.user.id}-${Date.now()}.${fileExt}`;
+    const fileName = `${session.user.id}.${fileExt}`;
     // Path di dalam bucket Supabase
     const filePath = `public/${fileName}`; 
 
@@ -67,7 +79,7 @@ export async function POST(request) {
     return NextResponse.json({
       message: "Foto profil berhasil diunggah.",
       user: updatedUser
-    }, { status: 200 });
+    }, { status: 201 });
 
   } catch (error) {
     console.error("[POST_UPLOAD_ERROR]:", error);

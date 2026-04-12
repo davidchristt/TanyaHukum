@@ -76,18 +76,41 @@ export async function PATCH(request) {
 
     // 2. Tangkap *payload* JSON yang dikirim oleh teman frontend-mu
     const body = await request.json();
-    const { name, email, newPassword, avatarUrl } = body;
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: "Format email tidak valid." }, { status: 400 });
+    }
+    if (newPassword && newPassword.length < 8) {
+      return NextResponse.json({ error: "Password minimal 8 karakter." }, { status: 400 });
+    }
+    if (name && name.trim().length === 0) {
+      return NextResponse.json({ error: "Nama tidak boleh kosong." }, { status: 400 });
+    }
 
     // 3. Siapkan objek data untuk di-update (hanya update field yang dikirim)
     const updateData = {};
-    if (name) updateData.name = name;
-    if (email) updateData.email = email;
+    if (name !== undefined) updateData.name = name;
+    if (email) {
+      const { error } = await supabase.auth.updateUser({ email });
+      if (error) throw new Error("Gagal update email di Supabase: " + error.message);
+      updateData.email = email;
+    }
     if (avatarUrl) updateData.avatarUrl = avatarUrl;
     
     // Jika ada kiriman kata sandi baru, hash menggunakan bcrypt
     if (newPassword && newPassword.trim() !== "") {
       const salt = await bcrypt.genSalt(10);
       updateData.passwordHash = await bcrypt.hash(newPassword, salt);
+    }
+
+    // Kalau frontend kirim body kosong `{}`, query Prisma tetap jalan sia-sia
+    // ✅ Tambahkan pengecekan ini sebelum eksekusi Prisma
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: "Tidak ada data yang diperbarui." }, { status: 400 });
+    }
+
+    // ✅ Minimal cek apakah formatnya URL
+    if (avatarUrl && !avatarUrl.startsWith("http")) {
+      return NextResponse.json({ error: "Format URL avatar tidak valid." }, { status: 400 });
     }
 
     // 4. Eksekusi update ke database menggunakan Prisma
