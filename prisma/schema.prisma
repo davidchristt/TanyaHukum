@@ -9,20 +9,21 @@ datasource db {
 }
 
 model User {
-  id               String         @id @default(uuid())
-  email            String         @unique
-  passwordHash     String?        
-  authProvider     String         @default("CREDENTIALS")
-  resetToken       String?        @unique
+  id               String    @id @default(uuid())
+  email            String    @unique
+  passwordHash     String?  
+  authProvider     String    @default("CREDENTIALS")
+  resetToken       String?   @unique
   resetTokenExpiry DateTime?
 
-  tier             Tier           @default(FREE)
-  promptLimit      Int            @default(50)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  tier             Tier      @default(FREE)
+  promptLimit      Int       @default(50)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   chats            ChatHistory[]
   transactions     Transaction[]
+  searchLogs       SearchLog[]   // Relasi baru untuk melacak pencarian user
 }
 
 model ChatHistory {
@@ -46,6 +47,41 @@ model Transaction {
   updatedAt  DateTime          @updatedAt
 
   user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// ENTITAS BARU UNTUK KEBUTUHAN DASHBOARD
+// ==========================================
+
+// 1. Model untuk "Total Regulasi" & "Dokumen Terpopuler"
+model Regulation {
+  id          String   @id @default(uuid())
+  title       String   // Contoh: "UU ITE", "KUHP"
+  description String?  @db.Text
+  content     String?  @db.Text
+  viewCount   Int      @default(0) // Kunci utama untuk query "Dokumen Terpopuler"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 2. Model untuk "Isu Terkini"
+model TrendingIssue {
+  id          String   @id @default(uuid())
+  title       String   // Contoh: "Maling Helm di unpad"
+  description String   @db.Text // Contoh: "Pelaku kabur ke Pangdam"
+  location    String?  // Opsional, untuk menyimpan lokasi isu
+  createdAt   DateTime @default(now()) // Digunakan frontend untuk hitung "X Jam Lalu"
+  updatedAt   DateTime @updatedAt
+}
+
+// 3. Model untuk "Tren Pencarian Hukum" (Time-series data)
+model SearchLog {
+  id        String   @id @default(uuid())
+  query     String   // Kata kunci yang dicari user
+  userId    String?  // Nullable, berjaga-jaga jika ada pencarian anonim
+  createdAt DateTime @default(now()) // Digunakan untuk agregasi data per hari/bulan pada grafik
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 enum Tier {
