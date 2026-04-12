@@ -4,40 +4,79 @@ import { VoyageEmbeddings } from "@langchain/community/embeddings/voyage";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
+// [BARU] 1. Import Prisma Client
+// Pastikan path ini sesuai dengan letak file inisialisasi Prisma Anda di project (misal: lib/prisma.js atau prisma/client.js)
+import prisma from "@/lib/prisma"; 
+
 export async function POST(req) {
   try {
-    // 1. Tangkap pesan JSON dari Frontend
+    // 1. Tangkap pesan dan identitas dari Frontend
     const body = await req.json();
-    const { message } = body;
-
-
-    console.log("VOYAGE KEY:", process.env.VOYAGEAI_API_KEY);
-    console.log("MESSAGE:", message);
-
+    // [BARU] 2. Tangkap userId dari body
+    const { message, userId } = body; 
 
     if (!message) {
       return NextResponse.json({ error: "Pesan tidak boleh kosong" }, { status: 400 });
     }
 
-    // 2. Setup Database Pinecone
+    // [BARU] 3. Verifikasi Identitas & Pengecekan Limit
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized. Identitas pengguna tidak ditemukan." }, { status: 401 });
+    }
+
+    // Cari data user di database
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "Pengguna tidak terdaftar." }, { status: 404 });
+    }
+
+    // Hitung jumlah chat user HARI INI
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0); // Set waktu ke 00:00:00 hari ini
+
+    const chatsTodayCount = await prisma.chatHistory.count({
+      where: {
+        userId: userId,
+        role: "USER", // Hanya hitung pertanyaan dari user
+        createdAt: {
+          gte: startOfDay, // Lebih besar atau sama dengan awal hari ini
+        }
+      }
+    });
+
+    // Keputusan Gatekeeper: Tolak jika limit habis
+    if (chatsTodayCount >= user.promptLimit) {
+      return NextResponse.json(
+        { 
+          error: "Limit pertanyaan harian Anda sudah habis. Silakan upgrade ke PRO untuk akses tanpa batas.",
+          limitReached: true // Flag khusus agar Frontend tahu ini error karena limit
+        }, 
+        { status: 403 }
+      );
+    }
+
+    // ==========================================================
+    // LOGIKA RAG AI (Sama persis seperti sebelumnya)
+    // ==========================================================
+    
     const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
     const index = pc.Index(process.env.PINECONE_INDEX_V2);
 
-    // 3. Setup Voyage AI (Si Pencari Hukum yang presisi)
     const embeddings = new VoyageEmbeddings({
       apiKey: process.env.VOYAGEAI_API_KEY,
       inputType: "query",
       modelName: "voyage-law-2", 
     });
 
-    // 4. Setup Gemini LLM (Si Juru Bicara)
     const llm = new ChatGoogleGenerativeAI({
       apiKey: process.env.GOOGLE_API_KEY,
       model: "gemini-2.5-flash",
-      temperature: 0.2, // Sangat rendah agar tetap faktual
+      temperature: 0.2, 
     });
 
-    // 5. Proses Pencarian (Retrieval) - Cari 30 potongan terbaik
     const queryVector = await embeddings.embedQuery(message);
     const queryResponse = await index.query({
       vector: queryVector,
@@ -45,13 +84,11 @@ export async function POST(req) {
       includeMetadata: true,
     });
 
-    // 6. Rangkai teks referensi untuk dibaca Gemini
     const matches = queryResponse.matches || [];
     const context = matches
       .map((m, i) => `[Referensi ${i + 1}: ${m.metadata?.source || 'Dokumen'}, Hal ${m.metadata?.page || '?'}]\n${m.metadata?.text || ''}`)
       .join("\n\n---\n\n");
 
-    // 7. System Prompt Anti-Halusinasi
     const systemPrompt = `Anda adalah TanyaHukum, asisten hukum Indonesia yang ahli dan terpercaya.
 TUGAS ANDA: Jawab pertanyaan pengguna HANYA berdasarkan konteks hukum berikut:
 ${context}
@@ -62,13 +99,36 @@ ATURAN WAJIB:
 3. Gunakan bahasa Indonesia yang profesional namun mudah dipahami masyarakat umum.
 4. Jangan pernah mengarang sanksi atau pasal yang tidak tertulis di konteks.`;
 
-    // 8. Generate Jawaban Akhir
     const response = await llm.invoke([
       new SystemMessage(systemPrompt),
       new HumanMessage(message),
     ]);
 
-    // 9. Kembalikan respons ke Frontend dalam format JSON
+    // ==========================================================
+    // [BARU] 4. Rekam Jejak ke Database (Setelah AI sukses menjawab)
+    // ==========================================================
+    
+    // Kita gunakan Promise.all agar penyimpanan ke DB berjalan paralel dan lebih cepat
+    await Promise.all([
+      // Simpan pertanyaan User
+      prisma.chatHistory.create({
+        data: {
+          userId: userId,
+          role: "USER",
+          content: message
+        }
+      }),
+      // Simpan jawaban AI
+      prisma.chatHistory.create({
+        data: {
+          userId: userId,
+          role: "AI",
+          content: response.content
+        }
+      })
+    ]);
+
+    // 5. Kembalikan respons ke Frontend
     return NextResponse.json({ answer: response.content });
 
   } catch (error) {
