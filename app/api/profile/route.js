@@ -63,27 +63,42 @@ export async function GET(request) {
 // ==========================================
 export async function PATCH(request) {
   try {
-    // 1. Inisialisasi Supabase client dan ambil sesi
+    // 1. Validasi Sesi
     const supabase = createRouteHandlerClient({ cookies });
     const { data: { session }, error: authError } = await supabase.auth.getSession();
 
     if (authError || !session) {
+      return NextResponse.json({ error: "Unauthorized. Akses ditolak." }, { status: 401 });
+    }
+
+    // 2. Parsing Body
+    const body = await request.json();
+    const { name, email, newPassword, avatarUrl } = body;
+
+    // ✅ 3. CEK authProvider DI SINI — sebelum updateData disiapkan
+    // Ambil sekalian untuk keperluan where clause nanti
+    const existingUser = await prisma.user.findUnique({
+      where: { supabaseId: session.user.id },
+      select: { authProvider: true }
+    });
+
+    if (!existingUser) {
+      return NextResponse.json({ error: "Pengguna tidak ditemukan." }, { status: 404 });
+    }
+
+    if (newPassword && existingUser.authProvider !== "CREDENTIALS") {
       return NextResponse.json(
-        { error: "Unauthorized. Akses ditolak." }, 
-        { status: 401 }
+        { error: "Akun OAuth tidak dapat mengatur password." },
+        { status: 400 }
       );
     }
 
-    // 2. Tangkap *payload* JSON yang dikirim oleh teman frontend-mu
-    const body = await request.json();
+    // 4. Validasi Input
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: "Format email tidak valid." }, { status: 400 });
     }
     if (newPassword && newPassword.length < 8) {
       return NextResponse.json({ error: "Password minimal 8 karakter." }, { status: 400 });
-    }
-    if (name && name.trim().length === 0) {
-      return NextResponse.json({ error: "Nama tidak boleh kosong." }, { status: 400 });
     }
 
     // 3. Siapkan objek data untuk di-update (hanya update field yang dikirim)
