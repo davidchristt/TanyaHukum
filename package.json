@@ -22,6 +22,7 @@
     "langchain": "^1.2.35",
     "llama-cloud-services": "^0.5.4",
     "llamaindex": "^0.12.1",
+    "midtrans-client": "^1.4.3",
     "next": "16.1.6",
     "pdf-lib": "^1.17.1",
     "pdf-parse": "^1.1.1",
