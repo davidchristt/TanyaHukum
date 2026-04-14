@@ -92,6 +92,7 @@ export async function POST(request) {
       userId: user.id,
       email: user.email,
       tier: user.tier,
+      role: user.role, // Pastikan ini 'admin' atau 'user'
     });
 
     // 6. Kirim response + set cookie HttpOnly
