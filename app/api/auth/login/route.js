@@ -70,6 +70,7 @@ export async function POST(request) {
         passwordHash: true,
         tier: true,
         promptLimit: true,
+        role: true, // <--- TAMBAHKAN INI agar role terbaca dari DB
       },
     });
 
@@ -92,6 +93,7 @@ export async function POST(request) {
       userId: user.id,
       email: user.email,
       tier: user.tier,
+      role: user.role, // Pastikan ini 'admin' atau 'user'
     });
 
     // 6. Kirim response + set cookie HttpOnly
@@ -103,6 +105,7 @@ export async function POST(request) {
           email: user.email,
           tier: user.tier,
           promptLimit: user.promptLimit,
+          role: user.role, // <--- Sertakan juga di sini untuk UI/State di frontend
         },
       },
       { status: 200 }
