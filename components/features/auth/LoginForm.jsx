@@ -73,11 +73,20 @@ export default function LoginForm() {
       // ✅ SIMPAN SESSION
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      setSuccess("Login berhasil");
+      // 1. Cek role dari data user
+      const isAdmin = data.user.role === "ADMIN"; 
+
+      // 2. Berikan pesan berbeda
+      setSuccess(isAdmin ? "Selamat datang, Admin!" : "Selamat datang, User B aja!");
 
       setTimeout(() => {
         router.push("/chatbot");
       }, 1500);
+
+      // setTimeout(() => {
+      //   // 3. Arahkan ke halaman yang berbeda jika perlu
+      //   router.push(isAdmin ? "/admin/dashboard" : "/chatbot");
+      // }, 1500);
 
     } catch (err) {
       setError(err.message);

@@ -18,6 +18,7 @@ model User {
   authProvider     String         @default("CREDENTIALS")
   resetToken       String?        @unique
   resetTokenExpiry DateTime?
+  role             Role           @default(USER) // Default sebagai user biasa
 
   tier             Tier           @default(FREE)
   promptLimit      Int            @default(50)
@@ -58,6 +59,7 @@ enum Tier {
 
 enum Role {
   USER
+  ADMIN
   AI
 }
 
