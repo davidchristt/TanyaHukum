@@ -1,7 +1,6 @@
 // app/api/users/route.js
 // Baca semua user yang ada
 
-// app/api/users/route.js
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
