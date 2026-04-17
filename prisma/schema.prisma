@@ -9,24 +9,26 @@ datasource db {
 }
 
 model User {
-  id               String         @id @default(uuid())
-  supabaseId       String? @unique  // ← agar meski user ganti email atau password, semua data yang telah ada sebelumnya tidak error
-  name             String?        // ✅ TAMBAHKAN INI: Untuk input "Nama"
-  avatarUrl        String?        // ✅ TAMBAHKAN INI: Untuk "Unggah Foto"
-  email            String         @unique
-  passwordHash     String?        
-  authProvider     String         @default("CREDENTIALS")
-  resetToken       String?        @unique
+  id               String    @id @default(uuid())
+  supabaseId       String?   @unique // ← agar meski user ganti email atau password, semua data yang telah ada sebelumnya tidak error
+  name             String? // ✅ TAMBAHKAN INI: Untuk input "Nama"
+  avatarUrl        String? // ✅ TAMBAHKAN INI: Untuk "Unggah Foto"
+  email            String    @unique
+  passwordHash     String?
+  authProvider     String    @default("CREDENTIALS")
+  resetToken       String?   @unique
   resetTokenExpiry DateTime?
-  role             Role           @default(USER) // Default sebagai user biasa
+  role             Role      @default(USER) // Default sebagai user biasa
 
-  tier             Tier           @default(FREE)
-  promptLimit      Int            @default(50)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  tier        Tier     @default(FREE)
+  promptLimit Int      @default(50)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  chats            ChatHistory[]
-  transactions     Transaction[]
+  chats          ChatHistory[]
+  transactions   Transaction[]
+  searchLogs     SearchLog[] // Relasi baru untuk melacak pencarian user
+  trendingIssues TrendingIssue[]
 }
 
 model ChatHistory {
@@ -36,7 +38,7 @@ model ChatHistory {
   content   String   @db.Text
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Transaction {
@@ -49,7 +51,52 @@ model Transaction {
   createdAt  DateTime          @default(now())
   updatedAt  DateTime          @updatedAt
 
-  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// ENTITAS BARU UNTUK KEBUTUHAN DASHBOARD
+// ==========================================
+
+// 1. Model untuk "Total Regulasi" & "Dokumen Terpopuler"
+model Regulation {
+  id          String   @id @default(uuid())
+  title       String
+  description String?  @db.Text
+  content     String?  @db.Text
+  viewCount   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([viewCount(sort: Desc)])
+}
+
+// 2. Model untuk "Isu Terkini"
+model TrendingIssue {
+  id          String   @id @default(uuid())
+  title       String
+  description String   @db.Text
+  location    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy String?
+  author    User?   @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+}
+
+// 3. Model untuk "Tren Pencarian Hukum" (Time-series data)
+model SearchLog {
+  id        String   @id @default(uuid())
+  query     String
+  userId    String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([query, createdAt])
 }
 
 enum Tier {
