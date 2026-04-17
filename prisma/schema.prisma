@@ -9,13 +9,6 @@ datasource db {
 }
 
 model User {
-<<<<<<< HEAD
-  id               String    @id @default(uuid())
-  email            String    @unique
-  passwordHash     String?  
-  authProvider     String    @default("CREDENTIALS")
-  resetToken       String?   @unique
-=======
   id               String         @id @default(uuid())
   supabaseId       String? @unique  // ← agar meski user ganti email atau password, semua data yang telah ada sebelumnya tidak error
   name             String?        // ✅ TAMBAHKAN INI: Untuk input "Nama"
@@ -24,7 +17,6 @@ model User {
   passwordHash     String?        
   authProvider     String         @default("CREDENTIALS")
   resetToken       String?        @unique
->>>>>>> main
   resetTokenExpiry DateTime?
   role             Role           @default(USER) // Default sebagai user biasa
 
@@ -68,32 +60,42 @@ model Transaction {
 // 1. Model untuk "Total Regulasi" & "Dokumen Terpopuler"
 model Regulation {
   id          String   @id @default(uuid())
-  title       String   // Contoh: "UU ITE", "KUHP"
+  title       String
   description String?  @db.Text
   content     String?  @db.Text
-  viewCount   Int      @default(0) // Kunci utama untuk query "Dokumen Terpopuler"
+  viewCount   Int      @default(0)
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([viewCount(sort: Desc)])
 }
 
 // 2. Model untuk "Isu Terkini"
 model TrendingIssue {
   id          String   @id @default(uuid())
-  title       String   // Contoh: "Maling Helm di unpad"
-  description String   @db.Text // Contoh: "Pelaku kabur ke Pangdam"
-  location    String?  // Opsional, untuk menyimpan lokasi isu
-  createdAt   DateTime @default(now()) // Digunakan frontend untuk hitung "X Jam Lalu"
+  title       String
+  description String   @db.Text
+  location    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  createdBy   String?
+  author      User?    @relation(fields: [createdBy], references: [id], onDelete: SetNull)
 }
 
 // 3. Model untuk "Tren Pencarian Hukum" (Time-series data)
 model SearchLog {
   id        String   @id @default(uuid())
-  query     String   // Kata kunci yang dicari user
-  userId    String?  // Nullable, berjaga-jaga jika ada pencarian anonim
-  createdAt DateTime @default(now()) // Digunakan untuk agregasi data per hari/bulan pada grafik
+  query     String
+  userId    String?
+  createdAt DateTime @default(now())
 
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([query, createdAt])
 }
 
 enum Tier {
