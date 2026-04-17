@@ -1,6 +1,9 @@
 // Logika reset password
 
+// src/app/api/auth/reset-password/route.js
+
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma';
 
@@ -8,38 +11,66 @@ export async function POST(request) {
   try {
     const { token, newPassword } = await request.json();
 
+    // 1. Validasi input
     if (!token || !newPassword) {
-      return NextResponse.json({ error: 'Token dan password baru wajib diisi' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Token dan password baru wajib diisi' },
+        { status: 400 }
+      );
     }
 
-    // 1. Cari user berdasarkan token yang cocok DAN belum kedaluwarsa
-    const user = await prisma.user.findUnique({
-      where: { resetToken: token }
+    if (newPassword.length < 8) {
+      return NextResponse.json(
+        { error: 'Password minimal 8 karakter' },
+        { status: 400 }
+      );
+    }
+
+    // 2. Hash token dari URL, lalu cocokkan dengan yang tersimpan di DB
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    // 3. Cari user — filter expiry langsung di query, bukan di aplikasi
+    const user = await prisma.user.findFirst({
+      where: {
+        resetToken: hashedToken,
+        resetTokenExpiry: { gt: new Date() },
+      },
     });
 
-    // Jika user tidak ditemukan, atau token sudah lewat batas waktunya
-    if (!user || user.resetTokenExpiry < new Date()) {
-      return NextResponse.json({ error: 'Token tidak valid atau sudah kedaluwarsa' }, { status: 400 });
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Token tidak valid atau sudah kedaluwarsa' },
+        { status: 400 }
+      );
     }
 
-    // 2. Hash password baru
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    // 4. Hash password baru (salt rounds 12)
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-    // 3. Update password user dan HAPUS tokennya agar tidak bisa dipakai lagi
+    // 5. Update password & hapus token (one-time use)
     await prisma.user.update({
       where: { id: user.id },
       data: {
         passwordHash: hashedPassword,
         resetToken: null,
         resetTokenExpiry: null,
-      }
+      },
     });
 
-    return NextResponse.json({ message: 'Password berhasil diubah. Silakan login kembali.' }, { status: 200 });
+    return NextResponse.json(
+      { message: 'Password berhasil diubah. Silakan login kembali.' },
+      { status: 200 }
+    );
 
   } catch (error) {
-    console.error("Reset Password Error:", error);
-    return NextResponse.json({ error: 'Terjadi kesalahan pada server' }, { status: 500 });
+    console.error('Reset Password Error:', error);
+
+    return NextResponse.json(
+      { error: 'Terjadi kesalahan pada server' },
+      { status: 500 }
+    );
   }
 }
