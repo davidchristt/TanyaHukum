@@ -61,9 +61,11 @@ model Transaction {
 // 1. Model untuk "Total Regulasi" & "Dokumen Terpopuler"
 model Regulation {
   id          String   @id @default(uuid())
-  title       String
-  description String?  @db.Text
-  content     String?  @db.Text
+  title       String   // Input Judul
+  description String?  @db.Text // Deskripsi (Metadata)
+  fileUrl     String   // URL file dari Supabase Storage / S3
+  category    String?  // Contoh: "Undang-undang", "Peraturan Daerah"
+  content     String?  @db.Text // Untuk ekstraksi teks (opsional)
   viewCount   Int      @default(0)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -75,8 +77,10 @@ model Regulation {
 // 2. Model untuk "Isu Terkini"
 model TrendingIssue {
   id          String   @id @default(uuid())
-  title       String
-  description String   @db.Text
+  title       String   // Input Judul
+  description String   @db.Text // Deskripsi Singkat
+  publishDate DateTime @default(now()) // Waktu Publish
+  newsLink    String?  // Link ke Berita
   location    String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
