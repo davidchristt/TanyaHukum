@@ -33,7 +33,7 @@ export async function middleware(request) {
 
   // 3. Proteksi Endpoint API Admin
   // Cek apakah request menuju ke path /api/users atau /api/admin
-  if (request.nextUrl.pathname.startsWith('/api/users')) {
+  if (request.nextUrl.pathname.startsWith('/api/admin')) {
     // Jika tidak login atau role bukan ADMIN, blokir
     // Catatan: Pastikan role ini ada di 'user_metadata' atau ambil dari database via Prisma
     if (!user || user.user_metadata?.role !== 'ADMIN') {
