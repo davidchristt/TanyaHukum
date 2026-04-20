@@ -1,52 +1,179 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 
 import Sidebar from "@/components/layout/Sidebar";
 import ChatArea from "@/components/features/chat/ChatArea";
+
+// AUTH
+import LoginForm from "@/components/features/auth/LoginForm";
+import RegisterForm from "@/components/features/auth/RegisterForm";
+
+// SUBSCRIPTION
 import SubscriptionList from "@/components/features/subscription/SubscriptionList";
 
-export default function ChatbotPage() {
-  const router = useRouter();
+import ProfileModal from "@/components/features/profile/ProfileModal";
 
+import { getProfile } from "@/src/lib/profile";
+
+export default function ChatbotPage() {
   const [isOpen, setIsOpen] = useState(true);
+
+  // AUTH
+  const [authMode, setAuthMode] = useState(null);
+
+  // USER (source of truth)
+  const [user, setUser] = useState(null);
+
+  // SUBSCRIPTION
   const [showSubscription, setShowSubscription] = useState(false);
 
-  // ✅ PROTECTED ROUTE
-  useEffect(() => {
-    const user = localStorage.getItem("user");
+  const [showProfile, setShowProfile] = useState(false);
 
-    if (!user) {
-      router.push("/login");
-    }
+  const [showToast, setShowToast] = useState(false);
+
+  const handleLoginSuccess = (userData) => {
+  setUser(userData); // 🔥 langsung set state
+  };
+
+  // ==============================
+  // LOAD USER (API BASED)
+  // ==============================
+  useEffect(() => {
+    const loadUser = () => {
+      const stored = localStorage.getItem("user");
+
+      if (!stored) {
+        setUser(null);
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(stored);
+        setUser(parsed);
+      } catch {
+        setUser(null);
+      }
+    };
+
+    loadUser();
+
+    window.addEventListener("auth-change", loadUser);
+
+    return () => {
+      window.removeEventListener("auth-change", loadUser);
+    };
   }, []);
 
+  useEffect(() => {
+  const handleToast = () => {
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2500);
+  };
+
+  window.addEventListener("show-toast", handleToast);
+
+  return () => {
+    window.removeEventListener("show-toast", handleToast);
+  };
+}, []);
+
   return (
-    <div className="h-screen bg-blue-100 p-6 flex gap-4 relative">
-      
-      <div className={`transition-all duration-300 ${isOpen ? "w-[280px]" : "w-[80px]"}`}>
-        <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
+    <div className="h-screen bg-blue-100 flex">
+
+      {/* SIDEBAR */}
+      <div
+        className={`transition-all duration-300 ${
+          isOpen ? "w-[280px]" : "w-[80px]"
+        }`}
+      >
+        <Sidebar
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          onOpenProfile={() => setShowProfile(true)}
+          user={user}
+        />
       </div>
 
+      {/* CHAT AREA */}
       <div className="flex-1">
-        <ChatArea onOpenSub={() => setShowSubscription(true)} />
+        <ChatArea
+          user={user}
+          onOpenAuth={(mode) => setAuthMode(mode || "login")}
+          onOpenSubscription={() => setShowSubscription(true)}
+        />
       </div>
 
-      {showSubscription && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
-          <div className="relative max-h-[95vh] overflow-y-auto rounded-3xl shadow-2xl animate-in fade-in zoom-in duration-300">
-            
-            <button 
-              onClick={() => setShowSubscription(false)}
-              className="absolute top-6 right-6 z-[10000] bg-white/80 hover:bg-white p-2 rounded-full shadow-lg transition"
+      {/* ================= AUTH POPUP ================= */}
+      {authMode && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+
+          <div className="relative w-full max-w-md">
+
+            <button
+              onClick={() => setAuthMode(null)}
+              className="absolute top-4 right-4 text-[#2f6fed] hover:text-white 
+              hover:bg-[#2f6fed] transition p-2 rounded-full"
             >
-              <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              ✕
             </button>
 
-            <SubscriptionList onComplete={() => setShowSubscription(false)} />
+            {authMode === "login" && (
+              <LoginForm
+                onClose={() => setAuthMode(null)}
+                onLoginSuccess={handleLoginSuccess}
+              />
+            )}
+
+            {authMode === "register" && (
+              <RegisterForm
+                onClose={() => {
+                  setAuthMode(null);
+                  window.dispatchEvent(new Event("auth-change"));
+                }}
+                onSwitchToLogin={() => setAuthMode("login")}
+              />
+            )}
+
+          </div>
+        </div>
+      )}
+
+      {/* ================= SUBSCRIPTION POPUP ================= */}
+      {showSubscription && (
+        <SubscriptionList
+          user={user}
+          onComplete={() => setShowSubscription(false)}
+        />
+      )}
+
+      {/* ================= PROFILE POPUP ================= */}
+      {showProfile && (
+        <ProfileModal
+          isOpen={showProfile}
+          onClose={() => setShowProfile(false)}
+          user={user} // 🔥 TAMBAH INI
+        />
+      )}
+
+      {/* ================= TOAST ================= */}
+      {showToast && (
+        <div className="fixed top-6 right-6 z-50">
+          <div className="bg-white border border-green-200 shadow-xl rounded-xl px-5 py-4 flex items-center gap-3">
+            
+            <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-sm">
+              ✓
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-gray-900">
+                Berhasil
+              </p>
+              <p className="text-xs text-gray-500">
+                Aksi berhasil dilakukan
+              </p>
+            </div>
+
           </div>
         </div>
       )}
