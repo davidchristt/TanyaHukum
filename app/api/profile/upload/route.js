@@ -1,88 +1,90 @@
-// api untuk mengupload foto di halaman profile
-// HANYA FOTO SAJA. DATA LAIN MENGGUNAKAN API app/api/profile/route.js
-
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { verifyToken } from "../../../../src/lib/auth-server";
 
-/**
- * POST: Upload Foto Profil ke Supabase Storage & Update DB
- */
 export async function POST(request) {
   try {
-    const supabase = createClient();
-    
-    // 1. Verifikasi user secara aman
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const token = request.cookies.get("token")?.value;
 
-    if (authError || !user) {
+    if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 2. Ambil data file dari FormData
+    const payload = await verifyToken(token);
+
+    const supabase = await createClient();
+
+    // ======================
+    // FILE
+    // ======================
     const formData = await request.formData();
-    const file = formData.get("file"); // Key harus "file" di frontend
+    const file = formData.get("file");
 
     if (!file) {
       return NextResponse.json({ error: "File tidak ditemukan." }, { status: 400 });
     }
 
-    // 3. Validasi Ukuran (2MB)
-    const MAX_SIZE = 2 * 1024 * 1024; 
+    // VALIDASI
+    const MAX_SIZE = 2 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      return NextResponse.json({ error: "Ukuran file maksimal 2MB." }, { status: 400 });
+      return NextResponse.json({ error: "Maks 2MB." }, { status: 400 });
     }
 
-    // 4. Validasi Tipe & Ekstensi
     const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
-    const fileExt = file.name.split('.').pop().toLowerCase();
-    const ALLOWED_EXT = ["jpg", "jpeg", "png", "webp"];
-
-    if (!ALLOWED_TYPES.includes(file.type) || !ALLOWED_EXT.includes(fileExt)) {
-      return NextResponse.json(
-        { error: "Format tidak didukung. Gunakan JPG, PNG, atau WebP." }, 
-        { status: 400 }
-      );
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json({ error: "Format tidak valid." }, { status: 400 });
     }
 
-    // 5. Nama File Unik (berdasarkan ID user agar tidak menumpuk)
-    const fileName = `${user.id}.${fileExt}`;
-    const filePath = `public/${fileName}`; 
+    const fileExt = file.name.split(".").pop().toLowerCase();
+    const fileName = `${payload.userId}.${fileExt}`;
+    const filePath = `public/${fileName}`;
 
-    // 6. Proses Upload ke Supabase Storage
+    // ======================
+    // UPLOAD
+    // ======================
     const { error: uploadError } = await supabase.storage
-      .from("avatars") // Pastikan nama bucket ini sudah dibuat di dashboard
+      .from("avatars")
       .upload(filePath, file, {
         cacheControl: "3600",
         upsert: true,
       });
 
     if (uploadError) {
-      console.error("[STORAGE_ERROR]:", uploadError);
-      return NextResponse.json({ error: "Gagal menyimpan file di storage." }, { status: 500 });
+      return NextResponse.json({ error: "Upload gagal." }, { status: 500 });
     }
 
-    // 7. Ambil Public URL
-    const { data: publicUrlData } = supabase.storage
+    // ======================
+    // PUBLIC URL
+    // ======================
+    const { data } = supabase.storage
       .from("avatars")
       .getPublicUrl(filePath);
 
-    const publicUrl = publicUrlData.publicUrl;
+    const publicUrl = data.publicUrl;
 
-    // 8. Update URL di Database Prisma
+    // ======================
+    // UPDATE DB (PAKAI ID, BUKAN supabaseId)
+    // ======================
     const updatedUser = await prisma.user.update({
-      where: { supabaseId: user.id },
+      where: { id: payload.userId },
       data: { avatarUrl: publicUrl },
-      select: { id: true, name: true, avatarUrl: true }
+      select: {
+        id: true,
+        name: true,
+        avatarUrl: true,
+      },
     });
 
     return NextResponse.json({
-      message: "Foto profil berhasil diperbarui.",
-      user: updatedUser
-    }, { status: 201 });
+      message: "Berhasil upload",
+      user: updatedUser,
+    });
 
-  } catch (error) {
-    console.error("[UPLOAD_ROUTE_ERROR]:", error);
-    return NextResponse.json({ error: "Terjadi kesalahan internal." }, { status: 500 });
+  } catch (err) {
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
   }
 }
