@@ -27,7 +27,7 @@ export async function POST(req) {
     }
 
     // 2. Definisikan Harga & Order ID
-    const amount = 1000; 
+    const amount = 49999; 
     const orderId = `TRX-${Date.now()}-${userId.substring(0, 5)}`;
 
     // 3. Buat Transaksi di Database kita (Status PENDING)

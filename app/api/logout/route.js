@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
  */
 export async function POST(request) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // 1. Cek apakah ada user yang aktif sebelum logout
     const { data: { user } } = await supabase.auth.getUser();
@@ -31,6 +31,8 @@ export async function POST(request) {
     
     // Jika gagal, tetap arahkan ke login dengan pesan error
     const errorUrl = new URL('/login?error=logout_failed', request.url);
-    return NextResponse.redirect(errorUrl, { status: 303 });
+    return NextResponse.json({
+      message: "Logout success"
+    });
   }
 }

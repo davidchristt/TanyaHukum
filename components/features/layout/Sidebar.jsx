@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 
-export default function Sidebar({ isOpen, setIsOpen }) {
+export default function Sidebar({ isOpen, setIsOpen, onOpenProfile, user }) {
   const pathname = usePathname();
 
   const go = (path) => {
@@ -76,20 +76,27 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       </div>
 
       {/* PROFILE */}
-      <div
-        onClick={() => go("/profile")}
-        className={`flex items-center cursor-pointer ${
-          isOpen ? "gap-3 px-2" : "justify-center"
-        }`}
-      >
-        <img src="/icons/profile.svg" className="w-9 h-9" />
-        {isOpen && (
-          <div>
-            <p className="text-sm font-medium text-gray-900">David</p>
-            <p className="text-xs text-gray-500">Gratis</p>
-          </div>
-        )}
-      </div>
+      {user && (
+        <div
+          onClick={onOpenProfile}
+          className={`flex items-center cursor-pointer ${
+            isOpen ? "gap-3 px-2" : "justify-center"
+          }`}
+        >
+          <img src="/icons/profile.svg" className="w-9 h-9" />
+
+          {isOpen && (
+            <div>
+              <p className="text-sm font-medium text-gray-900">
+                {user?.name || "User"}
+              </p>
+              <p className="text-xs text-gray-500">
+                {user?.tier === "PRO" ? "PRO" : "Gratis"}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
