@@ -3,26 +3,23 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { registerUser, loginWithGoogle } from "../../../src/lib/auth";
 
-export default function RegisterForm() {
+export default function RegisterForm({ onClose, onSwitchToLogin }) {
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const togglePassword = () => {
     setShowPassword(!showPassword);
   };
 
-  // ======================
   // GOOGLE INIT
-  // ======================
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
@@ -39,7 +36,7 @@ export default function RegisterForm() {
       });
 
       window.google.accounts.id.renderButton(
-        document.getElementById("google-register-btn"),
+        document.getElementById("google-btn"),
         {
           theme: "outline",
           size: "large",
@@ -49,69 +46,27 @@ export default function RegisterForm() {
     };
   }, []);
 
-  // ======================
-  // GOOGLE CALLBACK
-  // ======================
   const handleGoogleCallback = async (response) => {
     try {
-      const res = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          credentialToken: response.credential,
-        }),
+      const data = await loginWithGoogle({
+        credentialToken: response.credential,
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Google auth gagal");
-      }
 
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      setSuccess("Login dengan Google berhasil");
-
-      setTimeout(() => {
-        router.push("/chatbot");
-      }, 1500);
-
+      router.push("/chatbot");
     } catch (err) {
       setError(err.message);
     }
   };
 
-  // ======================
-  // REGISTER MANUAL
-  // ======================
-  const handleRegister = async () => {
+  const handleSubmit = async () => {
     setLoading(true);
     setError("");
-    setSuccess("");
 
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Register gagal");
-      }
-
-      setSuccess("Akun berhasil dibuat");
-
-      setTimeout(() => {
-        router.push("/login");
-      }, 1500);
-
+      await registerUser({ email, password });
+      onSwitchToLogin();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -120,16 +75,19 @@ export default function RegisterForm() {
   };
 
   return (
-    <>
-      {/* ✅ Toast Success */}
-      {success && (
-        <div className="fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
-          {success}
-        </div>
-      )}
+    <div className="fixed inset-0 bg-black/5 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="relative w-full max-w-md bg-white p-10 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
 
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
-        <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
+        {/* CLOSE BUTTON */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-[#2f6fed] hover:text-white 
+          hover:bg-[#2f6fed] transition p-2 rounded-full"
+        >
+          ✕
+        </button>
+
+        <h2 className="text-2xl font-semibold text-center text-gray-900 mb-8">
           Daftar Akun
         </h2>
 
@@ -143,8 +101,7 @@ export default function RegisterForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg 
-              text-gray-800 placeholder-gray-400
-              focus:outline-none focus:ring-2 focus:ring-blue-400"
+              focus:outline-none focus:ring-2 focus:ring-[#2f6fed]"
             />
           </div>
 
@@ -161,8 +118,7 @@ export default function RegisterForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg 
-                text-gray-800 placeholder-gray-400
-                focus:outline-none focus:ring-2 focus:ring-blue-400"
+                focus:outline-none focus:ring-2 focus:ring-[#2f6fed]"
               />
 
               <span
@@ -175,7 +131,7 @@ export default function RegisterForm() {
                       ? "/icons/mataPW.svg"
                       : "/icons/tutupMata.svg"
                   }
-                  alt="toggle password"
+                  alt="toggle"
                   className="w-5 h-5"
                 />
               </span>
@@ -187,28 +143,31 @@ export default function RegisterForm() {
             <p className="text-red-500 text-sm">{error}</p>
           )}
 
-          {/* Register */}
+          {/* Button */}
           <button
-            onClick={handleRegister}
+            onClick={handleSubmit}
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 transition 
-            text-white py-2.5 rounded-lg font-medium shadow-md"
+            className="w-full bg-[#2f6fed] hover:bg-[#255cd6] transition 
+            text-white py-3 rounded-lg font-medium shadow-md"
           >
             {loading ? "Loading..." : "Buat Akun"}
           </button>
 
-          {/* Google */}
-          <div id="google-register-btn" className="w-full flex justify-center"></div>
+          {/* GOOGLE */}
+          <div id="google-btn" className="w-full flex justify-center"></div>
 
           {/* Login */}
           <p className="text-center text-sm text-gray-500">
             Sudah Punya Akun?{" "}
-            <Link href="/login" className="text-blue-600 font-medium">
-              Masuk Sekarang
-            </Link>
+            <span
+              onClick={onSwitchToLogin}
+              className="text-[#2f6fed] cursor-pointer"
+            >
+              Masuk
+            </span>
           </p>
         </div>
       </div>
-    </>
+    </div>
   );
 }
