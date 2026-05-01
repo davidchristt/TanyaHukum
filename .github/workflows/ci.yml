@@ -44,7 +44,7 @@ jobs:
         VOYAGEAI_API_KEY: ${{ secrets.VOYAGEAI_API_KEY }}
         MIDTRANS_SERVER_KEY: ${{ secrets.MIDTRANS_SERVER_KEY }}
         MIDTRANS_CLIENT_KEY: ${{ secrets.MIDTRANS_CLIENT_KEY }}
-        NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: ${{ vars.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY }}
+        NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: ${{ secrets.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY }}
       run: npm run build --if-present
 
     # - run: npm test  <-- Aktifkan jika kamu punya file test (Jest/Vitest)
