@@ -2,8 +2,9 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { requestPasswordReset, resetPassword } from "../../../src/lib/auth";
 
-export default function ResetPasswordPage() {
+export default function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -11,162 +12,160 @@ export default function ResetPasswordPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // ✅ REQUEST RESET (kirim email)
+  const togglePassword = () => {
+    setShowPassword(!showPassword);
+  };
+
   const handleRequestReset = async () => {
+    setLoading(true);
     setError("");
     setMessage("");
 
-    if (!email) {
-      setError("Email wajib diisi");
-      return;
-    }
-
     try {
-      const res = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
+      const data = await requestPasswordReset({ email });
+      setMessage(data.message);
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Gagal kirim reset");
-      }
-
-      setMessage("Link reset password telah dikirim");
-
-      // dev mode redirect langsung
       if (data.resetUrl) {
-        window.location.href = data.resetUrl;
+        router.push(data.resetUrl.replace(window.location.origin, ""));
       }
-
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ✅ RESET PASSWORD
   const handleResetPassword = async () => {
+    setLoading(true);
     setError("");
     setMessage("");
 
-    if (!password) {
-      setError("Password baru wajib diisi");
+    if (password !== confirmPassword) {
+      setError("Password tidak sama");
+      setLoading(false);
       return;
     }
 
     try {
-      const res = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          token,
-          newPassword: password,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Gagal reset password");
-      }
+      await resetPassword({ token, newPassword: password });
 
       setMessage("Password berhasil diubah");
 
-      // ✅ redirect ke login
       setTimeout(() => {
         router.push("/login");
       }, 1500);
-
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-100">
-      <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md text-gray-800">
-        
-        <h2 className="text-2xl font-semibold text-center mb-6">
+    <div className="fixed inset-0 bg-black/5 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="relative w-full max-w-md bg-white p-10 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
+
+        {/* CLOSE */}
+        <button
+          onClick={() => router.back()}
+          className="absolute top-4 right-4 text-[#2f6fed] hover:text-white 
+          hover:bg-[#2f6fed] transition p-2 rounded-full"
+        >
+          ✕
+        </button>
+
+        <h2 className="text-2xl font-semibold text-center text-gray-900 mb-8">
           {token ? "Reset Password" : "Lupa Password"}
         </h2>
 
-        {/* ===================== */}
-        {/* MODE 1: INPUT EMAIL */}
-        {/* ===================== */}
-        {!token && (
-          <>
-            <input
-              type="email"
-              placeholder="Masukkan Email Anda"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4
-              focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
+        <div className="space-y-5">
+          {/* MODE EMAIL */}
+          {!token && (
+            <>
+              <input
+                type="email"
+                placeholder="Masukkan Email Anda"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg 
+                focus:outline-none focus:ring-2 focus:ring-[#2f6fed]"
+              />
 
-            <button
-              onClick={handleRequestReset}
-              className="w-full bg-blue-600 text-white py-2 rounded-lg"
-            >
-              Kirim Link Reset
-            </button>
-          </>
-        )}
+              <button
+                onClick={handleRequestReset}
+                disabled={loading}
+                className="w-full bg-[#2f6fed] hover:bg-[#255cd6] transition 
+                text-white py-3 rounded-lg font-medium shadow-md"
+              >
+                {loading ? "Loading..." : "Kirim Link Reset"}
+              </button>
+            </>
+          )}
 
-        {/* ===================== */}
-        {/* MODE 2: INPUT PASSWORD */}
-        {/* ===================== */}
-        {token && (
-          <>
-            <input
-              type="password"
-              placeholder="Password baru"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4
-              focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
+          {/* MODE RESET PASSWORD */}
+          {token && (
+            <>
+              {/* Password */}
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password baru"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg 
+                  focus:outline-none focus:ring-2 focus:ring-[#2f6fed]"
+                />
 
-            <button
-              onClick={handleResetPassword}
-              className="w-full bg-blue-600 text-white py-2 rounded-lg"
-            >
-              Reset Password
-            </button>
-          </>
-        )}
+                <span
+                  onClick={togglePassword}
+                  className="absolute right-3 top-2.5 cursor-pointer"
+                >
+                  <img
+                    src={
+                      showPassword
+                        ? "/icons/mataPW.svg"
+                        : "/icons/tutupMata.svg"
+                    }
+                    alt="toggle"
+                    className="w-5 h-5"
+                  />
+                </span>
+              </div>
 
-        {/* ===================== */}
-        {/* FEEDBACK */}
-        {/* ===================== */}
-        {error && (
-          <p className="text-red-500 text-sm mt-3">{error}</p>
-        )}
+              {/* Confirm Password */}
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Konfirmasi password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg 
+                focus:outline-none focus:ring-2 focus:ring-[#2f6fed]"
+              />
 
-        {message && (
-          <p className="text-green-500 text-sm mt-3">{message}</p>
-        )}
+              <button
+                onClick={handleResetPassword}
+                disabled={loading}
+                className="w-full bg-[#2f6fed] hover:bg-[#255cd6] transition 
+                text-white py-3 rounded-lg font-medium shadow-md"
+              >
+                {loading ? "Loading..." : "Reset Password"}
+              </button>
+            </>
+          )}
 
-        {/* ===================== */}
-        {/* BACK TO LOGIN */}
-        {/* ===================== */}
-        <button
-          onClick={() => router.push("/login")}
-          className="mt-5 text-sm text-blue-600 w-full"
-        >
-          Kembali ke Login
-        </button>
+          {/* ERROR */}
+          {error && <p className="text-red-500 text-sm">{error}</p>}
 
+          {/* SUCCESS */}
+          {message && <p className="text-green-500 text-sm">{message}</p>}
+        </div>
       </div>
     </div>
   );
