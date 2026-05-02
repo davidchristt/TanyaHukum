@@ -93,9 +93,18 @@ export async function POST(req) {
       .map((m, i) => `[Referensi ${i + 1}: ${m.metadata?.source || 'Dokumen'}, Hal ${m.metadata?.page || '?'}]\n${m.metadata?.text || ''}`)
       .join("\n\n---\n\n");
 
+
+    // ==========================================================
+    // [FITUR BARU]: Instruksi Personalisasi Bebas dari User
+    // ==========================================================
+    const userCustomInstructions = user.personalContext 
+      ? `\n=========================================\nPROFIL / INSTRUKSI KHUSUS DARI PENGGUNA:\n"${user.personalContext}"\n(PENTING: Sesuaikan gaya bahasa dan sudut pandang jawaban Anda dengan instruksi di atas!)\n=========================================\n`
+      : "";
+
     const systemPrompt = `Anda adalah TanyaHukum, asisten hukum Indonesia yang ahli dan terpercaya.
 TUGAS ANDA: Jawab pertanyaan pengguna HANYA berdasarkan konteks hukum berikut:
 ${context}
+${userCustomInstructions}
 
 ATURAN WAJIB:
 1. Jika jawabannya tidak ada di konteks, katakan: "Maaf, berdasarkan dokumen yang saya miliki, saya tidak menemukan informasi yang cukup untuk menjawab pertanyaan ini."
