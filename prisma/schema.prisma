@@ -19,6 +19,8 @@ model User {
   resetToken       String?   @unique
   resetTokenExpiry DateTime?
   role             Role      @default(USER) // Default sebagai user biasa
+  
+  personalContext String? @db.Text // Menampung instruksi bebas/personalisasi dari user
 
   tier        Tier     @default(FREE)
   promptLimit Int      @default(50)
@@ -64,6 +66,11 @@ model Regulation {
   title       String   // Input Judul
   description String?  @db.Text // Deskripsi (Metadata)
   fileUrl     String   // URL file dari Supabase Storage / S3
+  // ✅ TAMBAHAN UNTUK SCRAPER & LOKASI FILE 47GB
+  filePath    String?  // Path lokal di folder golden-dataset
+  fileName    String?  // Nama file PDF aslinya
+  fileSize    Int?     // Ukuran file
+  isProcessed Boolean  @default(false) // Penanda sudah masuk Pinecone
   category    String?  // Contoh: "Undang-undang", "Peraturan Daerah"
   content     String?  @db.Text // Untuk ekstraksi teks (opsional)
   viewCount   Int      @default(0)
