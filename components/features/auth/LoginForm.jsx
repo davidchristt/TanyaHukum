@@ -3,27 +3,23 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { loginUser, loginWithGoogle } from "../../../src/lib/auth";
 
-export default function LoginForm() {
+export default function LoginForm({ onClose, onSwitchToRegister, onLoginSuccess }){
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const [success, setSuccess] = useState("");
-
   const togglePassword = () => {
     setShowPassword(!showPassword);
   };
 
-  // =========================
-  // ✅ GOOGLE INIT
-  // =========================
+  // GOOGLE INIT
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
@@ -32,6 +28,8 @@ export default function LoginForm() {
     document.body.appendChild(script);
 
     script.onload = () => {
+      if (!window.google) return;
+
       window.google.accounts.id.initialize({
         client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
         callback: handleGoogleCallback,
@@ -48,36 +46,42 @@ export default function LoginForm() {
     };
   }, []);
 
-  // =========================
-  // ✅ LOGIN BIASA
-  // =========================
+  const handleGoogleCallback = async (response) => {
+    try {
+      const data = await loginWithGoogle({
+        credentialToken: response.credential,
+      });
+
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // ROLE BASED REDIRECT
+      if (data.user.role === "ADMIN") {
+        router.push("/admin/dashboard");
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const handleLogin = async () => {
     setLoading(true);
     setError("");
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const data = await loginUser({ email, password });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Login gagal");
-      }
-
-      // ✅ SIMPAN SESSION
+      // ✅ simpan user
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      setSuccess("Login berhasil");
+      // 🔥 langsung update global state
+      if (onLoginSuccess) {
+        onLoginSuccess(data.user);
+      }
 
-      setTimeout(() => {
-        router.push("/chatbot");
-      }, 1500);
+      onClose();
+
+      // optional (biar sync ke tempat lain)
+      window.dispatchEvent(new Event("auth-change"));
 
     } catch (err) {
       setError(err.message);
@@ -86,52 +90,20 @@ export default function LoginForm() {
     }
   };
 
-  // =========================
-  // ✅ GOOGLE CALLBACK
-  // =========================
-  const handleGoogleCallback = async (response) => {
-    try {
-      const res = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          credentialToken: response.credential,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Login Google gagal");
-      }
-
-      // ✅ SIMPAN SESSION
-      localStorage.setItem("user", JSON.stringify(data.user));
-
-      setSuccess("Login Google berhasil");
-
-      setTimeout(() => {
-        router.push("/chatbot");
-      }, 1500);
-
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
   return (
-    <>
-      {/* Toast */}
-      {success && (
-        <div className="fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
-          {success}
-        </div>
-      )}
+    <div className="fixed inset-0 bg-black/5 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="relative w-full max-w-md bg-white p-10 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
 
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
-        <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
+        {/* CLOSE */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-[#2f6fed] hover:text-white 
+          hover:bg-[#2f6fed] transition p-2 rounded-full"
+        >
+          ✕
+        </button>
+
+        <h2 className="text-2xl font-semibold text-center text-gray-900 mb-8">
           Masuk ke Akun Anda
         </h2>
 
@@ -145,20 +117,19 @@ export default function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg 
-              text-gray-800 placeholder-gray-400
-              focus:outline-none focus:ring-2 focus:ring-blue-400"
+              focus:outline-none focus:ring-2 focus:ring-[#2f6fed]"
             />
           </div>
 
           {/* Password */}
           <div>
-            <div className="flex justify-between items-center mb-1">
+            <div className="flex justify-between mb-1">
               <label className="text-sm text-gray-600">Kata Sandi</label>
               <span
                 onClick={() => router.push("/reset-password")}
-                className="text-sm text-blue-500 cursor-pointer"
+                className="text-sm text-[#2f6fed] cursor-pointer"
               >
-                Lupa Kata Sandi ?
+                Lupa Kata Sandi?
               </span>
             </div>
 
@@ -169,8 +140,7 @@ export default function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg 
-                text-gray-800 placeholder-gray-400
-                focus:outline-none focus:ring-2 focus:ring-blue-400"
+                focus:outline-none focus:ring-2 focus:ring-[#2f6fed]"
               />
 
               <span
@@ -183,7 +153,7 @@ export default function LoginForm() {
                       ? "/icons/mataPW.svg"
                       : "/icons/tutupMata.svg"
                   }
-                  alt="toggle password"
+                  alt="toggle"
                   className="w-5 h-5"
                 />
               </span>
@@ -191,18 +161,16 @@ export default function LoginForm() {
           </div>
 
           {/* Error */}
-          {error && (
-            <p className="text-red-500 text-sm">{error}</p>
-          )}
+          {error && <p className="text-red-500 text-sm">{error}</p>}
 
-          {/* Login */}
+          {/* Button */}
           <button
             onClick={handleLogin}
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 transition 
-            text-white py-2.5 rounded-lg font-medium shadow-md"
+            className="w-full bg-[#2f6fed] hover:bg-[#255cd6] transition 
+            text-white py-3 rounded-lg font-medium shadow-md"
           >
-            {loading ? "Loading..." : "Masuk Sekarang"}
+            {loading ? "Loading..." : "Masuk"}
           </button>
 
           {/* Google */}
@@ -211,12 +179,15 @@ export default function LoginForm() {
           {/* Register */}
           <p className="text-center text-sm text-gray-500">
             Belum Punya Akun?{" "}
-            <Link href="/register" className="text-blue-600">
-              Daftar Sekarang
-            </Link>
+          <span
+            onClick={onSwitchToRegister}
+            className="text-[#2f6fed] cursor-pointer"
+          >
+            Daftar Sekarang
+          </span>
           </p>
         </div>
       </div>
-    </>
+    </div>
   );
 }
