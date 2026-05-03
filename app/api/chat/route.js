@@ -152,3 +152,42 @@ ATURAN WAJIB:
     );
   }
 }
+
+// ==========================================================
+// [FITUR BARU]: GET Endpoint untuk Mengambil History Chat
+// ==========================================================
+export async function GET(req) {
+  try {
+    // 1. Ambil userId dari URL parameter (misal: /api/chat?userId=123...)
+    // Catatan: Karena GET tidak punya 'body', kita ambil dari URL.
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized. Identitas pengguna tidak ditemukan." },
+        { status: 401 }
+      );
+    }
+
+    // 2. Tarik data dari database
+    const history = await prisma.chatHistory.findMany({
+      where: { 
+        userId: userId 
+      },
+      orderBy: { 
+        createdAt: "asc" // 'asc' agar chat lama di atas, chat baru di bawah (seperti WhatsApp)
+      },
+    });
+
+    // 3. Kembalikan ke Frontend
+    return NextResponse.json({ history });
+
+  } catch (error) {
+    console.error("API Get History Error:", error);
+    return NextResponse.json(
+      { error: "Terjadi kesalahan saat mengambil riwayat chat." },
+      { status: 500 }
+    );
+  }
+}
