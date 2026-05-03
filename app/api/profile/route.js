@@ -27,6 +27,7 @@ export async function GET(request) {
         avatarUrl: true,
         tier: true,
         promptLimit: true,
+        personalContext: true,
       },
     });
 
@@ -64,7 +65,7 @@ export async function PATCH(request) {
     const payload = await verifyToken(token);
 
     const body = await request.json();
-    const { name, email, newPassword, avatarUrl } = body;
+    const { name, email, newPassword, avatarUrl, personalContext } = body;
 
     const existingUser = await prisma.user.findUnique({
       where: { id: payload.userId },
@@ -105,6 +106,10 @@ export async function PATCH(request) {
 
       const salt = await bcrypt.genSalt(10);
       updateData.passwordHash = await bcrypt.hash(newPassword, salt);
+    }
+
+    if (personalContext !== undefined) {
+      updateData.personalContext = personalContext; 
     }
 
     if (Object.keys(updateData).length === 0) {
