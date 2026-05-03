@@ -28,7 +28,7 @@
     "cheerio": "^1.2.0",
     "dotenv": "^17.3.1",
     "google-auth-library": "^10.6.2",
-    "jose": "^6.2.2",
+    "jose": "^6.2.3",
     "jsonwebtoken": "^9.0.3",
     "langchain": "^1.2.35",
     "llama-cloud-services": "^0.5.4",

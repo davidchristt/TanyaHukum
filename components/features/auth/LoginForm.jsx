@@ -46,7 +46,7 @@ export default function LoginForm({ onClose, onSwitchToRegister, onLoginSuccess 
     };
   }, []);
 
-  const handleGoogleCallback = async (response) => {
+const handleGoogleCallback = async (response) => {
     try {
       const data = await loginWithGoogle({
         credentialToken: response.credential,
@@ -56,8 +56,15 @@ export default function LoginForm({ onClose, onSwitchToRegister, onLoginSuccess 
 
       // ROLE BASED REDIRECT
       if (data.user.role === "ADMIN") {
-        router.push("/admin/dashboard");
+        router.push("/admin"); // Pastikan ini mengarah ke URL admin yang benar
+      } else {
+        if (onLoginSuccess) {
+          onLoginSuccess(data.user);
+        }
+        if (onClose) onClose();
       }
+      
+      window.dispatchEvent(new Event("auth-change"));
     } catch (err) {
       setError(err.message);
     }
@@ -70,15 +77,20 @@ export default function LoginForm({ onClose, onSwitchToRegister, onLoginSuccess 
     try {
       const data = await loginUser({ email, password });
 
-      // ✅ simpan user
+      // Simpan user
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      // 🔥 langsung update global state
-      if (onLoginSuccess) {
-        onLoginSuccess(data.user);
+      // LOGIKA PEMBAGIAN JALUR (ROLE)
+      if (data.user.role === "ADMIN") {
+        // Jika admin, langsung pindahkan ke halaman dashboard admin
+        router.push("/admin"); 
+      } else {
+        // Jika user biasa, jalankan fungsi sukses dan tutup pop-up modal
+        if (onLoginSuccess) {
+          onLoginSuccess(data.user);
+        }
+        if (onClose) onClose();
       }
-
-      onClose();
 
       // optional (biar sync ke tempat lain)
       window.dispatchEvent(new Event("auth-change"));
