@@ -54,11 +54,11 @@ export async function PATCH(request, { params }) {
     const updatedUser = await prisma.user.update({
       where: { id: id },
       data: {
-        // Kita hanya mengambil field yang diizinkan diupdate oleh admin
         role: body.role,
         tier: body.tier,
         promptLimit: body.promptLimit,
-        email: body.email, // Opsional, jika admin boleh ganti email user
+        email: body.email, 
+        name: body.name, // PERBAIKAN: Tambahkan ini agar nama bisa diedit!
       },
     });
 

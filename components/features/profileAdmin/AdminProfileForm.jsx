@@ -1,51 +1,94 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function AdminProfileForm() {
+export default function AdminProfileForm({ userData, updateLocalUser }) {
   const [showPassword, setShowPassword] = useState(false);
   const togglePassword = () => setShowPassword(!showPassword);
 
   const [formData, setFormData] = useState({
-    nama: "Admin Superuser",
-    email: "admin@tanyahukum.com",
+    nama: "",
+    email: "",
     password: "", 
   });
 
-  // State khusus untuk menampung pesan error per kolom
   const [errors, setErrors] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSubmit = () => {
+  // Otomatis mengisi form dengan data yang ditarik dari page.js
+  useEffect(() => {
+    setFormData({
+      nama: userData.nama || "",
+      email: userData.email || "",
+      password: ""
+    });
+  }, [userData]);
+
+  const handleSubmit = async () => {
     const newErrors = {};
 
-    // 1. Validasi Nama
-    if (!formData.nama.trim()) {
-      newErrors.nama = "Nama tidak boleh kosong!";
-    }
-
-    // 2. Validasi Email
+    if (!formData.nama.trim()) newErrors.nama = "Nama tidak boleh kosong!";
+    
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim()) {
       newErrors.email = "Email tidak boleh kosong!";
     } else if (!emailPattern.test(formData.email)) {
-      newErrors.email = "Format email tidak valid! (Contoh: admin@mail.com)";
+      newErrors.email = "Format email tidak valid!";
     }
 
-    // 3. Validasi Password
-    if (formData.password && formData.password.length < 6) {
-      newErrors.password = "Kata sandi minimal 6 karakter!";
+    if (formData.password && formData.password.length < 8) {
+      newErrors.password = "Kata sandi minimal 8 karakter!";
     }
 
-    // Jika ada error, simpan ke state dan hentikan proses
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    // Lolos semua validasi
-    setErrors({}); // Bersihkan error sebelumnya
-    alert("Berhasil! Profil Anda telah diperbarui."); // Boleh diganti Toast/Notifikasi nanti
-    setFormData({ ...formData, password: "" });
+    setErrors({});
+    setIsSaving(true);
+
+    try {
+      // Susun data yang mau dikirim ke Database
+      const payload = {
+        name: formData.nama,
+        email: formData.email,
+        role: userData.role
+      };
+      
+      // Kirim password HANYA jika diketik (mau diubah)
+      if (formData.password) {
+        payload.password = formData.password;
+      }
+
+      const response = await fetch(`/api/admin/users/${userData.id}`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${userData.id}`
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        // Update tampilan dan localStorage setelah sukses
+        updateLocalUser({
+          nama: formData.nama,
+          name: formData.nama,
+          email: formData.email
+        });
+        
+        alert("Berhasil! Profil Anda telah diperbarui di database.");
+        setFormData({ ...formData, password: "" }); // Kosongkan form password lagi
+      } else {
+        alert("Gagal memperbarui profil. Email mungkin sudah dipakai.");
+      }
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      alert("Terjadi kesalahan pada server.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -54,7 +97,6 @@ export default function AdminProfileForm() {
         Pengaturan Akun
       </h2>
 
-      {/* ===== NAMA ===== */}
       <div>
         <label className="text-sm font-medium text-gray-700">Nama</label>
         <input
@@ -62,18 +104,16 @@ export default function AdminProfileForm() {
           value={formData.nama}
           onChange={(e) => {
             setFormData({ ...formData, nama: e.target.value });
-            if (errors.nama) setErrors({ ...errors, nama: null }); // Hilangkan error saat ngetik
+            if (errors.nama) setErrors({ ...errors, nama: null });
           }}
           placeholder="Masukkan nama lengkap"
           className={`w-full mt-1.5 px-4 py-2 border rounded-lg text-gray-900 placeholder-gray-400 outline-none focus:ring-2 transition ${
             errors.nama ? "border-red-500 focus:ring-red-400 bg-red-50/50" : "border-blue-200 focus:ring-blue-400"
           }`}
         />
-        {/* Teks Error Merah */}
         {errors.nama && <p className="text-xs text-red-500 mt-1">{errors.nama}</p>}
       </div>
 
-      {/* ===== EMAIL ===== */}
       <div>
         <label className="text-sm font-medium text-gray-700">Email</label>
         <input
@@ -91,7 +131,6 @@ export default function AdminProfileForm() {
         {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
       </div>
 
-      {/* ===== PASSWORD ===== */}
       <div>
         <label className="text-sm font-medium text-gray-700">Ganti Kata Sandi (Opsional)</label>
         <div className="relative mt-1.5">
@@ -102,6 +141,7 @@ export default function AdminProfileForm() {
               setFormData({ ...formData, password: e.target.value });
               if (errors.password) setErrors({ ...errors, password: null });
             }}
+            autoComplete="new-password"
             placeholder="Biarkan kosong jika tidak ingin ganti sandi"
             className={`w-full px-4 py-2 border rounded-lg text-gray-900 placeholder-gray-400 outline-none focus:ring-2 transition ${
               errors.password ? "border-red-500 focus:ring-red-400 bg-red-50/50" : "border-blue-200 focus:ring-blue-400"
@@ -111,19 +151,21 @@ export default function AdminProfileForm() {
             onClick={togglePassword}
             className="absolute right-3 top-2.5 cursor-pointer p-1 hover:bg-gray-100 rounded-full transition"
           >
-            <img src={showPassword ? "/icons/mataPW.svg" : "/icons/tutupMata.svg"} alt="toggle" className="w-5 h-5 opacity-70 hover:opacity-100" />
+            <img src={showPassword ? "/icons/mataPW.svg" : "/icons/mataKetutup.svg"} alt="toggle" className="w-5 h-5 opacity-70 hover:opacity-100" />
           </span>
         </div>
         {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
       </div>
 
-      {/* BUTTON */}
       <div className="pt-2">
         <button 
           onClick={handleSubmit}
-          className="w-full py-3 bg-[#1e75ff] text-white font-semibold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition"
+          disabled={isSaving}
+          className={`w-full py-3 text-white font-semibold rounded-xl shadow-lg transition ${
+            isSaving ? "bg-gray-400 cursor-not-allowed" : "bg-[#1e75ff] hover:bg-blue-700 shadow-blue-200"
+          }`}
         >
-          Simpan Perubahan
+          {isSaving ? "Menyimpan ke Database..." : "Simpan Perubahan"}
         </button>
       </div>
     </div>
