@@ -1,49 +1,71 @@
-// app/api/dashboard/stats/route.js
-
 import { NextResponse } from "next/server";
 import prisma from '@/lib/prisma';
 import { Prisma } from "@prisma/client";
 
-// WARNING: REMOVE BEFORE PRODUCTION - replace with real DB queries
-const PLACEHOLDER_DATA = {
-  dokumen_terpopuler: [
-    { name: "UU ITE", views: 400 },
-    { name: "KUHP", views: 300 },
-    { name: "UU Cipta Kerja", views: 200 }
-  ],
-  isu_terkini: [
-    {
-      id: "1",
-      title: "Maling Helm di unpad",
-      description: "Pelaku kabur ke Pangdam",
-      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: "2",
-      title: "Aksi demo gedung sate",
-      description: "Demo berlangsung siang hari",
-      createdAt: new Date(Date.now() - 11 * 60 * 60 * 1000).toISOString(),
-    },
-    {
-      id: "3",
-      title: "Begal di jatinangor",
-      description: "Pelaku kabur lewat gang",
-      createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-    }
-  ],
-  tren_pencarian: [
-    { date: "2026-04-01", searches: 120 },
-    { date: "2026-04-02", searches: 150 },
-    { date: "2026-04-03", searches: 180 }
-  ]
-};
-
 export async function GET() {
   try {
-    const [totalUsers, totalInteractions] = await Promise.all([
+    // 1. Tarik Data Utama (Sama seperti sebelumnya)
+    const [
+      totalUsers, 
+      totalInteractions, 
+      totalRegulations,
+      popularDocsData,
+      trendingIssuesData
+    ] = await Promise.all([
       prisma.user.count(),
-      prisma.chatHistory.count()
+      prisma.chatHistory.count(),
+      prisma.regulation.count(),
+      
+      prisma.regulation.findMany({
+        orderBy: { viewCount: 'desc' },
+        take: 3,
+        select: { title: true, viewCount: true }
+      }),
+      
+      prisma.trendingIssue.findMany({
+        orderBy: { publishDate: 'desc' },
+        take: 3
+      })
     ]);
+
+    // 2. Tarik & Rekap Data Tren Pencarian per Hari
+    // Menggunakan fitur groupBy milik Prisma
+    const searchTrendsRaw = await prisma.searchLog.groupBy({
+      by: ['createdAt'], // Kelompokkan berdasarkan waktu
+      _count: {
+        id: true, // Hitung jumlah ID per waktu
+      },
+      orderBy: {
+        createdAt: 'asc', // Urutkan dari yang terlama ke terbaru (untuk grafik)
+      },
+      take: 30 // Ambil maksimal 30 hari terakhir biar grafik nggak kepanjangan
+    });
+
+    // Karena Prisma mengelompokkan berdasarkan waktu persis (jam/menit/detik), 
+    // kita harus merapikannya dengan JavaScript agar murni dikelompokkan per "Tanggal" (YYYY-MM-DD).
+    const trendMap = {};
+    searchTrendsRaw.forEach((log) => {
+      // Ambil format YYYY-MM-DD
+      const dateKey = log.createdAt.toISOString().split('T')[0]; 
+      
+      if (trendMap[dateKey]) {
+        trendMap[dateKey] += log._count.id;
+      } else {
+        trendMap[dateKey] = log._count.id;
+      }
+    });
+
+    // Ubah Object map tadi menjadi Array agar disukai oleh grafik Frontend bos
+    const formattedSearchTrends = Object.keys(trendMap).map((date) => ({
+      date: date,
+      searches: trendMap[date]
+    }));
+
+    // 3. Format Data untuk Frontend
+    const formattedPopularDocs = popularDocsData.map(doc => ({
+      name: doc.title,
+      views: doc.viewCount || 0
+    }));
 
     const isDev = process.env.NODE_ENV === "development";
 
@@ -52,28 +74,28 @@ export async function GET() {
       data: {
         summary: {
           total_regulasi: {
-            value: 100, // TODO: Ganti dengan prisma.regulation.count()
-            growth: null, // TODO: Hitung dari data historis
-            ...(isDev && { _note: "Not implemented yet" })
+            value: totalRegulations,
+            growth: null,
+            ...(isDev && { _note: "Growth belum dihitung" })
           },
           pengguna_aktif: {
             value: totalUsers,
             growth: null,
-            ...(isDev && { _note: "Growth belum dihitung" })
           },
           interaksi_harian: {
             value: totalInteractions,
             growth: null,
-            ...(isDev && { _note: "Growth belum dihitung" })
           }
         },
-        ...PLACEHOLDER_DATA // ← di-spread di sini
+        dokumen_terpopuler: formattedPopularDocs,
+        isu_terkini: trendingIssuesData,
+        tren_pencarian: formattedSearchTrends // <-- BOOM! Sekarang datanya 100% dari tabel SearchLog!
       }
     };
 
     return NextResponse.json(responseData, {
       status: 200,
-      headers: { "Cache-Control": "s-maxage=60, stale-while-revalidate=300" }
+      headers: { "Cache-Control": "no-store" } 
     });
 
   } catch (error) {

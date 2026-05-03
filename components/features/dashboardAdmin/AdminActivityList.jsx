@@ -8,6 +8,9 @@ export default function AdminActivityList() {
   const [data, setData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // <-- TAMBAHAN: State untuk pop-up konfirmasi hapus
+  const [issueToDelete, setIssueToDelete] = useState(null);
 
   // Fungsi praktis untuk membuat ID Card (Header + Token)
   const getAuthHeaders = () => {
@@ -45,7 +48,7 @@ export default function AdminActivityList() {
           return {
             id: item.id,
             title: item.title,
-            desc: item.description, // Menyesuaikan nama dari database (description -> desc)
+            desc: item.description,
             time: timeStr
           };
         });
@@ -64,11 +67,16 @@ export default function AdminActivityList() {
     fetchIssues();
   }, []);
 
-  // 2. DELETE: Hapus isu secara permanen
-  const handleDelete = async (id) => {
-    // Trik UI: Hapus dari layar dulu biar kerasa cepat (Optimistic UI)
+  // 2. DELETE: Eksekusi hapus yang dipanggil DARI POP-UP
+  const executeDelete = async () => {
+    if (!issueToDelete) return;
+
+    const id = issueToDelete.id;
     const previousData = [...data];
+    
+    // Trik UI: Hapus dari layar dulu biar kerasa cepat (Optimistic UI)
     setData(data.filter((item) => item.id !== id));
+    setIssueToDelete(null); // Langsung tutup pop-up konfirmasi
     
     try {
       const response = await fetch(`/api/admin/trending/${id}`, {
@@ -94,8 +102,8 @@ export default function AdminActivityList() {
         credentials: 'include',
         body: JSON.stringify({
           title: newIssue.title,
-          description: newIssue.desc, // Frontend pakai 'desc', backend pakai 'description'
-          newsLink: newIssue.link     // Frontend pakai 'link', backend pakai 'newsLink'
+          description: newIssue.desc, 
+          newsLink: newIssue.link     
         })
       });
 
@@ -112,7 +120,7 @@ export default function AdminActivityList() {
   };
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 h-full flex flex-col">
+    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 h-full flex flex-col relative">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-800">
           Isu Terkini
@@ -134,7 +142,8 @@ export default function AdminActivityList() {
             <AdminActivityItem
               key={item.id}
               item={item}
-              onDelete={() => handleDelete(item.id)}
+              // <-- PERUBAHAN: Buka pop-up dan kirim data isu, JANGAN langsung hapus
+              onDelete={() => setIssueToDelete(item)} 
             />
           ))
         ) : (
@@ -142,11 +151,50 @@ export default function AdminActivityList() {
         )}
       </div>
 
+      {/* RENDER MODAL TAMBAH ISU */}
       {isModalOpen && (
         <AdminIssueModal 
           onClose={() => setIsModalOpen(false)} 
           onSave={handleAdd} 
         />
+      )}
+
+      {/* RENDER MODAL KONFIRMASI HAPUS (TAMBAHAN BARU) */}
+      {issueToDelete && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/20 backdrop-blur-sm">
+          <div className="bg-white p-8 rounded-2xl shadow-xl w-[400px] text-center transform transition-all">
+            
+            {/* Ikon Peringatan (SEKARANG PAKAI IKON BIRU ASLI BOS!) */}
+            <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-5 border border-blue-100">
+              <img src="/icons/hapus.svg" alt="Hapus" className="w-8 h-8" />
+            </div>
+            
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Hapus Isu Terkini?</h2>
+            
+            <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+              Apakah Anda yakin ingin menghapus <br />
+              <span className="font-semibold text-gray-800">"{issueToDelete.title}"</span>?<br />
+              Tindakan ini tidak dapat dibatalkan.
+            </p>
+            
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setIssueToDelete(null)}
+                className="flex-1 bg-gray-100 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-200 transition"
+              >
+                Batal
+              </button>
+              {/* Tombol eksekusi tetap merah sebagai standar keamanan UX untuk peringatan "Hapus" */}
+              <button 
+                onClick={executeDelete}
+                className="flex-1 bg-red-500 text-white font-semibold py-3 rounded-xl hover:bg-red-600 transition shadow-lg shadow-red-200"
+              >
+                Ya, Hapus
+              </button>
+            </div>
+
+          </div>
+        </div>
       )}
     </div>
   );

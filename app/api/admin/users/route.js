@@ -11,18 +11,19 @@ export async function GET() {
     const users = await prisma.user.findMany({
         select: {
           id: true,
+          name: true,        // <-- TAMBAHAN INI BOS! Biar namanya ikut dikirim ke Frontend!
           email: true,
-          role: true,        // Penting untuk admin
-          tier: true,        // Memantau status langganan
-          promptLimit: true,  // Memantau kuota user
+          role: true,        
+          tier: true,        
+          promptLimit: true,  
           createdAt: true,
         },
         orderBy: {
-          createdAt: 'desc', // User terbaru di atas
+          createdAt: 'desc', 
         },
     });
 
-    console.log("Data user berhasil diambil:", users.length, "orang"); // Muncul di terminal
+    console.log("Data user berhasil diambil:", users.length, "orang"); 
     return NextResponse.json(users, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: "Gagal mengambil data" }, { status: 500 });
@@ -32,33 +33,32 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { email, password, role, tier, promptLimit } = body;
+    // PERBAIKAN: Tambahkan 'name' ke dalam destructuring
+    const { email, password, role, tier, promptLimit, name } = body; 
 
-    // 1. Validasi input sederhana
     if (!email || !password) {
       return NextResponse.json({ error: "Email dan Password wajib diisi" }, { status: 400 });
     }
 
-    // 2. Hash password (jangan simpan plain text!)
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. Simpan ke Database
     const newUser = await prisma.user.create({
       data: {
         email,
-        passwordHash: hashedPassword, // Sesuaikan dengan schema.prisma
+        name, // PERBAIKAN: Masukkan nama ke database
+        passwordHash: hashedPassword, 
         role: role || 'USER',
         tier: tier || 'FREE',
-        promptLimit: promptLimit || 50, // Sesuaikan default schema (50)
+        promptLimit: promptLimit || 50, 
       },
     });
 
     return NextResponse.json(newUser, { status: 201 });
   } catch (error) {
-    console.error("DEBUG ERROR:", error); // Lihat ini di terminal VSCode
+    console.error("DEBUG ERROR:", error); 
     return NextResponse.json({ 
         error: "Gagal membuat user", 
-        detail: error.message // Tambahkan ini sementara untuk debug
+        detail: error.message 
     }, { status: 500 });
   }
 }
