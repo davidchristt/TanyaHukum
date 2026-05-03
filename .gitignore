@@ -47,3 +47,7 @@ next-env.d.ts
 /app/generated/prisma
 
 /data/
+
+# Dataset & Raw Files
+golden-dataset/
+*.pdf

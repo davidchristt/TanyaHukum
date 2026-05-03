@@ -93,9 +93,18 @@ export async function POST(req) {
       .map((m, i) => `[Referensi ${i + 1}: ${m.metadata?.source || 'Dokumen'}, Hal ${m.metadata?.page || '?'}]\n${m.metadata?.text || ''}`)
       .join("\n\n---\n\n");
 
+
+    // ==========================================================
+    // [FITUR BARU]: Instruksi Personalisasi Bebas dari User
+    // ==========================================================
+    const userCustomInstructions = user.personalContext 
+      ? `\n=========================================\nPROFIL / INSTRUKSI KHUSUS DARI PENGGUNA:\n"${user.personalContext}"\n(PENTING: Sesuaikan gaya bahasa dan sudut pandang jawaban Anda dengan instruksi di atas!)\n=========================================\n`
+      : "";
+
     const systemPrompt = `Anda adalah TanyaHukum, asisten hukum Indonesia yang ahli dan terpercaya.
 TUGAS ANDA: Jawab pertanyaan pengguna HANYA berdasarkan konteks hukum berikut:
 ${context}
+${userCustomInstructions}
 
 ATURAN WAJIB:
 1. Jika jawabannya tidak ada di konteks, katakan: "Maaf, berdasarkan dokumen yang saya miliki, saya tidak menemukan informasi yang cukup untuk menjawab pertanyaan ini."
@@ -139,6 +148,45 @@ ATURAN WAJIB:
     console.error("API Chat Error:", error);
     return NextResponse.json(
       { error: "Terjadi kesalahan pada server saat memproses pertanyaan hukum." }, 
+      { status: 500 }
+    );
+  }
+}
+
+// ==========================================================
+// [FITUR BARU]: GET Endpoint untuk Mengambil History Chat
+// ==========================================================
+export async function GET(req) {
+  try {
+    // 1. Ambil userId dari URL parameter (misal: /api/chat?userId=123...)
+    // Catatan: Karena GET tidak punya 'body', kita ambil dari URL.
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized. Identitas pengguna tidak ditemukan." },
+        { status: 401 }
+      );
+    }
+
+    // 2. Tarik data dari database
+    const history = await prisma.chatHistory.findMany({
+      where: { 
+        userId: userId 
+      },
+      orderBy: { 
+        createdAt: "asc" // 'asc' agar chat lama di atas, chat baru di bawah (seperti WhatsApp)
+      },
+    });
+
+    // 3. Kembalikan ke Frontend
+    return NextResponse.json({ history });
+
+  } catch (error) {
+    console.error("API Get History Error:", error);
+    return NextResponse.json(
+      { error: "Terjadi kesalahan saat mengambil riwayat chat." },
       { status: 500 }
     );
   }
