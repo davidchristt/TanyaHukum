@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 import SubscriptionSelect from "./SubscriptionSelect";
@@ -12,6 +12,10 @@ export default function SubscriptionList({ user, onComplete }) {
   const [selected, setSelected] = useState("basic");
   const [step, setStep] = useState("select");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Guard: prevent calling snap.pay while popup is already open
+  const isSnapOpen = useRef(false);
 
   const router = useRouter();
 
@@ -44,6 +48,9 @@ export default function SubscriptionList({ user, onComplete }) {
   // HANDLE CHECKOUT
   // =========================
   const handleCheckout = async () => {
+    // Prevent duplicate calls while Snap popup is already active
+    if (isSnapOpen.current || isLoading) return;
+
     try {
       if (!user?.id) {
         alert("User tidak ditemukan");
@@ -52,48 +59,48 @@ export default function SubscriptionList({ user, onComplete }) {
 
       if (selected !== "pro") return;
 
+      setIsLoading(true);
       const data = await createCheckout(user.id);
+      setIsLoading(false);
+
+      isSnapOpen.current = true;
 
       window.snap.pay(data.token, {
         onSuccess: function () {
+          isSnapOpen.current = false;
+
           // =========================
-          // 🔥 UPDATE USER KE PRO (INI YANG KURANG)
+          // UPDATE USER TO PRO
           // =========================
           const stored = JSON.parse(localStorage.getItem("user") || "{}");
-
-          const updatedUser = {
-            ...stored,
-            tier: "PRO",
-            promptLimit: null,
-          };
-
+          const updatedUser = { ...stored, tier: "PRO", promptLimit: null };
           localStorage.setItem("user", JSON.stringify(updatedUser));
 
-          // =========================
-          // UI FEEDBACK (TETAP PUNYA KAMU)
-          // =========================
           setShowSuccess(true);
-
           setTimeout(() => {
             setShowSuccess(false);
-
-            // refresh global UI
             window.dispatchEvent(new Event("auth-change"));
-
-            // close modal
             if (onComplete) onComplete();
           }, 2000);
         },
 
         onPending: function () {
+          isSnapOpen.current = false;
           alert("Selesaikan pembayaran Anda");
         },
 
         onError: function () {
+          isSnapOpen.current = false;
           alert("Pembayaran gagal");
+        },
+
+        onClose: function () {
+          isSnapOpen.current = false;
         },
       });
     } catch (err) {
+      isSnapOpen.current = false;
+      setIsLoading(false);
       console.error(err);
       alert("Gagal memulai pembayaran");
     }
@@ -127,11 +134,12 @@ export default function SubscriptionList({ user, onComplete }) {
           )}
 
           {step === "summary" && (
-            <SubscriptionSummary
+          <SubscriptionSummary
               user={user}
               selectedPlan={selectedPlan}
               onBack={() => setStep("select")}
               onPay={handleCheckout}
+              isLoading={isLoading}
             />
           )}
 
