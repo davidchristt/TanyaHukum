@@ -70,7 +70,9 @@ export async function POST(request) {
         passwordHash: true,
         tier: true,
         promptLimit: true,
-        role: true, // <--- TAMBAHKAN INI agar role terbaca dari DB
+        role: true,
+        name: true,      // <--- TAMBAHKAN INI
+        avatarUrl: true, // <--- TAMBAHKAN INI
       },
     });
 
@@ -105,7 +107,9 @@ export async function POST(request) {
           email: user.email,
           tier: user.tier,
           promptLimit: user.promptLimit,
-          role: user.role, // <--- Sertakan juga di sini untuk UI/State di frontend
+          role: user.role,
+          name: user.name,           // <--- TAMBAHKAN INI
+          avatarUrl: user.avatarUrl, // <--- TAMBAHKAN INI
         },
       },
       { status: 200 }

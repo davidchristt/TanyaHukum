@@ -14,11 +14,16 @@ export default function AdminProfileForm({ userData, updateLocalUser }) {
 
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+  const [toast, setToast] = useState(null); // <-- TAMBAHAN: State untuk notifikasi
 
-  // Otomatis mengisi form dengan data yang ditarik dari page.js
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   useEffect(() => {
     setFormData({
-      nama: userData.nama || "",
+      nama: userData.nama || userData.name || "",
       email: userData.email || "",
       password: ""
     });
@@ -49,14 +54,12 @@ export default function AdminProfileForm({ userData, updateLocalUser }) {
     setIsSaving(true);
 
     try {
-      // Susun data yang mau dikirim ke Database
       const payload = {
         name: formData.nama,
         email: formData.email,
         role: userData.role
       };
       
-      // Kirim password HANYA jika diketik (mau diubah)
       if (formData.password) {
         payload.password = formData.password;
       }
@@ -71,28 +74,35 @@ export default function AdminProfileForm({ userData, updateLocalUser }) {
       });
 
       if (response.ok) {
-        // Update tampilan dan localStorage setelah sukses
         updateLocalUser({
           nama: formData.nama,
           name: formData.nama,
           email: formData.email
         });
         
-        alert("Berhasil! Profil Anda telah diperbarui di database.");
-        setFormData({ ...formData, password: "" }); // Kosongkan form password lagi
+        showToast("Berhasil! Profil diperbarui.");
+        setFormData({ ...formData, password: "" }); 
       } else {
-        alert("Gagal memperbarui profil. Email mungkin sudah dipakai.");
+        showToast("Gagal! Email mungkin sudah dipakai.", "error");
       }
     } catch (error) {
       console.error("Error saving profile:", error);
-      alert("Terjadi kesalahan pada server.");
+      showToast("Terjadi kesalahan pada server.", "error");
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-md space-y-4">
+    <div className="bg-white rounded-2xl p-6 shadow-md space-y-4 relative">
+      
+      {/* Notifikasi Cantik (Muncul di tengah atas Form) */}
+      {toast && (
+        <div className={`absolute -top-6 left-1/2 -translate-x-1/2 z-10 px-4 py-2 rounded-lg shadow-lg text-sm font-medium text-white transition-all duration-300 ${toast.type === 'error' ? 'bg-red-500' : 'bg-green-500'}`}>
+          {toast.message}
+        </div>
+      )}
+
       <h2 className="text-xl font-semibold text-gray-800 mb-2">
         Pengaturan Akun
       </h2>
