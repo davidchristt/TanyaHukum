@@ -1,94 +1,90 @@
 // ==============================
-// STORAGE KEY
+// STORAGE KEY (Legacy & Session)
 // ==============================
-const KEY = "conversations";
 const ACTIVE_KEY = "active_conversation_id";
 
 // ==============================
-// GET ALL
+// GET ALL CHATS (BACKEND)
 // ==============================
-export function getConversations() {
-  return JSON.parse(localStorage.getItem(KEY) || "[]");
+export async function getConversations(userId) {
+  if (!userId) return [];
+  const res = await fetch(`/api/chat?userId=${userId}&type=list`);
+  const data = await res.json();
+  return data.chats || [];
 }
 
 // ==============================
-// SAVE ALL
-// ==============================
-function saveConversations(convs) {
-  localStorage.setItem(KEY, JSON.stringify(convs));
-}
-
-// ==============================
-// CREATE NEW CONVERSATION
+// CREATE NEW CONVERSATION (LOCAL RESET)
 // ==============================
 export function createNewConversation() {
-  const convs = getConversations();
-
-  const newConv = {
-    id: Date.now().toString(),
-    title: "Obrolan Baru",
-    messages: [],
-    createdAt: Date.now(),
-  };
-
-  convs.push(newConv);
-  saveConversations(convs);
-
-  localStorage.setItem(ACTIVE_KEY, newConv.id);
-
-  return newConv;
+  localStorage.removeItem(ACTIVE_KEY);
+  window.dispatchEvent(new Event("load-conversation"));
+  return { id: null };
 }
 
 // ==============================
-// GET CURRENT
+// GET CURRENT ACTIVE ID
 // ==============================
-export function getCurrentConversation() {
-  const convs = getConversations();
-  const activeId = localStorage.getItem(ACTIVE_KEY);
-
-  return convs.find((c) => c.id === activeId) || null;
+export function getCurrentConversationId() {
+  return localStorage.getItem(ACTIVE_KEY);
 }
 
 // ==============================
 // SET ACTIVE
 // ==============================
 export function setActiveConversation(id) {
-  localStorage.setItem(ACTIVE_KEY, id);
+  if (id) {
+    localStorage.setItem(ACTIVE_KEY, id);
+  } else {
+    localStorage.removeItem(ACTIVE_KEY);
+  }
 }
 
 // ==============================
-// ADD MESSAGE
+// GET MESSAGES FOR CHAT (BACKEND)
 // ==============================
-export function addMessage(message) {
-  const convs = getConversations();
-  const activeId = localStorage.getItem(ACTIVE_KEY);
+export async function getChatMessages(userId, chatId) {
+  if (!userId || !chatId) return [];
+  const res = await fetch(`/api/chat?userId=${userId}&chatId=${chatId}`);
+  const data = await res.json();
+  return (data.history || []).map(m => ({
+    role: m.role.toLowerCase() === "ai" ? "assistant" : "user",
+    content: m.content
+  }));
+}
 
-  const conv = convs.find((c) => c.id === activeId);
-  if (!conv) return;
+// ==============================
+// RENAME CHAT (BACKEND)
+// ==============================
+export async function renameChat(chatId, title) {
+  const res = await fetch("/api/chat", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chatId, title }),
+  });
+  return await res.json();
+}
 
-  conv.messages.push(message);
-
-  // auto title dari message pertama
-  if (conv.messages.length === 1) {
-    conv.title = message.content.slice(0, 40);
-  }
-
-  saveConversations(convs);
-
-  // trigger sync
-  window.dispatchEvent(new Event("storage"));
+// ==============================
+// DELETE CHAT (BACKEND)
+// ==============================
+export async function deleteChat(chatId) {
+  const res = await fetch(`/api/chat?chatId=${chatId}`, {
+    method: "DELETE",
+  });
+  return await res.json();
 }
 
 // ==============================
 // SEND MESSAGE (API)
 // ==============================
-export async function sendMessage({ message, userId }) {
+export async function sendMessage({ message, userId, chatId }) {
   const res = await fetch("/api/chat", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ message, userId }),
+    body: JSON.stringify({ message, userId, chatId }),
   });
 
   const data = await res.json();

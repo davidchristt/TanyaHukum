@@ -1,6 +1,7 @@
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
+import AnimatedBackground from "@/components/shared/AnimatedBackground";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -15,7 +16,8 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="id">
-      <body className={`${poppins.className} bg-[#eaf1fb]`}>
+      <body className={`${poppins.className} bg-white`}>
+        <AnimatedBackground />
 
         {/* ⬇️ WAJIB DI DALAM BODY */}
         <Script
@@ -24,7 +26,7 @@ export default function RootLayout({ children }) {
           strategy="afterInteractive"
         />
 
-        <main className="app-container">
+        <main className="relative z-10">
           {children}
         </main>
 

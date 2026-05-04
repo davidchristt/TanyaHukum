@@ -16,9 +16,16 @@ import { cookies } from 'next/headers'
 export async function createClient() {
   const cookieStore = await cookies()
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Supabase URL and Anon Key are missing in environment variables.");
+  }
+
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         getAll() {
@@ -33,6 +40,33 @@ export async function createClient() {
             // Abaikan jika dipanggil dari Server Component
           }
         },
+      },
+    }
+  )
+}
+
+/**
+ * createAdminClient
+ * ----------------
+ * Gunakan ini HANYA di sisi server (Route Handlers / Server Actions).
+ * Menggunakan SERVICE_ROLE_KEY untuk bypass RLS.
+ */
+export async function createAdminClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  // Fallback ke ANON_KEY jika SERVICE_ROLE_KEY tidak diset (meski mungkin kena RLS)
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Supabase URL or Key is missing in environment variables.");
+  }
+
+  return createServerClient(
+    supabaseUrl,
+    supabaseKey,
+    {
+      cookies: {
+        getAll: () => [],
+        setAll: () => {},
       },
     }
   )

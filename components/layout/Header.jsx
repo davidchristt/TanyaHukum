@@ -86,16 +86,16 @@ export default function Header({ onOpenSubscription, onOpenAuth }) {
           <>
             <button
               onClick={() => handleOpenAuth("login")}
-              className="text-sm px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              className="text-sm font-bold text-gray-600 hover:text-[#2f6fed] transition-colors px-2"
             >
-              Login
+              Masuk
             </button>
 
             <button
               onClick={() => handleOpenAuth("register")}
-              className="text-sm px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="text-sm px-6 py-2 bg-[#2f6fed] hover:bg-[#255cd6] text-white rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-[0.98] font-bold"
             >
-              Register
+              Daftar
             </button>
           </>
         )}
