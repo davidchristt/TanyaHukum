@@ -40,7 +40,7 @@ export default function LoginForm({ onClose, onSwitchToRegister, onLoginSuccess 
         {
           theme: "outline",
           size: "large",
-          width: "100%",
+          width: "300",
         }
       );
     };
@@ -52,14 +52,24 @@ const handleGoogleCallback = async (response) => {
         credentialToken: response.credential,
       });
 
-      localStorage.setItem("user", JSON.stringify(data.user));
+      // --- PERBAIKAN DI SINI JUGA ---
+      const userToSave = {
+        id: data.user.id,
+        email: data.user.email,
+        role: data.user.role,
+        tier: data.user.tier,
+        promptLimit: data.user.promptLimit,
+        nama: data.user.name || data.user.nama || "", 
+        avatarUrl: data.user.avatarUrl || "",         
+      };
 
-      // ROLE BASED REDIRECT
+      localStorage.setItem("user", JSON.stringify(userToSave));
+
       if (data.user.role === "ADMIN") {
-        router.push("/admin"); // Pastikan ini mengarah ke URL admin yang benar
+        router.push("/admin"); 
       } else {
         if (onLoginSuccess) {
-          onLoginSuccess(data.user);
+          onLoginSuccess(userToSave);
         }
         if (onClose) onClose();
       }
@@ -77,22 +87,32 @@ const handleGoogleCallback = async (response) => {
     try {
       const data = await loginUser({ email, password });
 
-      // Simpan user
-      localStorage.setItem("user", JSON.stringify(data.user));
+      // --- PERBAIKAN DI SINI ---
+      // Pastikan SEMUA data dari response API (termasuk name & avatarUrl) disimpan
+      const userToSave = {
+        id: data.user.id,
+        email: data.user.email,
+        role: data.user.role,
+        tier: data.user.tier,
+        promptLimit: data.user.promptLimit,
+        nama: data.user.name || data.user.nama || "", // Handle "nama" atau "name"
+        avatarUrl: data.user.avatarUrl || "",         // Ambil avatarUrl-nya
+      };
+
+      // Simpan user lengkap ke localStorage
+      localStorage.setItem("user", JSON.stringify(userToSave));
 
       // LOGIKA PEMBAGIAN JALUR (ROLE)
       if (data.user.role === "ADMIN") {
-        // Jika admin, langsung pindahkan ke halaman dashboard admin
         router.push("/admin"); 
       } else {
-        // Jika user biasa, jalankan fungsi sukses dan tutup pop-up modal
         if (onLoginSuccess) {
-          onLoginSuccess(data.user);
+          // Kirim data user yang lengkap juga ke function prop
+          onLoginSuccess(userToSave); 
         }
         if (onClose) onClose();
       }
 
-      // optional (biar sync ke tempat lain)
       window.dispatchEvent(new Event("auth-change"));
 
     } catch (err) {

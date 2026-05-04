@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
+import { useState, useEffect } from "react"; // <-- WAJIB TAMBAH INI
 
 /* ===== MENU CONFIG ===== */
 const MENU_ADMIN = [
@@ -24,6 +25,23 @@ const MENU_ADMIN = [
 export default function AdminSidebar({ isOpen, setIsOpen }) {
   const router = useRouter();
   const pathname = usePathname();
+  
+  // <-- STATE UNTUK MENYIMPAN USER -->
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      setUser(JSON.parse(stored));
+    }
+
+    const handleStorageChange = () => {
+      const updatedUser = localStorage.getItem("user");
+      if (updatedUser) setUser(JSON.parse(updatedUser));
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   return (
     <div
@@ -93,11 +111,19 @@ export default function AdminSidebar({ isOpen, setIsOpen }) {
           isOpen ? "gap-3 px-2" : "justify-center"
         } cursor-pointer hover:bg-blue-50 rounded-xl p-2 transition`}
       >
-        <img src="/icons/profile.svg" className="w-9 h-9" />
+        {/* Dinamis cek foto profil */}
+        <img 
+          src={user?.avatarUrl || "/icons/profile.svg"} 
+          className={`w-9 h-9 shrink-0 ${user?.avatarUrl ? "rounded-full object-cover" : "object-contain opacity-60"}`} 
+          alt="Profile"
+        />
 
         {isOpen && (
-          <div>
-            <p className="text-sm font-medium text-gray-900">Admin</p>
+          <div className="overflow-hidden">
+            {/* Dinamis cek nama */}
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {user?.nama || user?.name || "Admin"}
+            </p>
             <p className="text-xs text-gray-500">Superuser</p>
           </div>
         )}

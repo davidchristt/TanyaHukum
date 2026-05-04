@@ -40,7 +40,8 @@ export default function RegisterForm({ onClose, onSwitchToLogin }) {
         {
           theme: "outline",
           size: "large",
-          width: "100%",
+          width: "300",
+          text: "signup_with", // <--- TAMBAHKAN BARIS INI BOS!
         }
       );
     };
