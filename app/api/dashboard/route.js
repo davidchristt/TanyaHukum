@@ -4,17 +4,47 @@ import { Prisma } from "@prisma/client";
 
 export async function GET() {
     try {
+
+        // --- KODE INI BUAT BIKIN BATAS WAKTU HARI INI ---
+        // 1. Dapatkan tanggal hari ini (YYYY-MM-DD) versi waktu Indonesia (+7 jam)
+        const now = new Date();
+        const wibDateString = new Date(now.getTime() + (7 * 60 * 60 * 1000)).toISOString().split('T')[0];
+
+        // 2. Bikin batas pakai format standar internasional dengan ujung +07:00 (WIB)
+        // JS dan Prisma bakal otomatis nerjemahin ini ke zona waktu UTC yang pas di database!
+        const todayStart = new Date(`${wibDateString}T00:00:00.000+07:00`);
+        const todayEnd = new Date(`${wibDateString}T23:59:59.999+07:00`);
+
         // 1. Tarik Data Utama (Sama seperti sebelumnya)
         const [
             totalUsers,
             totalInteractions,
             totalRegulations,
+            totalSearchesToday,
             popularDocsData,
             trendingIssuesData
         ] = await Promise.all([
             prisma.user.count(),
-            prisma.chatHistory.count(),
+
+            prisma.chatHistory.count({
+                where: {
+                    createdAt: {
+                        gte: todayStart,
+                        lte: todayEnd,
+                    }
+                }
+            }),
+
             prisma.regulation.count(),
+
+            prisma.searchLog.count({
+                where: {
+                    createdAt: {
+                        gte: todayStart,
+                        lte: todayEnd,
+                    }
+                }
+            }),
 
             prisma.regulation.findMany({
                 orderBy: { viewCount: 'desc' },
@@ -84,6 +114,10 @@ export async function GET() {
                     },
                     interaksi_harian: {
                         value: totalInteractions,
+                        growth: null,
+                    },
+                    pencarian_harian: { 
+                        value: totalSearchesToday,
                         growth: null,
                     }
                 },
