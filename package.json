@@ -29,7 +29,7 @@
     "dotenv": "^17.3.1",
     "fs-extra": "^11.3.4",
     "google-auth-library": "^10.6.2",
-    "jose": "^6.2.2",
+    "jose": "^6.2.3",
     "jsonwebtoken": "^9.0.3",
     "langchain": "^1.2.35",
     "llama-cloud-services": "^0.5.4",
@@ -43,6 +43,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-markdown": "^10.1.0",
+    "recharts": "^3.8.1",
     "voyageai": "^0.2.1"
   },
   "devDependencies": {

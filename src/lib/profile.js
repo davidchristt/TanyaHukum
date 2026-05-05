@@ -22,8 +22,10 @@ export async function getProfile() {
 export async function updateProfile({
   name,
   email,
+  currentPassword,
   newPassword,
   avatarUrl,
+  personalContext,
 }) {
   const res = await fetch("/api/profile", {
     method: "PATCH",
@@ -34,8 +36,10 @@ export async function updateProfile({
     body: JSON.stringify({
       name,
       email,
+      currentPassword,
       newPassword,
       avatarUrl,
+      personalContext,
     }),
   });
 
@@ -52,19 +56,25 @@ export async function updateProfile({
 // UPLOAD AVATAR
 // ==============================
 export async function uploadAvatar(file) {
+  if (!file) throw new Error("File tidak ditemukan");
+
   const formData = new FormData();
-  formData.append("file", file);
+  // Ensure the key matches backend's formData.get("file")
+  // Adding filename explicitly for better compatibility
+  formData.append("file", file, file.name);
 
   const res = await fetch("/api/profile/upload", {
     method: "POST",
-    credentials: "include", // 🔥 WAJIB
+    credentials: "include",
+    // IMPORTANT: Do NOT set Content-Type header when sending FormData
     body: formData,
   });
 
   const data = await res.json();
 
   if (!res.ok) {
-    throw new Error(data.error || "Gagal upload avatar");
+    // Surface the actual error from backend (e.g., "Upload gagal.", "Maks 2MB", etc.)
+    throw new Error(data.error || `Upload failed with status ${res.status}`);
   }
 
   return data;
@@ -83,6 +93,8 @@ export async function logout() {
 
   // 🔥 clear local state
   localStorage.removeItem("user");
+  localStorage.removeItem("active_conversation_id");
+  localStorage.removeItem("conversations");
 
   // 🔥 trigger global update
   window.dispatchEvent(new Event("auth-change"));

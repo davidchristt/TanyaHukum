@@ -1,12 +1,15 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 
 import {
   getConversations,
   createNewConversation,
   setActiveConversation,
+  renameChat,
+  deleteChat,
 } from "@/src/lib/chat";
 
 /* ===== MENU ===== */
@@ -15,16 +18,19 @@ const MENU = [
     label: "Obrolan Baru",
     icon: "/icons/newChat.svg",
     action: "new_chat",
+    restricted: false,
   },
   {
     label: "Dashboard Statistik",
     icon: "/icons/dashboardStatistik.svg",
     path: "/dashboard",
+    restricted: true,
   },
   {
     label: "Pusat Data Hukum",
     icon: "/icons/pusatDataSidebar.svg",
     path: "/pusat-data",
+    restricted: true,
   },
 ];
 
@@ -34,49 +40,65 @@ export default function Sidebar({ isOpen, setIsOpen, onOpenProfile }) {
 
   const [chatHistory, setChatHistory] = useState([]);
   const [user, setUser] = useState(null);
+  const [toasts, setToasts] = useState([]);
+
+  const activeChatIdFromStorage =
+    typeof window !== "undefined"
+      ? localStorage.getItem("active_conversation_id")
+      : null;
+
+  const addToast = (message, type = "success") => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3000);
+  };
 
   useEffect(() => {
     const loadUser = () => {
       const stored = localStorage.getItem("user");
       setUser(stored ? JSON.parse(stored) : null);
     };
-
     loadUser();
-
-    // 🔥 penting
     window.addEventListener("auth-change", loadUser);
-
-    return () => {
-      window.removeEventListener("auth-change", loadUser);
-    };
+    return () => window.removeEventListener("auth-change", loadUser);
   }, []);
 
   // ==============================
   // LOAD HISTORY
   // ==============================
   useEffect(() => {
-    if (pathname !== "/chatbot") return;
+    if (pathname !== "/chatbot" || !user) return;
 
-    const load = () => {
-      const convs = getConversations();
-      const filtered = convs.filter((c) => c.messages.length > 0);
-      setChatHistory([...filtered].reverse());
+    const load = async () => {
+      try {
+        const chats = await getConversations(user.id);
+        setChatHistory(chats);
+      } catch (err) {
+        console.error("Failed to load history:", err);
+      }
     };
 
     load();
-
     window.addEventListener("storage", load);
-    return () => window.removeEventListener("storage", load);
-  }, [pathname]);
+    window.addEventListener("refresh-chats", load);
+    window.addEventListener("load-conversation", load);
+    return () => {
+      window.removeEventListener("storage", load);
+      window.removeEventListener("refresh-chats", load);
+      window.removeEventListener("load-conversation", load);
+    };
+  }, [pathname, user]);
 
   // ==============================
   // MENU CLICK
   // ==============================
   const handleMenuClick = (item) => {
-    if (item.action === "new_chat") {
-      const newConv = createNewConversation();
-      setActiveConversation(newConv.id);
+    if (item.restricted && !user) return;
 
+    if (item.action === "new_chat") {
+      createNewConversation();
       window.dispatchEvent(new Event("load-conversation"));
       router.push("/chatbot");
       return;
@@ -86,188 +108,370 @@ export default function Sidebar({ isOpen, setIsOpen, onOpenProfile }) {
   };
 
   // ==============================
-  // RENAME
+  // RENAME (called by ChatItem with new title)
   // ==============================
-  const handleRename = (id) => {
-    const name = prompt("Rename chat:");
-    if (!name) return;
-
-    const convs = getConversations();
-
-    const updated = convs.map((c) =>
-      c.id === id ? { ...c, title: name } : c
-    );
-
-    localStorage.setItem("conversations", JSON.stringify(updated));
-    window.dispatchEvent(new Event("storage"));
+  const handleRename = async (id, newTitle) => {
+    if (!newTitle || !newTitle.trim()) return;
+    try {
+      await renameChat(id, newTitle.trim());
+      addToast("Nama obrolan berhasil diubah");
+      window.dispatchEvent(new Event("refresh-chats"));
+    } catch (err) {
+      addToast("Gagal mengubah nama", "error");
+    }
   };
 
   // ==============================
-  // DELETE
+  // DELETE (called by ChatItem after confirmation)
   // ==============================
-  const handleDelete = (id) => {
-    const confirmDelete = confirm("Hapus chat?");
-    if (!confirmDelete) return;
+  const handleDelete = async (id) => {
+    try {
+      await deleteChat(id);
+      addToast("Obrolan berhasil dihapus");
 
-    const convs = getConversations().filter((c) => c.id !== id);
+      const activeId = localStorage.getItem("active_conversation_id");
+      if (activeId === id) {
+        localStorage.removeItem("active_conversation_id");
+        window.dispatchEvent(new Event("load-conversation"));
+      }
 
-    localStorage.setItem("conversations", JSON.stringify(convs));
-
-    if (convs.length > 0) {
-      setActiveConversation(convs[0].id);
-    } else {
-      const newConv = createNewConversation();
-      setActiveConversation(newConv.id);
+      window.dispatchEvent(new Event("refresh-chats"));
+    } catch (err) {
+      addToast("Gagal menghapus obrolan", "error");
     }
-
-    window.dispatchEvent(new Event("storage"));
-    window.dispatchEvent(new Event("load-conversation"));
   };
 
   return (
-    <div
-      className={`relative z-10 h-full bg-white/60 backdrop-blur-md rounded-2xl p-4 shadow-lg 
-      flex flex-col justify-between transition-all duration-300 
-      ${isOpen ? "w-64" : "w-20 items-center"}`}
-    >
-      {/* TOP */}
-      <div className="w-full flex flex-col h-full">
+    <>
+      <div
+        className={`relative z-10 h-full bg-white/60 backdrop-blur-md rounded-2xl p-4 shadow-lg 
+        flex flex-col justify-between transition-all duration-300 
+        ${isOpen ? "w-64" : "w-20 items-center"}`}
+      >
+        {/* TOP */}
+        <div className="w-full flex flex-col h-full">
 
-        {/* HEADER (TIDAK DIUBAH) */}
-        {isOpen ? (
-          <div className="flex items-center justify-between mb-6">
-            <img src="/icons/logo.svg" className="w-14 h-14" />
-
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-2 rounded-lg border border-blue-300 hover:bg-blue-50 transition"
-            >
-              <img src="/icons/sidebar.svg" className="w-5 h-5" />
-            </button>
-          </div>
-        ) : (
-          <div className="flex justify-center mb-6">
-            <div className="relative group/logo">
+          {/* HEADER */}
+          {isOpen ? (
+            <div className="flex items-center justify-between mb-6">
               <img src="/icons/logo.svg" className="w-14 h-14" />
-
               <button
-                onClick={() => setIsOpen(true)}
-                className="absolute inset-0 flex items-center justify-center 
-                opacity-0 group-hover/logo:opacity-100 transition z-50
-                rounded-lg bg-white/90 border border-blue-300"
+                onClick={() => setIsOpen(false)}
+                className="p-2 rounded-lg border border-blue-300 hover:bg-blue-50 transition"
               >
                 <img src="/icons/sidebar.svg" className="w-5 h-5" />
               </button>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="flex justify-center mb-6">
+              <div className="relative group/logo">
+                <img src="/icons/logo.svg" className="w-14 h-14" />
+                <button
+                  onClick={() => setIsOpen(true)}
+                  className="absolute inset-0 flex items-center justify-center 
+                  opacity-0 group-hover/logo:opacity-100 transition z-50
+                  rounded-lg bg-white/90 border border-blue-300"
+                >
+                  <img src="/icons/sidebar.svg" className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
 
-        {/* MENU */}
-        <div className="space-y-3">
-          {MENU.map((item, i) => (
-            <MenuItem
-              key={i}
-              icon={item.icon}
-              label={item.label}
-              isOpen={isOpen}
-              onClick={() => handleMenuClick(item)}
-            />
-          ))}
+          {/* MENU */}
+          <div className="space-y-3">
+            {MENU.map((item, i) => (
+              <MenuItem
+                key={i}
+                icon={item.icon}
+                label={item.label}
+                isOpen={isOpen}
+                onClick={() => handleMenuClick(item)}
+                disabled={item.restricted && !user}
+              />
+            ))}
+          </div>
+
+          {/* HISTORY */}
+          {isOpen && pathname === "/chatbot" && (
+            <>
+              <p className="text-xs text-gray-500 mt-6 mb-2 px-1 font-bold uppercase tracking-wider">
+                Riwayat Obrolan
+              </p>
+
+              <div className="space-y-1.5 flex-1 overflow-y-auto overflow-x-visible pr-1">
+                {!user ? (
+                  <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100 border-dashed animate-in fade-in duration-500">
+                    <p className="text-[10px] text-gray-500 text-center leading-relaxed">
+                      Masuk untuk melihat riwayat obrolan Anda
+                    </p>
+                  </div>
+                ) : chatHistory.length === 0 ? (
+                  <p className="text-xs text-gray-400 px-2 italic">
+                    Belum ada obrolan
+                  </p>
+                ) : (
+                  chatHistory.map((chat) => (
+                    <ChatItem
+                      key={chat.id}
+                      text={chat.title}
+                      isActive={activeChatIdFromStorage === chat.id}
+                      onClick={() => {
+                        setActiveConversation(chat.id);
+                        window.dispatchEvent(new Event("load-conversation"));
+                      }}
+                      onRename={(newTitle) => handleRename(chat.id, newTitle)}
+                      onDelete={() => handleDelete(chat.id)}
+                    />
+                  ))
+                )}
+              </div>
+            </>
+          )}
         </div>
 
-        {/* HISTORY */}
-        {isOpen && pathname === "/chatbot" && (
-          <>
-            <p className="text-xs text-gray-500 mt-6 mb-2 px-1">
-              Obrolan Anda
-            </p>
-
-            <div className="space-y-2 flex-1 overflow-y-auto pr-1">
-
-              {chatHistory.length === 0 ? (
-                <p className="text-xs text-gray-400 px-2">
-                  Belum ada obrolan
+        {/* PROFILE */}
+        {user && (
+          <div
+            onClick={onOpenProfile}
+            className={`flex items-center ${
+              isOpen ? "gap-3 px-2" : "justify-center"
+            } cursor-pointer hover:bg-blue-50 rounded-xl p-2 transition`}
+          >
+            <img src="/icons/profile.svg" className="w-9 h-9" />
+            {isOpen && (
+              <div>
+                <p className="text-sm font-medium text-gray-900 leading-tight">
+                  {user.nama || user.name || "User"}
                 </p>
-              ) : (
-                chatHistory.map((chat) => (
-                  <ChatItem
-                    key={chat.id}
-                    text={chat.title}
-                    onClick={() => {
-                      setActiveConversation(chat.id);
-                      window.dispatchEvent(new Event("load-conversation"));
-                    }}
-                    onRename={() => handleRename(chat.id)}
-                    onDelete={() => handleDelete(chat.id)}
-                  />
-                ))
-              )}
-
-            </div>
-          </>
+                <p className="text-[10px] text-blue-600 font-bold">
+                  {user.tier || "Gratis"}
+                </p>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
-      {/* ==============================
-          PROFILE (FIXED)
-      ============================== */}
+      {/* TOAST CONTAINER */}
+      <div className="fixed top-6 right-6 z-[100] flex flex-col gap-3">
+        {toasts.map((t) => (
+          <div
+            key={t.id}
+            className={`px-4 py-3 rounded-xl shadow-2xl border text-sm font-medium animate-in slide-in-from-right-full duration-300 flex items-center gap-3 backdrop-blur-md
+            ${t.type === "error" ? "bg-red-50 border-red-100 text-red-700" : "bg-white/90 border-blue-100 text-gray-800"}`}
+          >
+            <div className={`w-2 h-2 rounded-full ${t.type === "error" ? "bg-red-500" : "bg-blue-500"}`} />
+            {t.message}
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
 
-      {user && ( // ✅ hanya muncul kalau login
-        <div
-          onClick={onOpenProfile} // ✅ buka modal, bukan route
-          className={`flex items-center ${
-            isOpen ? "gap-3 px-2" : "justify-center"
-          } cursor-pointer hover:bg-blue-50 rounded-xl p-2 transition`}
-        >
-          <img src="/icons/profile.svg" className="w-9 h-9" />
+/* ===== MENU ITEM ===== */
+function MenuItem({ icon, label, isOpen, onClick, disabled }) {
+  return (
+    <div className="relative group">
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        className={`w-full flex items-center ${
+          isOpen ? "justify-start px-3" : "justify-center"
+        } gap-3 py-3 border rounded-xl transition-all duration-300
+        ${disabled
+          ? "opacity-40 grayscale cursor-not-allowed border-gray-100"
+          : "border-blue-200 hover:bg-blue-50 active:scale-[0.98] shadow-sm"}`}
+      >
+        <img src={icon} className="w-5 h-5" />
+        {isOpen && <span className="text-gray-800 text-sm font-medium">{label}</span>}
+      </button>
 
-          {isOpen && (
-            <div>
-              <p className="text-sm font-medium text-gray-900">
-                {user.name || "User"}
-              </p>
-              <p className="text-xs text-gray-500">
-                {user.tier || "Gratis"}
-              </p>
-            </div>
-          )}
+      {/* Tooltip */}
+      {disabled && (
+        <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-[60] whitespace-nowrap">
+          Perlu Masuk
+          <div className="absolute top-1/2 -left-1 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
         </div>
       )}
     </div>
   );
 }
 
-/* ===== MENU ITEM ===== */
-function MenuItem({ icon, label, isOpen, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full flex items-center ${
-        isOpen ? "justify-start px-3" : "justify-center"
-      } gap-3 py-3 border rounded-xl transition border-blue-200 hover:bg-blue-50`}
-    >
-      <img src={icon} className="w-5 h-5" />
-      {isOpen && <span className="text-gray-800 text-sm">{label}</span>}
-    </button>
-  );
-}
-
 /* ===== CHAT ITEM ===== */
-function ChatItem({ text, onClick, onRename, onDelete }) {
+function ChatItem({ text, onClick, onRename, onDelete, isActive }) {
+  const [menuPos, setMenuPos] = useState(null);
+  const [showRename, setShowRename] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
+  const btnRef = useRef(null);
+
+  const openMenu = (e) => {
+    e.stopPropagation();
+    if (menuPos) {
+      setMenuPos(null);
+      return;
+    }
+    const rect = btnRef.current.getBoundingClientRect();
+    setMenuPos({ top: rect.top, left: rect.right + 8 });
+  };
+
+  const closeMenu = () => setMenuPos(null);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!menuPos && !showRename && !showDeleteConfirm) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        closeMenu();
+        setShowRename(false);
+        setShowDeleteConfirm(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menuPos, showRename, showDeleteConfirm]);
+
+  const handleRenameSubmit = (e) => {
+    e.stopPropagation();
+    const trimmed = renameValue.trim();
+    if (!trimmed) return;
+    onRename(trimmed);
+    setShowRename(false);
+  };
+
+  const handleDeleteConfirm = (e) => {
+    e.stopPropagation();
+    onDelete();
+    setShowDeleteConfirm(false);
+  };
+
   return (
     <div className="group relative">
-
       <div
         onClick={onClick}
-        className="p-2 border rounded-lg text-sm text-gray-700 hover:bg-gray-50 cursor-pointer truncate"
+        className={`p-3 pr-10 border rounded-xl text-sm transition-all cursor-pointer truncate font-medium
+        ${isActive
+          ? "bg-blue-600 text-white shadow-md border-blue-500"
+          : "text-gray-700 border-transparent hover:bg-blue-50/80 hover:border-blue-100"}`}
       >
         {text}
       </div>
 
-      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 flex gap-2">
-        <button onClick={onRename}>✏️</button>
-        <button onClick={onDelete}>🗑️</button>
+      {/* THREE DOTS TRIGGER */}
+      <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
+        <button
+          ref={btnRef}
+          onClick={openMenu}
+          className={`w-7 h-7 flex items-center justify-center rounded-lg transition-all text-base leading-none
+          ${isActive ? "hover:bg-white/20 text-white" : "hover:bg-blue-100 text-gray-400 opacity-0 group-hover:opacity-100"}`}
+        >
+          •••
+        </button>
       </div>
+
+      {/* PORTAL DROPDOWN */}
+      {menuPos && typeof document !== "undefined" && createPortal(
+        <>
+          <div className="fixed inset-0 z-[9998]" onClick={closeMenu} />
+          <div
+            style={{ top: menuPos.top, left: menuPos.left }}
+            className="fixed z-[9999] w-44 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 animate-in fade-in zoom-in-95 duration-150 overflow-hidden"
+          >
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowRename(true);
+                setRenameValue(text);
+                closeMenu();
+              }}
+              className="w-full text-left px-3.5 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+            >
+              <img src="/icons/pen.svg" className="w-4 h-4 opacity-70" />
+              <span>Ganti Nama</span>
+            </button>
+            <div className="h-[1px] bg-gray-100 mx-2" />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDeleteConfirm(true);
+                closeMenu();
+              }}
+              className="w-full text-left px-3.5 py-2.5 text-[13px] text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
+            >
+              <img src="/icons/delete.svg" className="w-4 h-4 opacity-80" />
+              <span className="font-medium">Hapus Obrolan</span>
+            </button>
+          </div>
+        </>,
+        document.body
+      )}
+
+      {/* RENAME MODAL */}
+      {showRename && typeof document !== "undefined" && createPortal(
+        <>
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[10000]" onClick={() => setShowRename(false)} />
+          <div className="fixed inset-0 flex items-center justify-center z-[10001]">
+            <div className="bg-white rounded-xl shadow-lg w-80 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Ganti Nama Obrolan</h2>
+              <input
+                autoFocus
+                type="text"
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleRenameSubmit(e);
+                }}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  className="px-4 py-2 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                  onClick={() => setShowRename(false)}
+                >
+                  Batal
+                </button>
+                <button
+                  className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                  onClick={handleRenameSubmit}
+                >
+                  Simpan
+                </button>
+              </div>
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {showDeleteConfirm && typeof document !== "undefined" && createPortal(
+        <>
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[10000]" onClick={() => setShowDeleteConfirm(false)} />
+          <div className="fixed inset-0 flex items-center justify-center z-[10001]">
+            <div className="bg-white rounded-xl shadow-lg w-80 p-6">
+              <h2 className="text-lg font-semibold text-red-600 mb-2">Hapus Obrolan?</h2>
+              <p className="text-sm text-gray-500 mb-6">Tindakan ini tidak dapat dibatalkan.</p>
+              <div className="flex justify-end gap-2">
+                <button
+                  className="px-4 py-2 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                  onClick={() => setShowDeleteConfirm(false)}
+                >
+                  Batal
+                </button>
+                <button
+                  className="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                  onClick={handleDeleteConfirm}
+                >
+                  Hapus
+                </button>
+              </div>
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
     </div>
   );
 }
