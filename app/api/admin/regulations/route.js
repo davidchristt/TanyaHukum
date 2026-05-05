@@ -1,19 +1,49 @@
-// app/api/admin/regulations/route.js
-// API ini akan menerima data metadata dan URL file yang sudah diupload ke Storage supabase.
-// Method: POST ke /api/admin/regulations.
-// Payload: Kirim JSON berisi { "title": string, "description": string, "fileUrl": string }.
-
 import { NextResponse } from "next/server";
 import prisma from '@/lib/prisma';
 
-// GET: Ambil semua daftar dokumen hukum
-export async function GET() {
+// GET: Ambil daftar dokumen hukum dengan Pagination & Search (Khusus Admin)
+export async function GET(req) {
   try {
-    const regulations = await prisma.regulation.findMany({
-      orderBy: { createdAt: "desc" },
+    const { searchParams } = new URL(req.url);
+
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const search = searchParams.get("search") || "";
+    const category = searchParams.get("category") || "";
+
+    const skip = (page - 1) * limit;
+
+    const whereClause = {
+      // Di admin, kita mungkin ingin menampilkan semua data (termasuk yg isActive: false jika ada)
+      ...(search && { title: { contains: search, mode: "insensitive" } }),
+      ...(category && { category: category }),
+    };
+
+    const [regulations, totalCount] = await Promise.all([
+      prisma.regulation.findMany({
+        where: whereClause,
+        skip: skip,
+        take: limit,
+        // Admin biasanya lebih butuh melihat data yang baru saja ditambahkan
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.regulation.count({ where: whereClause })
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return NextResponse.json({
+      data: regulations,
+      meta: {
+        totalData: totalCount,
+        currentPage: page,
+        dataPerPage: limit,
+        totalPages: totalPages
+      }
     });
-    return NextResponse.json(regulations);
+
   } catch (error) {
+    console.error("Admin API Regulations GET Error:", error);
     return NextResponse.json(
       { error: "Gagal mengambil data dokumen" },
       { status: 500 }
@@ -21,7 +51,7 @@ export async function GET() {
   }
 }
 
-// POST: Input dokumen hukum baru
+// POST: Input dokumen hukum baru (TETAP DIPERTAHANKAN UNTUK ADMIN)
 export async function POST(req) {
   try {
     const body = await req.json();

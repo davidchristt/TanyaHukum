@@ -2,32 +2,59 @@
 
 import { useState, useEffect } from "react";
 
+// Kategori yang tersedia sesuai backend
+const CATEGORIES = ["Semua", "Ketenagakerjaan", "Perdata"];
+
 export default function DataList() {
   const [documents, setDocuments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // State untuk fungsi pencarian di frontend
+  // State untuk API temen bos
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState("Semua");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  // Debounce: Tunggu 500ms setelah ngetik baru cari
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Reset ke halaman 1 kalau ganti pencarian/kategori
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, activeCategory]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
 
-        // Fetch ke API yang sudah kamu siapkan untuk mengambil semua regulasi
-        const response = await fetch("/api/regulations");
+        // Susun query parameter buat backend
+        const params = new URLSearchParams();
+        params.append("page", currentPage);
+        if (debouncedSearch) params.append("search", debouncedSearch);
+        if (activeCategory !== "Semua") params.append("category", activeCategory);
+
+        // Tembak API yang udah dibikin temen
+        const response = await fetch(`/api/regulations?${params.toString()}`);
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json();
+        const result = await response.json();
 
-        // Memastikan data yang diterima adalah array
-        if (Array.isArray(data)) {
-          setDocuments(data);
+        // Sesuaikan dengan response JSON backend
+        if (result.data && Array.isArray(result.data)) {
+          setDocuments(result.data);
+          setTotalPages(result.meta?.totalPages || 1);
         } else {
-          console.error("Format data tidak sesuai:", data);
+          console.error("Format data tidak sesuai:", result);
           setDocuments([]);
         }
 
@@ -39,17 +66,9 @@ export default function DataList() {
     };
 
     fetchData();
-  }, []);
+  }, [debouncedSearch, activeCategory, currentPage]);
 
-  // Fungsi untuk memfilter dokumen berdasarkan input pencarian
-  const filteredDocuments = documents.filter((doc) => {
-    const searchLower = searchQuery.toLowerCase();
-    const titleMatch = doc.title?.toLowerCase().includes(searchLower);
-    const descMatch = doc.description?.toLowerCase().includes(searchLower);
-    return titleMatch || descMatch;
-  });
-
-  // Fungsi untuk membuka link file
+  // Fungsi untuk membuka link file (Tombol Baca)
   const handleOpenFile = (url) => {
     if (url) {
       window.open(url, '_blank');
@@ -58,11 +77,29 @@ export default function DataList() {
     }
   };
 
+  // Fungsi khusus untuk memaksa unduhan (Tombol Unduh)
+  const handleDownloadFile = (url) => {
+    if (!url) {
+      alert("Link file tidak tersedia.");
+      return;
+    }
+
+    // Trik memaksa download dengan atribut 'download' dan parameter Supabase
+    const downloadUrl = url.includes('?') ? `${url}&download=` : `${url}?download=`;
+
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.setAttribute("download", ""); // Memberi tahu browser ini file untuk diunduh
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
-    <div className="h-full bg-[#EAF2FA] rounded-[32px] p-8 flex flex-col shadow-sm border border-blue-100 overflow-y-auto">
+    <div className="h-full bg-[#EAF2FA] rounded-[32px] p-8 flex flex-col shadow-sm border border-blue-100 overflow-y-auto overflow-x-hidden">
 
       {/* Search Section */}
-      <div className="bg-white border border-[#A6D4FF] rounded-2xl p-8 mb-10 w-full max-w-4xl mx-auto shadow-sm">
+      <div className="bg-white border border-[#A6D4FF] rounded-2xl p-8 mb-10 w-full max-w-4xl mx-auto shadow-sm flex-shrink-0">
 
         <div className="text-center mb-6">
           <p className="text-gray-900 font-semibold text-lg">
@@ -73,7 +110,7 @@ export default function DataList() {
           </p>
         </div>
 
-        <div className="relative flex items-center">
+        <div className="relative flex items-center mb-6">
           <img
             src="/icons/search.svg"
             className="w-5 h-5 absolute left-5 opacity-70"
@@ -88,7 +125,6 @@ export default function DataList() {
             focus:outline-none focus:ring-2 focus:ring-blue-300 text-gray-800"
           />
           <button className="absolute right-5 hover:scale-110 transition text-gray-500 hover:text-blue-500">
-            {/* SVG Langsung untuk ikon Filter */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -103,27 +139,43 @@ export default function DataList() {
             </svg>
           </button>
         </div>
+
+        {/* Filter Kategori Baru */}
+        <div className="flex flex-wrap justify-center gap-2">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${activeCategory === cat
+                ? "bg-blue-600 text-white shadow-md"
+                : "bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200"
+                }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* List */}
-      <div className="w-full max-w-4xl mx-auto flex-1">
+      <div className="w-full max-w-4xl mx-auto flex-1 pb-10">
 
         <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
-          {searchQuery ? "Hasil Pencarian" : "Dokumen Terpopuler"}
+          {searchQuery || activeCategory !== "Semua" ? "Hasil Pencarian" : "Dokumen Terpopuler"}
         </h2>
 
         {isLoading ? (
           <div className="flex flex-col items-center py-20 gap-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500"></div>
-            <p className="text-blue-500 font-medium">Loading...</p>
+            <p className="text-blue-500 font-medium">Memuat Dokumen...</p>
           </div>
-        ) : filteredDocuments.length === 0 ? (
-          <div className="text-center py-10 text-gray-500">
+        ) : documents.length === 0 ? (
+          <div className="text-center py-10 text-gray-500 bg-white rounded-2xl border border-dashed border-gray-300">
             Tidak ada dokumen yang ditemukan.
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredDocuments.map((item, i) => (
+            {documents.map((item, i) => (
               <div
                 key={item.id || i}
                 className="flex justify-between items-center p-5 bg-white 
@@ -132,8 +184,8 @@ export default function DataList() {
               >
 
                 {/* Left */}
-                <div className="flex items-center gap-4">
-                  <div className="min-w-12 w-12 h-12 flex items-center justify-center bg-blue-50 rounded-xl">
+                <div className="flex items-center gap-4 flex-1 min-w-0 pr-4">
+                  <div className="min-w-[48px] w-12 h-12 flex items-center justify-center bg-blue-50 rounded-xl shrink-0">
                     <img
                       src="/icons/dokumenTerpopuler.svg"
                       className="w-6 h-6"
@@ -141,18 +193,25 @@ export default function DataList() {
                     />
                   </div>
 
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="text-gray-900 font-semibold line-clamp-2">
                       {item.title}
                     </h3>
-                    <p className="text-sm text-gray-600 line-clamp-1 mt-1">
-                      {item.description || "Tidak ada deskripsi"}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {item.category && (
+                        <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded uppercase font-bold shrink-0">
+                          {item.category}
+                        </span>
+                      )}
+                      <p className="text-sm text-gray-600 line-clamp-1 truncate">
+                        {item.description || "Tidak ada deskripsi"}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 {/* Right */}
-                <div className="flex gap-2 shrink-0 ml-4">
+                <div className="flex gap-2 shrink-0">
                   <button
                     onClick={() => handleOpenFile(item.fileUrl)}
                     className="px-4 py-2 border border-[#A6D4FF] rounded-xl 
@@ -162,8 +221,9 @@ export default function DataList() {
                     Baca
                   </button>
 
+                  {/* Tombol Unduh yang sudah diperbaiki error JSX-nya */}
                   <button
-                    onClick={() => handleOpenFile(item.fileUrl)}
+                    onClick={() => handleDownloadFile(item.fileUrl)}
                     className="px-4 py-2 border border-[#A6D4FF] rounded-xl 
                     text-gray-700 font-medium 
                     hover:bg-blue-50 transition active:scale-95"
@@ -174,6 +234,30 @@ export default function DataList() {
 
               </div>
             ))}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-4 mt-8 pt-4 border-t border-blue-100">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-white border border-[#A6D4FF] rounded-xl text-gray-700 font-medium hover:bg-blue-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Sebelumnya
+                </button>
+                <span className="text-sm font-medium text-gray-600">
+                  Halaman {currentPage} dari {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 bg-white border border-[#A6D4FF] rounded-xl text-gray-700 font-medium hover:bg-blue-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Selanjutnya
+                </button>
+              </div>
+            )}
+
           </div>
         )}
       </div>
