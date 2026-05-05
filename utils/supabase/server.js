@@ -1,26 +1,18 @@
-/**
- * Supabase Server Client Utility
- * ------------------------------
- * File ini menggantikan library lama @supabase/auth-helpers-nextjs.
- * Digunakan untuk menginisialisasi client Supabase di:
- * - Route Handlers (API)
- * - Server Actions
- * - Server Components
- * 
- * Fungsi ini otomatis menangani sinkronisasi cookie antara Supabase dan Next.js.
- */
-
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+// ======================
+// USER CLIENT (SESSION)
+// ======================
 export async function createClient() {
   const cookieStore = await cookies()
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase URL and Anon Key are missing in environment variables.");
+    throw new Error("Supabase URL dan Anon Key belum diset.")
   }
 
   return createServerClient(
@@ -37,7 +29,7 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             )
           } catch {
-            // Abaikan jika dipanggil dari Server Component
+            // ignore di Server Component
           }
         },
       },
@@ -45,29 +37,25 @@ export async function createClient() {
   )
 }
 
-/**
- * createAdminClient
- * ----------------
- * Gunakan ini HANYA di sisi server (Route Handlers / Server Actions).
- * Menggunakan SERVICE_ROLE_KEY untuk bypass RLS.
- */
+// ======================
+// ADMIN CLIENT (NO RLS)
+// ======================
 export async function createAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  // Fallback ke ANON_KEY jika SERVICE_ROLE_KEY tidak diset (meski mungkin kena RLS)
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase URL or Key is missing in environment variables.");
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("Supabase URL atau SERVICE_ROLE_KEY belum diset.")
   }
 
-  return createServerClient(
+  return createSupabaseClient(
     supabaseUrl,
-    supabaseKey,
+    serviceRoleKey,
     {
-      cookies: {
-        getAll: () => [],
-        setAll: () => {},
-      },
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
     }
   )
 }
