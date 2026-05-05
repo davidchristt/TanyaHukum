@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/server"; // Pastikan fungsi ini sudah Anda buat
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifyToken } from "../../../../src/lib/auth-server";
@@ -13,11 +13,9 @@ export async function POST(request) {
 
     const payload = await verifyToken(token);
 
-    const supabase = await createClient();
+    // GUNAKAN ADMIN CLIENT agar bypass RLS
+    const supabase = await createAdminClient();
 
-    // ======================
-    // FILE
-    // ======================
     const formData = await request.formData();
     const file = formData.get("file");
 
@@ -25,37 +23,44 @@ export async function POST(request) {
       return NextResponse.json({ error: "File tidak ditemukan." }, { status: 400 });
     }
 
-    // VALIDASI
+    // VALIDASI UKURAN (2MB)
     const MAX_SIZE = 2 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
       return NextResponse.json({ error: "Maks 2MB." }, { status: 400 });
     }
 
+    // VALIDASI FORMAT
     const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json({ error: "Format tidak valid." }, { status: 400 });
     }
 
     const fileExt = file.name.split(".").pop().toLowerCase();
-    const fileName = `${payload.userId}.${fileExt}`;
-    const filePath = `public/${fileName}`;
+    
+    // GUNAKAN TIMESTAMP pada nama file agar browser tidak cache foto lama
+    const fileName = `${payload.userId}_${Date.now()}.${fileExt}`;
+    const filePath = `${fileName}`; // Simpan di root bucket saja
+
+    // Konversi file ke Buffer (lebih stabil untuk server-side upload)
+    const buffer = Buffer.from(await file.arrayBuffer());
 
     // ======================
-    // UPLOAD
+    // UPLOAD KE STORAGE
     // ======================
     const { error: uploadError } = await supabase.storage
       .from("avatars")
-      .upload(filePath, file, {
-        cacheControl: "3600",
+      .upload(filePath, buffer, {
+        contentType: file.type,
         upsert: true,
       });
 
     if (uploadError) {
-      return NextResponse.json({ error: "Upload gagal." }, { status: 500 });
+      console.error("Supabase Error:", uploadError);
+      return NextResponse.json({ error: "Upload ke storage gagal." }, { status: 500 });
     }
 
     // ======================
-    // PUBLIC URL
+    // AMBIL PUBLIC URL
     // ======================
     const { data } = supabase.storage
       .from("avatars")
@@ -64,7 +69,7 @@ export async function POST(request) {
     const publicUrl = data.publicUrl;
 
     // ======================
-    // UPDATE DB (PAKAI ID, BUKAN supabaseId)
+    // UPDATE DATABASE (PRISMA)
     // ======================
     const updatedUser = await prisma.user.update({
       where: { id: payload.userId },
@@ -82,9 +87,10 @@ export async function POST(request) {
     });
 
   } catch (err) {
+    console.error("Catch Error:", err);
     return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
+      { error: "Internal Server Error" },
+      { status: 500 }
     );
   }
 }
