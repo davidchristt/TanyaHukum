@@ -1,13 +1,11 @@
-// app/api/admin/trending/[id]/route.js
-// delete trending
-
 import { NextResponse } from "next/server";
 import prisma from '@/lib/prisma';
 
 // DELETE: Hapus Isu Terkini
 export async function DELETE(req, { params }) {
   try {
-    const { id } = params;
+    // PERBAIKAN: Wajib pakai await params di Next.js versi terbaru!
+    const { id } = await params;
 
     await prisma.trendingIssue.delete({
       where: { id },

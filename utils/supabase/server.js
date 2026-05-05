@@ -1,24 +1,23 @@
-/**
- * Supabase Server Client Utility
- * ------------------------------
- * File ini menggantikan library lama @supabase/auth-helpers-nextjs.
- * Digunakan untuk menginisialisasi client Supabase di:
- * - Route Handlers (API)
- * - Server Actions
- * - Server Components
- * 
- * Fungsi ini otomatis menangani sinkronisasi cookie antara Supabase dan Next.js.
- */
-
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+// ======================
+// USER CLIENT (SESSION)
+// ======================
 export async function createClient() {
   const cookieStore = await cookies()
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Supabase URL dan Anon Key belum diset.")
+  }
+
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         getAll() {
@@ -30,10 +29,33 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             )
           } catch {
-            // Abaikan jika dipanggil dari Server Component
+            // ignore di Server Component
           }
         },
       },
+    }
+  )
+}
+
+// ======================
+// ADMIN CLIENT (NO RLS)
+// ======================
+export async function createAdminClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("Supabase URL atau SERVICE_ROLE_KEY belum diset.")
+  }
+
+  return createSupabaseClient(
+    supabaseUrl,
+    serviceRoleKey,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
     }
   )
 }

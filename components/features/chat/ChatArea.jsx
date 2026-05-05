@@ -6,9 +6,10 @@ import ReactMarkdown from "react-markdown";
 
 import {
   sendMessage,
-  getCurrentConversation,
   createNewConversation,
-  addMessage,
+  getCurrentConversationId,
+  getChatMessages,
+  setActiveConversation
 } from "@/src/lib/chat";
 
 // RANDOM TEXT
@@ -46,42 +47,36 @@ export default function ChatArea({ user, onOpenAuth, onOpenSubscription }) {
   const sendingRef = useRef(false);
 
   // ==============================
-  // INIT CONVERSATION
+  // INIT & SWITCH CONVERSATION
   // ==============================
   useEffect(() => {
-    let conv = getCurrentConversation();
-
-    if (!conv) {
-      conv = createNewConversation();
-    }
-
-    setMessages(conv.messages);
-
-    setEmptyTitle(getRandomItem(EMPTY_TITLES));
-    setEmptyText(getRandomItem(EMPTY_PROMPTS));
-  }, []);
-
-  // ==============================
-  // SWITCH CONVERSATION
-  // ==============================
-  useEffect(() => {
-    const loadConversation = () => {
-      const conv = getCurrentConversation();
-
-      if (conv) {
-        setMessages(conv.messages);
-      }
-
-      if (!conv || conv.messages.length === 0) {
+    const loadConversation = async () => {
+      const activeId = getCurrentConversationId();
+      
+      if (activeId && user) {
+        setLoading(true);
+        try {
+          const history = await getChatMessages(user.id, activeId);
+          setMessages(history);
+        } catch (err) {
+          console.error("Failed to load messages:", err);
+          setMessages([]);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setMessages([]);
         setEmptyTitle(getRandomItem(EMPTY_TITLES));
         setEmptyText(getRandomItem(EMPTY_PROMPTS));
       }
     };
 
+    loadConversation();
+
     window.addEventListener("load-conversation", loadConversation);
     return () =>
       window.removeEventListener("load-conversation", loadConversation);
-  }, []);
+  }, [user]);
 
   // ==============================
   // SEND MESSAGE
@@ -89,7 +84,6 @@ export default function ChatArea({ user, onOpenAuth, onOpenSubscription }) {
   const handleSend = async () => {
     if (!message.trim()) return;
 
-    // 🔥 LOGIN CHECK
     if (!user) {
       onOpenAuth("login");
       return;
@@ -104,6 +98,7 @@ export default function ChatArea({ user, onOpenAuth, onOpenSubscription }) {
     sendingRef.current = true;
 
     const text = message;
+    const currentChatId = getCurrentConversationId();
 
     const userMessage = {
       role: "user",
@@ -111,8 +106,6 @@ export default function ChatArea({ user, onOpenAuth, onOpenSubscription }) {
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    addMessage(userMessage);
-
     setMessage("");
     setLoading(true);
 
@@ -120,16 +113,21 @@ export default function ChatArea({ user, onOpenAuth, onOpenSubscription }) {
       const data = await sendMessage({
         message: text,
         userId: user.id,
+        chatId: currentChatId
       });
+
+      // Update chatId if it was a new chat
+      if (!currentChatId && data.chatId) {
+        setActiveConversation(data.chatId);
+        window.dispatchEvent(new Event("refresh-chats"));
+      }
 
       if (user?.tier !== "PRO") {
         const updatedUser = {
           ...user,
           promptLimit: Math.max(0, (user.promptLimit || 1) - 1),
         };
-
         localStorage.setItem("user", JSON.stringify(updatedUser));
-
         window.dispatchEvent(new Event("auth-change"));
       }
 
@@ -139,30 +137,35 @@ export default function ChatArea({ user, onOpenAuth, onOpenSubscription }) {
       };
 
       setMessages((prev) => [...prev, aiMessage]);
-      addMessage(aiMessage);
-
       window.dispatchEvent(new Event("auth-change"));
 
     } catch (err) {
       const errorMsg = {
         role: "assistant",
-        content: "Terjadi kesalahan.",
+        content: err.error || "Terjadi kesalahan.",
       };
-
       setMessages((prev) => [...prev, errorMsg]);
-      addMessage(errorMsg);
-
     } finally {
       setLoading(false);
       sendingRef.current = false;
     }
   };
 
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, loading]);
+
   return (
-    <div className="h-full flex flex-col bg-white/70 backdrop-blur-md rounded-2xl shadow-lg">
+    <div className="h-full flex flex-col bg-white/70 backdrop-blur-md rounded-2xl shadow-lg min-h-0 overflow-hidden">
 
       {/* HEADER */}
-      <div className="border-b border-gray-200">
+      <div className="flex-none border-b border-gray-200">
         <Header
           user={user}
           onOpenAuth={onOpenAuth}
@@ -171,7 +174,7 @@ export default function ChatArea({ user, onOpenAuth, onOpenSubscription }) {
       </div>
 
       {/* CONTENT */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
 
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center px-6">
@@ -202,6 +205,7 @@ export default function ChatArea({ user, onOpenAuth, onOpenSubscription }) {
               />
 
               <button
+                id="send-btn-center"
                 onClick={handleSend}
                 disabled={loading}
                 className="px-6 hover:bg-blue-50"
@@ -215,7 +219,7 @@ export default function ChatArea({ user, onOpenAuth, onOpenSubscription }) {
         ) : (
           <>
             {/* CHAT LIST */}
-            <div className="flex-1 overflow-y-auto px-6 py-6">
+            <div className="flex-1 overflow-y-auto px-6 py-6 min-h-0 scroll-smooth">
               <div className="flex flex-col gap-4">
 
                 {messages.map((msg, i) => (
@@ -223,61 +227,71 @@ export default function ChatArea({ user, onOpenAuth, onOpenSubscription }) {
                     key={i}
                     className={`flex flex-col ${
                       msg.role === "user" ? "items-end" : "items-start"
-                    }`}
+                    } group mb-6 transition-all duration-300`}
                   >
                     <div
-                      className={`px-6 py-5 rounded-2xl text-sm ${
+                      className={`relative max-w-[90%] sm:max-w-[80%] px-6 py-5 rounded-3xl text-[15px] leading-[1.7] tracking-tight ${
                         msg.role === "user"
-                          ? "bg-blue-600 text-white"
-                          : "bg-white border border-gray-200 shadow-sm"
+                          ? "bg-blue-600 text-white shadow-lg shadow-blue-100 rounded-tr-none border border-blue-700/10"
+                          : "bg-[#F9FAFB] border border-gray-200 shadow-sm text-gray-800 rounded-tl-none"
                       }`}
                     >
                       {msg.role === "assistant" ? (
-                        <div className="prose prose-sm max-w-none">
+                        <div className="prose prose-sm max-w-none prose-slate prose-p:leading-[1.8] prose-p:mb-4 prose-li:mb-2 prose-headings:mb-3">
                           <ReactMarkdown>{msg.content}</ReactMarkdown>
                         </div>
                       ) : (
-                        <div className="whitespace-pre-wrap">
+                        <div className="whitespace-pre-wrap font-medium">
                           {msg.content}
                         </div>
                       )}
+
+                      {/* ACTIONS (TOP-RIGHT) */}
+                      {msg.role === "assistant" && (
+                        <div className="absolute -top-3 -right-3 flex gap-1 opacity-40 group-hover:opacity-100 transition-all duration-300 bg-white border border-gray-200 p-1 rounded-xl shadow-md z-10 scale-90 group-hover:scale-100">
+                          <ActionButton
+                            icon="/icons/copy.svg"
+                            onClick={() => {
+                              navigator.clipboard.writeText(msg.content);
+                              const btn = document.getElementById(`copy-${i}`);
+                              if (btn) btn.innerText = "✓";
+                              setTimeout(() => { if (btn) btn.innerText = ""; }, 2000);
+                            }}
+                            tooltip="Copy"
+                            id={`copy-${i}`}
+                          />
+                          <ActionButton
+                            icon="/icons/regenerate.svg"
+                            onClick={() => {
+                              const lastUserIdx = messages.slice(0, i).findLastIndex(m => m.role === "user");
+                              if (lastUserIdx !== -1) {
+                                const lastUserText = messages[lastUserIdx].content;
+                                setMessage(lastUserText);
+                                setTimeout(() => {
+                                  const sendBtn = document.getElementById("send-btn");
+                                  if (sendBtn) sendBtn.click();
+                                }, 0);
+                              }
+                            }}
+                            tooltip="Regenerate"
+                          />
+                        </div>
+                      )}
                     </div>
-
-                    {/* ACTION */}
-                    {msg.role === "assistant" && (
-                      <div className="flex gap-3 mt-2 ml-1">
-
-                        <button
-                          onClick={() => navigator.clipboard.writeText(msg.content)}
-                          className="opacity-60 hover:opacity-100"
-                        >
-                          <img src="/icons/copy.svg" className="w-4 h-4" />
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            const lastUser = messages[i - 1];
-                            if (lastUser?.role === "user") {
-                              setMessage(lastUser.content);
-                              setTimeout(() => handleSend(), 0);
-                            }
-                          }}
-                          className="opacity-60 hover:opacity-100"
-                        >
-                          <img src="/icons/regenerate.svg" className="w-4 h-4" />
-                        </button>
-
-                      </div>
-                    )}
                   </div>
                 ))}
 
                 {loading && (
-                  <div className="bg-gray-200 px-4 py-3 rounded-2xl text-sm w-fit">
-                    Mengetik...
+                  <div className="flex flex-col items-start mb-4">
+                    <div className="bg-white border border-gray-100 shadow-sm px-5 py-4 rounded-2xl rounded-tl-none flex gap-1.5 items-center">
+                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                      <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce"></div>
+                    </div>
                   </div>
                 )}
 
+                <div ref={messagesEndRef} />
               </div>
             </div>
 
@@ -300,6 +314,7 @@ export default function ChatArea({ user, onOpenAuth, onOpenSubscription }) {
                 />
 
                 <button
+                  id="send-btn"
                   onClick={handleSend}
                   disabled={loading}
                   className="px-6 hover:bg-blue-50"
@@ -314,5 +329,18 @@ export default function ChatArea({ user, onOpenAuth, onOpenSubscription }) {
 
       </div>
     </div>
+  );
+}
+
+function ActionButton({ icon, onClick, tooltip, id }) {
+  return (
+    <button
+      onClick={onClick}
+      className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1 min-w-[28px] justify-center"
+      title={tooltip}
+    >
+      <img src={icon} className="w-3.5 h-3.5 opacity-60" />
+      <span id={id} className="text-[10px] font-bold text-blue-600"></span>
+    </button>
   );
 }

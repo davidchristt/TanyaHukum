@@ -65,7 +65,7 @@ export async function PATCH(request) {
     const payload = await verifyToken(token);
 
     const body = await request.json();
-    const { name, email, newPassword, avatarUrl, personalContext } = body;
+    const { name, email, currentPassword, newPassword, avatarUrl, personalContext } = body;
 
     const existingUser = await prisma.user.findUnique({
       where: { id: payload.userId },
@@ -97,6 +97,21 @@ export async function PATCH(request) {
     }
 
     if (newPassword) {
+      if (!currentPassword) {
+        return NextResponse.json(
+          { error: "Password lama wajib diisi" },
+          { status: 400 }
+        );
+      }
+
+      const isMatch = await bcrypt.compare(currentPassword, existingUser.passwordHash);
+      if (!isMatch) {
+        return NextResponse.json(
+          { error: "Password lama salah" },
+          { status: 401 }
+        );
+      }
+
       if (newPassword.length < 8) {
         return NextResponse.json(
           { error: "Password minimal 8 karakter" },

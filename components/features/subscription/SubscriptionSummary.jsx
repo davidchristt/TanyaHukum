@@ -7,6 +7,7 @@ export default function SubscriptionSummary({
   selectedPlan,
   onBack,
   onPay,
+  isLoading = false,
 }) {
   const [agree, setAgree] = useState(false);
 
@@ -118,15 +119,15 @@ export default function SubscriptionSummary({
       {/* ================= BUTTON ================= */}
       <button
         onClick={onPay}
-        disabled={!agree}
+        disabled={!agree || isLoading}
         className={`w-full py-3 rounded-xl font-semibold transition
         ${
-          agree
+          agree && !isLoading
             ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md"
             : "bg-gray-200 text-gray-400 cursor-not-allowed"
         }`}
       >
-        Bayar Sekarang
+        {isLoading ? "Memproses..." : "Bayar Sekarang"}
       </button>
 
     </div>
