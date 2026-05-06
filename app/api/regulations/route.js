@@ -3,36 +3,51 @@ import prisma from "@/lib/prisma";
 
 export async function GET(req) {
     try {
-        // 1. Tangkap parameter dari URL (untuk fitur search, filter, dan pagination)
+        // 1. Tangkap parameter dari URL
         const { searchParams } = new URL(req.url);
 
-        // Default: halaman 1, tampilkan 10 data per halaman
         const page = parseInt(searchParams.get("page") || "1");
         const limit = parseInt(searchParams.get("limit") || "10");
         const search = searchParams.get("search") || "";
         const category = searchParams.get("category") || "";
+        
+        // [FITUR BARU]: Tangkap userId kalau dikirim sama Frontend (opsional)
+        const userId = searchParams.get("userId") || null;
 
-        // 2. Rumus Pagination (Lewati data ke berapa)
+        // ==========================================================
+        // [FITUR BARU]: Simpan ke SearchLog kalau ada pencarian
+        // ==========================================================
+        if (search && search.trim() !== "") {
+            // Kita pakai .catch() aja tanpa await di depannya (Fire-and-forget).
+            // Tujuannya biar API nggak jadi lambat nungguin proses nyatet log kelar.
+            prisma.searchLog.create({
+                data: {
+                    query: search.trim(),
+                    userId: userId // Masuk kalau ada, null kalau user belum login
+                }
+            }).catch(err => console.error("Gagal menyimpan SearchLog:", err));
+        }
+        // ==========================================================
+
+        // 2. Rumus Pagination
         const skip = (page - 1) * limit;
 
         // 3. Susun aturan pencarian (Where Clause)
         const whereClause = {
-            isActive: true, // Nyalakan ini kalau lu punya kolom isActive untuk soft-delete
-            ...(search && { title: { contains: search, mode: "insensitive" } }), // Cari berdasarkan judul, abaikan huruf besar/kecil
-            ...(category && { category: category }), // Filter kategori (misal: "Ketenagakerjaan" atau "Perdata")
+            isActive: true, 
+            ...(search && { title: { contains: search, mode: "insensitive" } }), 
+            ...(category && { category: category }), 
         };
 
-        // 4. Tarik data dan hitung total baris secara BERSAMAAN (Paralel biar cepat)
+        // 4. Tarik data dan hitung total baris secara BERSAMAAN
         const [regulations, totalCount] = await Promise.all([
             prisma.regulation.findMany({
                 where: whereClause,
                 skip: skip,
                 take: limit,
                 orderBy: {
-                    // Urutkan dari yang terbaru atau berdasarkan abjad (sesuaikan dengan schema lu)
                     title: "asc"
                 },
-                // [OPSIONAL TAPI PENTING]: Pilih kolom yang mau dikirim ke frontend biar hemat bandwidth
                 select: {
                     id: true,
                     title: true,
