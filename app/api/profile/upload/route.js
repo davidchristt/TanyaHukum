@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifyToken } from "@/src/lib/auth-server";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0; // Tambahkan ini!
+
 export async function POST(request) {
   try {
     const token = request.cookies.get("token")?.value;
@@ -101,7 +104,11 @@ export async function POST(request) {
       message: "Upload berhasil",
       url: publicUrl,
       user: updatedUser,
-    });
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+      }
+    });    
 
   } catch (err) {
     console.error("Upload Route Error:", err);
