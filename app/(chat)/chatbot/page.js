@@ -5,14 +5,13 @@ import { useState, useEffect } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import ChatArea from "@/components/features/chat/ChatArea";
 
-// AUTH
-import LoginForm from "@/components/features/auth/LoginForm";
-import RegisterForm from "@/components/features/auth/RegisterForm";
+import AuthModal from "@/components/features/auth/AuthModal";
 
 // SUBSCRIPTION
 import SubscriptionList from "@/components/features/subscription/SubscriptionList";
 
 import ProfileModal from "@/components/features/profile/ProfileModal";
+import AboutModal from "@/components/features/about/AboutModal";
 
 import { getProfile } from "@/src/lib/profile";
 
@@ -33,7 +32,8 @@ export default function ChatbotPage() {
   const [showToast, setShowToast] = useState(false);
 
   const handleLoginSuccess = (userData) => {
-  setUser(userData); // 🔥 langsung set state
+    setUser(userData); 
+    setAuthMode(null);
   };
 
   // ==============================
@@ -66,24 +66,26 @@ export default function ChatbotPage() {
   }, []);
 
   useEffect(() => {
-  const handleToast = () => {
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 2500);
-  };
+    const handleToast = () => {
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2500);
+    };
 
-  window.addEventListener("show-toast", handleToast);
+    window.addEventListener("show-toast", handleToast);
 
-  return () => {
-    window.removeEventListener("show-toast", handleToast);
-  };
-}, []);
+    return () => {
+      window.removeEventListener("show-toast", handleToast);
+    };
+  }, []);
 
   return (
-    <div className="h-screen bg-blue-100 flex">
+    <div className="h-screen flex relative overflow-hidden">
+      {/* ABOUT MODAL (Guest Only) */}
+      <AboutModal onOpenAuth={(mode) => setAuthMode(mode)} />
 
       {/* SIDEBAR */}
       <div
-        className={`transition-all duration-300 ${
+        className={`transition-all duration-300 relative z-20 ${
           isOpen ? "w-[280px]" : "w-[80px]"
         }`}
       >
@@ -96,7 +98,7 @@ export default function ChatbotPage() {
       </div>
 
       {/* CHAT AREA */}
-      <div className="flex-1">
+      <div className="flex-1 relative z-10">
         <ChatArea
           user={user}
           onOpenAuth={(mode) => setAuthMode(mode || "login")}
@@ -104,40 +106,13 @@ export default function ChatbotPage() {
         />
       </div>
 
-      {/* ================= AUTH POPUP ================= */}
-      {authMode && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-
-          <div className="relative w-full max-w-md">
-
-            <button
-              onClick={() => setAuthMode(null)}
-              className="absolute top-4 right-4 text-[#2f6fed] hover:text-white 
-              hover:bg-[#2f6fed] transition p-2 rounded-full"
-            >
-              ✕
-            </button>
-
-            {authMode === "login" && (
-              <LoginForm
-                onClose={() => setAuthMode(null)}
-                onLoginSuccess={handleLoginSuccess}
-              />
-            )}
-
-            {authMode === "register" && (
-              <RegisterForm
-                onClose={() => {
-                  setAuthMode(null);
-                  window.dispatchEvent(new Event("auth-change"));
-                }}
-                onSwitchToLogin={() => setAuthMode("login")}
-              />
-            )}
-
-          </div>
-        </div>
-      )}
+      {/* ================= AUTH MODAL ================= */}
+      <AuthModal
+        isOpen={!!authMode}
+        initialMode={authMode || "login"}
+        onClose={() => setAuthMode(null)}
+        onLoginSuccess={handleLoginSuccess}
+      />
 
       {/* ================= SUBSCRIPTION POPUP ================= */}
       {showSubscription && (
@@ -152,7 +127,7 @@ export default function ChatbotPage() {
         <ProfileModal
           isOpen={showProfile}
           onClose={() => setShowProfile(false)}
-          user={user} // 🔥 TAMBAH INI
+          user={user} 
         />
       )}
 

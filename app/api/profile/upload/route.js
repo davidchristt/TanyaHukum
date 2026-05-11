@@ -1,19 +1,22 @@
-import { createAdminClient } from "@/utils/supabase/server"; // Pastikan fungsi ini sudah Anda buat
+import { createAdminClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { verifyToken } from "../../../../src/lib/auth-server";
+import { verifyToken } from "@/src/lib/auth-server";
 
 export async function POST(request) {
   try {
     const token = request.cookies.get("token")?.value;
 
     if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Sesi Anda telah berakhir, silakan masuk kembali." },
+        { status: 401 }
+      );
     }
 
     const payload = await verifyToken(token);
 
-    // GUNAKAN ADMIN CLIENT agar bypass RLS
+    // Gunakan admin client untuk bypass RLS di storage
     const supabase = await createAdminClient();
 
     const formData = await request.formData();
@@ -26,27 +29,27 @@ export async function POST(request) {
     // VALIDASI UKURAN (2MB)
     const MAX_SIZE = 2 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      return NextResponse.json({ error: "Maks 2MB." }, { status: 400 });
+      return NextResponse.json({ error: "Ukuran file maksimal 2MB." }, { status: 400 });
     }
 
     // VALIDASI FORMAT
     const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+    const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
     if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json({ error: "Format tidak valid." }, { status: 400 });
+      return NextResponse.json({ error: "Format file tidak didukung (Gunakan JPG, PNG, atau WebP)." }, { status: 400 });
     }
 
     const fileExt = file.name.split(".").pop().toLowerCase();
-    
-    // GUNAKAN TIMESTAMP pada nama file agar browser tidak cache foto lama
-    const fileName = `${payload.userId}_${Date.now()}.${fileExt}`;
-    const filePath = `${fileName}`; // Simpan di root bucket saja
-
-    // Konversi file ke Buffer (lebih stabil untuk server-side upload)
-    const buffer = Buffer.from(await file.arrayBuffer());
+    // Gunakan userId langsung sebagai nama file untuk mempermudah management & cache
+    const fileName = `${payload.userId}.${fileExt}`;
+    const filePath = `${fileName}`; // Simpan di root bucket agar lebih simpel
 
     // ======================
-    // UPLOAD KE STORAGE
+    // UPLOAD (Convert to Buffer for stability)
     // ======================
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
     const { error: uploadError } = await supabase.storage
       .from("avatars")
       .upload(filePath, buffer, {
@@ -55,21 +58,21 @@ export async function POST(request) {
       });
 
     if (uploadError) {
-      console.error("Supabase Error:", uploadError);
-      return NextResponse.json({ error: "Upload ke storage gagal." }, { status: 500 });
+      console.error("Supabase Storage Error:", uploadError);
+      return NextResponse.json({ error: `Gagal mengunggah ke storage: ${uploadError.message}` }, { status: 500 });
     }
 
     // ======================
     // AMBIL PUBLIC URL
     // ======================
-    const { data } = supabase.storage
+    const { data: urlData } = supabase.storage
       .from("avatars")
       .getPublicUrl(filePath);
 
-    const publicUrl = data.publicUrl;
+    const publicUrl = urlData.publicUrl;
 
     // ======================
-    // UPDATE DATABASE (PRISMA)
+    // UPDATE DB
     // ======================
     const updatedUser = await prisma.user.update({
       where: { id: payload.userId },
@@ -77,19 +80,31 @@ export async function POST(request) {
       select: {
         id: true,
         name: true,
+        email: true,
         avatarUrl: true,
+        tier: true,
       },
     });
 
     return NextResponse.json({
-      message: "Berhasil upload",
+      message: "Upload berhasil",
+      url: publicUrl,
       user: updatedUser,
     });
 
   } catch (err) {
-    console.error("Catch Error:", err);
+    console.error("Upload Route Error:", err);
+
+    // Distinguish between auth errors and other server errors
+    if (err.message === "Invalid token" || err.message === "Unauthorized") {
+      return NextResponse.json(
+        { error: "Sesi Anda telah berakhir, silakan masuk kembali." },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: `Internal Server Error: ${err.message}` },
       { status: 500 }
     );
   }
