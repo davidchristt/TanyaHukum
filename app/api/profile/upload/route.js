@@ -36,17 +36,24 @@ export async function POST(request) {
       return NextResponse.json({ error: "Ukuran file maksimal 2MB." }, { status: 400 });
     }
 
-    // VALIDASI FORMAT
+    // 1. Deklarasi dulu
+    const fileExt = file.name.split(".").pop()?.toLowerCase();
+
+    // 2. Baru validasi
     const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
-    if (!ALLOWED_EXTENSIONS.includes(fileExt)) {
+    if (!fileExt || !ALLOWED_EXTENSIONS.includes(fileExt)) {
       return NextResponse.json({ error: "Ekstensi file tidak valid." }, { status: 400 });
     }
 
-    const fileExt = file.name.split(".").pop().toLowerCase();
-    if (!fileExt || !ALLOWED_EXTENSIONS.includes(fileExt)) {
-    // Gunakan userId langsung sebagai nama file untuk mempermudah management & cache
-      const fileName = `${payload.userId}.${fileExt}`;
+    // Validasi MIME type juga (double check)
+    const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json({ error: "Format file tidak didukung." }, { status: 400 });
     }
+
+    // 3. Baru buat fileName & filePath
+    const fileName = `${payload.userId}.${fileExt}`;
+    const filePath = fileName;
 
     // ======================
     // UPLOAD (Convert to Buffer for stability)
@@ -63,7 +70,7 @@ export async function POST(request) {
 
     if (uploadError) {
       console.error("Supabase Storage Error:", uploadError);
-      return NextResponse.json({ error: `Gagal mengunggah ke storage: ${uploadError.message}` }, { status: 500 });
+      return NextResponse.json({ error: "Gagal mengunggah file, coba lagi." }, { status: 500 });
     }
 
     // ======================
