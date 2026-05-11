@@ -1,14 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import AdminDataItem from "./AdminDataItem";
 import AdminDataModal from "./AdminDataModal";
+import AdminDocDetailModal from "./AdminDocDetailModal";
 
-// Kategori hardcode karena data dipanggil per halaman (pagination)
 const CATEGORIES = [
   "Semua",
+  "Administrasi Negara",
   "Ketenagakerjaan",
-  "Perdata"
+  "Perdata",
+  "Pidana",
+  "Pemerintahan",
+  "Peraturan Presiden"
 ];
 
 export default function AdminDataList() {
@@ -17,15 +22,20 @@ export default function AdminDataList() {
   const [editingItem, setEditingItem] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [viewingItem, setViewingItem] = useState(null);
+  const [mounted, setMounted] = useState(false);
 
-  // State untuk Search, Kategori, dan Pagination
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Efek Debounce agar tidak spam hit API saat mengetik
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
@@ -33,7 +43,6 @@ export default function AdminDataList() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Reset ke halaman 1 kalau admin ganti kategori atau ngetik pencarian baru
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedSearch, selectedCategory]);
@@ -54,7 +63,6 @@ export default function AdminDataList() {
   const fetchRegulations = async () => {
     setIsLoading(true);
     try {
-      // Susun parameter URL untuk backend
       const params = new URLSearchParams();
       params.append("page", currentPage);
       if (debouncedSearch) params.append("search", debouncedSearch);
@@ -67,15 +75,17 @@ export default function AdminDataList() {
 
       if (response.ok) {
         const result = await response.json();
-
-        // Cek struktur response dari API baru
         if (result.data) {
           const formattedData = result.data.map(item => ({
             id: item.id,
             dokumen: item.title,
             deskripsi: item.description,
             fileUrl: item.fileUrl,
-            category: item.category || "Umum"
+            category: item.category || "Umum",
+            createdAt: item.createdAt,
+            viewCount: item.viewCount || 0,
+            fileSize: item.fileSize || null,
+            fileName: item.fileName || null
           }));
           setData(formattedData);
           setTotalPages(result.meta?.totalPages || 1);
@@ -90,35 +100,25 @@ export default function AdminDataList() {
     }
   };
 
-  // Panggil API tiap kali page, search, atau kategori berubah
   useEffect(() => {
     fetchRegulations();
   }, [currentPage, debouncedSearch, selectedCategory]);
 
   const executeDelete = async () => {
     if (!itemToDelete) return;
-
     const id = itemToDelete.id;
     const previousData = [...data];
-
-    // Optimistic UI: Hapus dari layar seketika
     setData(data.filter((item) => item.id !== id));
     setItemToDelete(null);
-
     try {
       const response = await fetch(`/api/admin/regulations/${id}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
         credentials: 'include'
       });
-
       if (!response.ok) throw new Error("Gagal menghapus di server");
-
-      // Boleh dipanggil lagi kalau mau datanya bener-bener akurat 10 baris setelah dihapus 1
-      // fetchRegulations(); 
     } catch (error) {
       console.error(error);
-      alert("Gagal menghapus dokumen. Server menolak.");
       setData(previousData);
     }
   };
@@ -130,54 +130,28 @@ export default function AdminDataList() {
 
   const handleSave = async (savedItem) => {
     const dummyFileUrl = `https://orueivtvfcdgfqpkqddw.supabase.co/storage/v1/object/public/documents/${encodeURIComponent(savedItem.dokumen)}`;
-
     const payload = {
-      title: savedItem.dokumen,
+      title: savedItem.title,
       description: savedItem.deskripsi,
       fileUrl: dummyFileUrl,
-      category: savedItem.kategori
+      category: savedItem.kategori,
+      fileSize: savedItem.fileSize || null,
+      fileName: savedItem.fileName || null
     };
 
-    if (editingItem) {
-      // --- PROSES EDIT (PATCH) ---
-      try {
-        const response = await fetch(`/api/admin/regulations/${editingItem.id}`, {
-          method: "PATCH",
-          headers: getAuthHeaders(),
-          credentials: 'include',
-          body: JSON.stringify(payload)
-        });
-
-        if (response.ok) {
-          fetchRegulations();
-        } else {
-          const errorData = await response.json();
-          alert(`Gagal mengupdate dokumen: ${errorData.error || 'Server error'}`);
-        }
-      } catch (error) {
-        console.error("Error saat update:", error);
-      }
-    } else {
-      // --- PROSES TAMBAH BARU (POST) ---
-      try {
-        const response = await fetch('/api/admin/regulations', {
-          method: "POST",
-          headers: getAuthHeaders(),
-          credentials: 'include',
-          body: JSON.stringify(payload)
-        });
-
-        if (response.ok) {
-          fetchRegulations();
-        } else {
-          const errorData = await response.json();
-          alert(`Gagal menambahkan dokumen: ${errorData.error || 'Server error'}`);
-        }
-      } catch (error) {
-        console.error("Error saat save:", error);
-      }
+    try {
+      const url = editingItem ? `/api/admin/regulations/${editingItem.id}` : '/api/admin/regulations';
+      const method = editingItem ? "PATCH" : "POST";
+      const response = await fetch(url, {
+        method,
+        headers: getAuthHeaders(),
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+      if (response.ok) fetchRegulations();
+    } catch (error) {
+      console.error("Error saat save:", error);
     }
-
     handleCloseModal();
   };
 
@@ -187,152 +161,176 @@ export default function AdminDataList() {
   };
 
   return (
-    <div className="bg-[#f2f7ff]/60 border border-blue-50 rounded-2xl p-6 shadow-sm min-h-[500px] relative flex flex-col">
+    <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 min-h-[600px] flex flex-col group transition-all duration-300 hover:shadow-md relative overflow-hidden">
+      
+      {/* HEADER SECTION */}
+      <div className="mb-10">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8">
+          <div>
+            <h2 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+              <div className="w-2 h-8 bg-blue-600 rounded-full" />
+              Pusat Data Hukum
+            </h2>
+            <p className="text-sm text-gray-500 mt-1 font-medium">Administrasi regulasi dan metadata dokumen nasional.</p>
+          </div>
+          
+          <button 
+            onClick={() => {
+              setEditingItem(null);
+              setIsModalOpen(true);
+            }} 
+            className="bg-blue-600 text-white px-8 py-4 rounded-[1.25rem] font-bold hover:bg-blue-700 transition shadow-xl shadow-blue-200 flex items-center justify-center gap-3 shrink-0 active:scale-95"
+          >
+            <span className="text-xl">+</span>
+            <span>Tambah Dokumen</span>
+          </button>
+        </div>
 
-      {/* HEADER: Judul + Alat Pencarian & Filter */}
-      <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between mb-8 gap-4">
-        <h2 className="text-2xl font-medium text-gray-800 shrink-0">
-          Database Data Hukum
-        </h2>
-
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto">
-
-          {/* SEARCH BAR */}
-          <div className="relative w-full sm:w-64">
-            <input
-              type="text"
-              placeholder="Cari regulasi..."
+        {/* SEARCH & FILTERS */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-gray-50/50 p-4 rounded-[2rem] border border-gray-100">
+          <div className="relative md:col-span-3">
+            <input 
+              type="text" 
+              placeholder="Cari regulasi atau metadata..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full border border-gray-300 rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition"
+              className="w-full bg-white border border-gray-200 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 outline-none transition shadow-sm"
             />
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-              <img src="/icons/search.svg" alt="Search" className="w-4 h-4 opacity-50" />
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+              <img src="/icons/search.svg" alt="Search" className="w-5 h-5 opacity-40" />
             </div>
           </div>
 
-          {/* FILTER KATEGORI */}
-          <select
+          <select 
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full sm:w-40 border border-gray-300 rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer transition"
+            className="bg-white border border-gray-200 rounded-2xl py-3.5 px-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 outline-none shadow-sm cursor-pointer"
           >
             {CATEGORIES.map(cat => (
               <option key={cat} value={cat}>{cat}</option>
             ))}
           </select>
-
-          {/* TOMBOL TAMBAH */}
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-[#78b3ff] text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-blue-500 transition shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto shrink-0"
-          >
-            <span>+</span> Tambah
-          </button>
         </div>
       </div>
 
-      {/* JUDUL KOLOM */}
-      <div className="flex items-center justify-between px-4 mb-3 pb-3 border-b border-blue-50/50">
-        <div className="grid grid-cols-12 gap-4 w-full">
-          <p className="col-span-1 text-sm font-bold text-gray-600 text-center">No</p>
-          <p className="col-span-6 text-sm font-bold text-gray-600">Dokumen</p>
-          <p className="col-span-2 text-sm font-bold text-gray-600 text-center">Kategori</p>
-          <p className="col-span-3 text-sm font-bold text-gray-600">Deskripsi</p>
-        </div>
-        <div className="w-[80px] ml-4 shrink-0"></div>
+      {/* PRODUCTION TABLE */}
+      <div className="flex-1 overflow-x-auto custom-scrollbar -mx-8 px-8">
+        <table className="w-full border-separate border-spacing-y-3">
+          <thead className="sticky top-0 z-20 bg-white/80 backdrop-blur-md">
+            <tr className="text-left">
+              <th className="pb-4 px-6 text-[11px] font-black text-gray-400 uppercase tracking-widest">Informasi Dokumen</th>
+              <th className="pb-4 px-4 text-[11px] font-black text-gray-400 uppercase tracking-widest">Metadata & Kategori</th>
+              <th className="pb-4 px-4 text-[11px] font-black text-gray-400 uppercase tracking-widest text-center">Ukuran & Views</th>
+              <th className="pb-4 px-4 text-[11px] font-black text-gray-400 uppercase tracking-widest text-center">Tgl Unggah</th>
+              <th className="pb-4 px-6"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              <tr>
+                <td colSpan="5" className="py-20 text-center">
+                   <div className="flex flex-col items-center gap-4">
+                      <div className="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
+                      <p className="text-sm font-bold text-gray-400 animate-pulse">Menghubungkan ke database hukum...</p>
+                   </div>
+                </td>
+              </tr>
+            ) : data.length === 0 ? (
+              <tr>
+                <td colSpan="5" className="py-20 text-center">
+                   <div className="border-2 border-dashed border-gray-100 rounded-[2rem] p-12 inline-block">
+                      <p className="text-sm font-bold text-gray-400 italic">Dokumen tidak ditemukan dalam database.</p>
+                   </div>
+                </td>
+              </tr>
+            ) : (
+              data.map((item, index) => (
+                <AdminDataItem 
+                  key={item.id} 
+                  index={index + (currentPage - 1) * 10} 
+                  item={item} 
+                  onDelete={() => setItemToDelete(item)} 
+                  onEdit={() => handleEdit(item)}
+                  onView={() => setViewingItem(item)}
+                />
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {/* ISI TABEL */}
-      <div className="flex flex-col gap-1 flex-1">
-        {isLoading ? (
-          <div className="text-center py-8 text-gray-500">Memuat data dari database...</div>
-        ) : data.length === 0 ? (
-          <div className="text-center py-8 text-gray-400">Belum ada dokumen / dokumen tidak ditemukan.</div>
-        ) : (
-          data.map((item, index) => (
-            <AdminDataItem
-              key={item.id}
-              // Hitung nomor urut berdasarkan pagination (biar nggak reset ke 1 di tiap halaman)
-              index={index + (currentPage - 1) * 10}
-              item={item}
-              onDelete={() => setItemToDelete(item)}
-              onEdit={() => handleEdit(item)}
-            />
-          ))
-        )}
-      </div>
-
-      {/* KONTROL PAGINATION */}
-      {totalPages > 1 && !isLoading && (
-        <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-100">
-          <p className="text-sm text-gray-500">
-            Halaman {currentPage} dari {totalPages}
+      {/* PAGINATION FOOTER */}
+      {!isLoading && totalPages > 1 && (
+        <div className="mt-8 pt-8 border-t border-gray-50 flex items-center justify-between">
+          <p className="text-xs font-bold text-gray-400">
+            Halaman <span className="text-gray-900 font-black">{currentPage}</span> dari <span className="text-gray-900 font-black">{totalPages}</span>
           </p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="p-2.5 rounded-xl border border-gray-100 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition"
             >
-              Sebelumnya
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
             </button>
-            <button
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+            <button 
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
-              className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="p-2.5 rounded-xl border border-gray-100 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition"
             >
-              Selanjutnya
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </button>
           </div>
         </div>
       )}
 
-      {/* RENDER MODAL EDIT/TAMBAH */}
-      {isModalOpen && (
-        <AdminDataModal
-          onClose={handleCloseModal}
-          onSave={handleSave}
-          initialData={editingItem}
+      {mounted && isModalOpen && createPortal(
+        <AdminDataModal onClose={handleCloseModal} onSave={handleSave} initialData={editingItem} />,
+        document.body
+      )}
+
+      {/* DOCUMENT DETAIL MODAL */}
+      {mounted && viewingItem && (
+        <AdminDocDetailModal
+          item={viewingItem}
+          onClose={() => setViewingItem(null)}
+          onEdit={() => { setViewingItem(null); handleEdit(viewingItem); }}
+          onDelete={() => { setViewingItem(null); setItemToDelete(viewingItem); }}
         />
       )}
 
-      {/* RENDER MODAL KONFIRMASI HAPUS */}
-      {itemToDelete && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/20 backdrop-blur-sm">
-          <div className="bg-white p-8 rounded-2xl shadow-xl w-[400px] text-center transform transition-all">
-
-            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-5 border border-red-100">
-              <img src="/icons/hapus.svg" alt="Warning" className="w-8 h-8 opacity-80" />
+      {/* DELETE CONFIRMATION MODAL */}
+      {mounted && itemToDelete && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/20 backdrop-blur-md animate-fadeIn p-4">
+          <div className="bg-white p-10 rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] w-full max-w-[450px] text-center transform transition-all animate-slideUp">
+            <div className="w-20 h-20 bg-red-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-red-100">
+              <img src="/icons/hapus.svg" alt="Warning" className="w-10 h-10 opacity-80" />
             </div>
-
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Hapus Dokumen?</h2>
-
-            <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+            <h2 className="text-2xl font-black text-gray-900 mb-3 tracking-tight">Hapus Dokumen?</h2>
+            <p className="text-sm text-gray-500 mb-10 leading-relaxed font-medium px-4">
               Apakah Anda yakin ingin menghapus dokumen <br />
-              <span className="font-semibold text-gray-800">"{itemToDelete.dokumen}"</span>?<br />
-              Tindakan ini tidak dapat dibatalkan.
+              <span className="font-bold text-gray-900">"{itemToDelete.dokumen}"</span>?<br />
+              Tindakan ini permanen dan tidak dapat dibatalkan.
             </p>
-
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <button
                 onClick={() => setItemToDelete(null)}
-                className="flex-1 bg-gray-100 text-gray-700 font-semibold py-3 rounded-xl hover:bg-gray-200 transition"
+                className="flex-1 bg-gray-50 text-gray-400 font-bold py-4 rounded-[1.25rem] hover:bg-gray-100 transition active:scale-95 text-xs uppercase tracking-widest"
               >
-                Batal
+                Batalkan
               </button>
               <button
                 onClick={executeDelete}
-                className="flex-1 bg-red-500 text-white font-semibold py-3 rounded-xl hover:bg-red-600 transition shadow-lg shadow-red-200"
+                className="flex-1 bg-red-500 text-white font-bold py-4 rounded-[1.25rem] hover:bg-red-600 transition shadow-xl shadow-red-200 active:scale-95 text-xs uppercase tracking-widest"
               >
                 Ya, Hapus
               </button>
             </div>
-
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-
     </div>
   );
 }

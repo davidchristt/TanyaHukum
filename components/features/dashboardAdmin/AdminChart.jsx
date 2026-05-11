@@ -20,10 +20,13 @@ export default function AdminChart({ dataTren = [] }) {
     : dataTren;
 
   return (
-    <div className="bg-white/80 rounded-2xl p-5 shadow-sm border border-blue-100 flex flex-col h-full">
-      <h3 className="text-lg font-semibold text-gray-800 mb-6">
-        Tren Pencarian Hukum
-      </h3>
+    <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 flex flex-col h-full group transition-all duration-300 hover:shadow-md">
+      <div className="flex items-center gap-3 mb-8">
+        <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
+        <h3 className="text-lg font-bold text-gray-900">
+          Tren Pencarian Hukum
+        </h3>
+      </div>
 
       <div style={{ width: '100%', minHeight: '300px', height: '300px' }}>
         {dataTren.length > 0 ? (

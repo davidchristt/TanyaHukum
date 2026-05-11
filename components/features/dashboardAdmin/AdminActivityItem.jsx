@@ -1,28 +1,26 @@
-export default function AdminActivityItem({ item, onDelete }) {
-  return (
-    <div className="p-4 border rounded-xl flex items-start justify-between gap-4 hover:bg-gray-50 transition shadow-sm bg-white">
-      {/* Container Teks */}
-      <div className="flex-1">
-        <p className="text-sm font-semibold text-gray-800 line-clamp-1">
-          {item.title}
-        </p>
-        <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">
-          {item.desc}
-        </p>
-        <p className="text-xs text-gray-400 mt-3 font-medium">
-          {item.time}
-        </p>
-      </div>
+"use client";
 
-      {/* Container Tombol Hapus */}
+export default function AdminActivityItem({ item, onDelete, onView }) {
+  return (
+    <div className="group flex items-start gap-3 p-3 rounded-xl hover:bg-blue-50/30 transition relative cursor-pointer" onClick={onView}>
+      <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5 shrink-0 group-hover:bg-blue-600 transition" />
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-black text-gray-900 line-clamp-2 leading-relaxed">{item.title}</p>
+        <div className="flex items-center gap-2 mt-1">
+          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{item.time}</span>
+          {item.location && (
+            <>
+              <span className="text-gray-200">·</span>
+              <span className="text-[9px] font-bold text-gray-400">{item.location}</span>
+            </>
+          )}
+        </div>
+      </div>
       <button
-        onClick={onDelete}
-        // flex-shrink-0 adalah tameng utama agar tombol tidak menyusut!
-        className="flex-shrink-0 p-2 rounded-lg hover:bg-blue-50 transition-all"
-        title="Hapus Isu Terkini"
+        onClick={(e) => { e.stopPropagation(); onDelete(); }}
+        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-100 transition shrink-0"
       >
-        {/* Kita panggil kembali icon kebanggaan bos! */}
-        <img src="/icons/hapus.svg" alt="Hapus" className="w-5 h-5" />
+        <img src="/icons/hapus.svg" alt="Hapus" className="w-3.5 h-3.5 opacity-50 hover:opacity-100 transition" />
       </button>
     </div>
   );

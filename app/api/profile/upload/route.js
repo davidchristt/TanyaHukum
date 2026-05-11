@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifyToken } from "@/src/lib/auth-server";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0; // Tambahkan ini!
+
 export async function POST(request) {
   try {
     const token = request.cookies.get("token")?.value;
@@ -16,12 +19,13 @@ export async function POST(request) {
 
     const payload = await verifyToken(token);
 
+    if (!payload?.userId) {
+      return NextResponse.json({ error: "Token tidak valid." }, { status: 401 });
+    }
+
     // Gunakan admin client untuk bypass RLS di storage
     const supabase = await createAdminClient();
 
-    // ======================
-    // FILE
-    // ======================
     const formData = await request.formData();
     const file = formData.get("file");
 
@@ -29,21 +33,30 @@ export async function POST(request) {
       return NextResponse.json({ error: "File tidak ditemukan." }, { status: 400 });
     }
 
-    // VALIDASI
+    // VALIDASI UKURAN (2MB)
     const MAX_SIZE = 2 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
       return NextResponse.json({ error: "Ukuran file maksimal 2MB." }, { status: 400 });
     }
 
-    const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json({ error: "Format file tidak didukung (Gunakan JPG, PNG, atau WebP)." }, { status: 400 });
+    // 1. Deklarasi dulu
+    const fileExt = file.name.split(".").pop()?.toLowerCase();
+
+    // 2. Baru validasi
+    const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
+    if (!fileExt || !ALLOWED_EXTENSIONS.includes(fileExt)) {
+      return NextResponse.json({ error: "Ekstensi file tidak valid." }, { status: 400 });
     }
 
-    const fileExt = file.name.split(".").pop().toLowerCase();
-    // Gunakan userId langsung sebagai nama file untuk mempermudah management & cache
+    // Validasi MIME type juga (double check)
+    const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json({ error: "Format file tidak didukung." }, { status: 400 });
+    }
+
+    // 3. Baru buat fileName & filePath
     const fileName = `${payload.userId}.${fileExt}`;
-    const filePath = `${fileName}`; // Simpan di root bucket agar lebih simpel
+    const filePath = fileName;
 
     // ======================
     // UPLOAD (Convert to Buffer for stability)
@@ -60,17 +73,17 @@ export async function POST(request) {
 
     if (uploadError) {
       console.error("Supabase Storage Error:", uploadError);
-      return NextResponse.json({ error: `Gagal mengunggah ke storage: ${uploadError.message}` }, { status: 500 });
+      return NextResponse.json({ error: "Gagal mengunggah file, coba lagi." }, { status: 500 });
     }
 
     // ======================
-    // PUBLIC URL
+    // AMBIL PUBLIC URL
     // ======================
     const { data: urlData } = supabase.storage
       .from("avatars")
       .getPublicUrl(filePath);
 
-    const publicUrl = urlData.publicUrl;
+    const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
 
     // ======================
     // UPDATE DB
@@ -91,6 +104,10 @@ export async function POST(request) {
       message: "Upload berhasil",
       url: publicUrl,
       user: updatedUser,
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+      }
     });
 
   } catch (err) {
@@ -104,9 +121,6 @@ export async function POST(request) {
       );
     }
 
-    return NextResponse.json(
-      { error: `Internal Server Error: ${err.message}` },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Terjadi kesalahan pada server." }, { status: 500 });
   }
 }

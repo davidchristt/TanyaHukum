@@ -48,8 +48,17 @@ export async function GET() {
 
             prisma.regulation.findMany({
                 orderBy: { viewCount: 'desc' },
-                take: 3,
-                select: { title: true, viewCount: true }
+                take: 10,
+                select: { 
+                    id: true,
+                    title: true, 
+                    description: true,
+                    category: true,
+                    fileSize: true,
+                    fileUrl: true,
+                    viewCount: true,
+                    createdAt: true
+                }
             }),
 
             prisma.trendingIssue.findMany({
@@ -93,6 +102,7 @@ export async function GET() {
 
         // 3. Format Data untuk Frontend
         const formattedPopularDocs = popularDocsData.map(doc => ({
+            ...doc,
             name: doc.title,
             views: doc.viewCount || 0
         }));

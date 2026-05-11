@@ -114,9 +114,13 @@ export default function Header({ onOpenSubscription, onOpenAuth }) {
 
         {/* ===== USER PRO ===== */}
         {user && user.tier === "PRO" && (
-          <span className="text-sm px-4 py-2 bg-green-100 text-green-700 rounded-lg font-medium">
+          <button
+            onClick={onOpenSubscription}
+            className="flex items-center gap-2 px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg font-medium transition-all active:scale-[0.98]"
+          >
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             PRO Member
-          </span>
+          </button>
         )}
 
       </div>

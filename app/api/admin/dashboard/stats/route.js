@@ -1,112 +1,107 @@
 import { NextResponse } from "next/server";
 import prisma from '@/lib/prisma';
-import { Prisma } from "@prisma/client";
 
 export async function GET() {
   try {
-    // 1. Tarik Data Utama (Sama seperti sebelumnya)
+    const now = new Date();
+    const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0);
+    const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
+    const prevWeekStart = new Date(now); prevWeekStart.setDate(prevWeekStart.getDate() - 14);
+
+    // === PARALLEL AGGREGATION QUERIES ===
     const [
-      totalUsers, 
-      totalInteractions, 
-      totalRegulations,
-      popularDocsData,
-      trendingIssuesData
+      totalUsers, totalAdmins, proUsers, freeUsers,
+      totalRegulations, totalViews, totalChatMessages,
+      usersThisWeek, usersPrevWeek,
+      regsThisWeek, regsPrevWeek,
+      chatsToday,
+      totalStorageRaw,
+      popularDocs, recentDocs,
+      trendingIssues,
+      searchTrendsRaw,
+      categoryDistribution,
+      activeUsersToday,
     ] = await Promise.all([
       prisma.user.count(),
-      prisma.chatHistory.count(),
+      prisma.user.count({ where: { role: 'ADMIN' } }),
+      prisma.user.count({ where: { tier: 'PRO' } }),
+      prisma.user.count({ where: { tier: 'FREE' } }),
       prisma.regulation.count(),
-      
-      prisma.regulation.findMany({
-        orderBy: { viewCount: 'desc' },
-        take: 3,
-        select: { title: true, viewCount: true }
-      }),
-      
-      prisma.trendingIssue.findMany({
-        orderBy: { publishDate: 'desc' },
-        take: 3
-      })
+      prisma.regulation.aggregate({ _sum: { viewCount: true } }),
+      prisma.chatHistory.count(),
+      // Growth: users this week vs prev week
+      prisma.user.count({ where: { createdAt: { gte: weekAgo } } }),
+      prisma.user.count({ where: { createdAt: { gte: prevWeekStart, lt: weekAgo } } }),
+      // Growth: regulations this week vs prev week
+      prisma.regulation.count({ where: { createdAt: { gte: weekAgo } } }),
+      prisma.regulation.count({ where: { createdAt: { gte: prevWeekStart, lt: weekAgo } } }),
+      // Chat messages today
+      prisma.chatHistory.count({ where: { role: 'USER', createdAt: { gte: todayStart } } }),
+      // Total storage
+      prisma.regulation.aggregate({ _sum: { fileSize: true } }),
+      // Popular docs (top 5)
+      prisma.regulation.findMany({ orderBy: { viewCount: 'desc' }, take: 5, select: { id: true, title: true, viewCount: true, category: true, fileSize: true } }),
+      // Recent docs
+      prisma.regulation.findMany({ orderBy: { createdAt: 'desc' }, take: 5, select: { id: true, title: true, createdAt: true, category: true, fileSize: true } }),
+      // Trending issues
+      prisma.trendingIssue.findMany({ orderBy: { publishDate: 'desc' }, take: 5, select: { id: true, title: true, description: true, publishDate: true, location: true, newsLink: true, isActive: true } }),
+      // Search trends (last 14 days)
+      prisma.searchLog.groupBy({ by: ['createdAt'], _count: { id: true }, orderBy: { createdAt: 'asc' } }),
+      // Category distribution
+      prisma.regulation.groupBy({ by: ['category'], _count: { id: true }, where: { category: { not: null } } }),
+      // Active users today (users who sent messages today)
+      prisma.chatHistory.findMany({ where: { role: 'USER', createdAt: { gte: todayStart } }, select: { userId: true }, distinct: ['userId'] }),
     ]);
 
-    // 2. Tarik & Rekap Data Tren Pencarian per Hari
-    // Menggunakan fitur groupBy milik Prisma
-    const searchTrendsRaw = await prisma.searchLog.groupBy({
-      by: ['createdAt'], // Kelompokkan berdasarkan waktu
-      _count: {
-        id: true, // Hitung jumlah ID per waktu
-      },
-      orderBy: {
-        createdAt: 'asc', // Urutkan dari yang terlama ke terbaru (untuk grafik)
-      },
-      take: 30 // Ambil maksimal 30 hari terakhir biar grafik nggak kepanjangan
-    });
-
-    // Karena Prisma mengelompokkan berdasarkan waktu persis (jam/menit/detik), 
-    // kita harus merapikannya dengan JavaScript agar murni dikelompokkan per "Tanggal" (YYYY-MM-DD).
+    // === PROCESS SEARCH TRENDS ===
     const trendMap = {};
     searchTrendsRaw.forEach((log) => {
-      // Ambil format YYYY-MM-DD
-      const dateKey = log.createdAt.toISOString().split('T')[0]; 
-      
-      if (trendMap[dateKey]) {
-        trendMap[dateKey] += log._count.id;
-      } else {
-        trendMap[dateKey] = log._count.id;
-      }
+      const dateKey = log.createdAt.toISOString().split('T')[0];
+      trendMap[dateKey] = (trendMap[dateKey] || 0) + log._count.id;
     });
-
-    // Ubah Object map tadi menjadi Array agar disukai oleh grafik Frontend bos
-    const formattedSearchTrends = Object.keys(trendMap).map((date) => ({
-      date: date,
-      searches: trendMap[date]
+    const searchTrends = Object.keys(trendMap).slice(-14).map(date => ({
+      date, searches: trendMap[date]
     }));
 
-    // 3. Format Data untuk Frontend
-    const formattedPopularDocs = popularDocsData.map(doc => ({
-      name: doc.title,
-      views: doc.viewCount || 0
-    }));
-
-    const isDev = process.env.NODE_ENV === "development";
-
-    const responseData = {
-      success: true,
-      data: {
-        summary: {
-          total_regulasi: {
-            value: totalRegulations,
-            growth: null,
-            ...(isDev && { _note: "Growth belum dihitung" })
-          },
-          pengguna_aktif: {
-            value: totalUsers,
-            growth: null,
-          },
-          interaksi_harian: {
-            value: totalInteractions,
-            growth: null,
-          }
-        },
-        dokumen_terpopuler: formattedPopularDocs,
-        isu_terkini: trendingIssuesData,
-        tren_pencarian: formattedSearchTrends // <-- BOOM! Sekarang datanya 100% dari tabel SearchLog!
-      }
+    // === COMPUTE GROWTH PERCENTAGES ===
+    const calcGrowth = (current, prev) => {
+      if (prev === 0) return current > 0 ? "+100%" : "0%";
+      const pct = Math.round(((current - prev) / prev) * 100);
+      return pct >= 0 ? `+${pct}%` : `${pct}%`;
     };
 
-    return NextResponse.json(responseData, {
-      status: 200,
-      headers: { "Cache-Control": "no-store" } 
-    });
+    // === CATEGORY DISTRIBUTION ===
+    const categories = categoryDistribution.map(c => ({
+      name: c.category || "Lainnya",
+      count: c._count.id
+    })).sort((a, b) => b.count - a.count);
 
+    // === FORMAT RESPONSE ===
+    return NextResponse.json({
+      success: true,
+      data: {
+        cards: {
+          totalDocuments: { value: totalRegulations, growth: calcGrowth(regsThisWeek, regsPrevWeek), label: "Total Dokumen" },
+          totalUsers: { value: totalUsers, growth: calcGrowth(usersThisWeek, usersPrevWeek), label: "Total Pengguna" },
+          activeUsersToday: { value: activeUsersToday.length, label: "User Aktif Hari Ini" },
+          totalViews: { value: totalViews._sum?.viewCount || 0, label: "Total Views" },
+          chatRequestsToday: { value: chatsToday, label: "Chat Hari Ini" },
+          totalChatMessages: { value: totalChatMessages, label: "Total Chat Msg" },
+          proUsers: { value: proUsers, label: "Pro Members" },
+          freeUsers: { value: freeUsers, label: "Free Users" },
+          totalAdmins: { value: totalAdmins, label: "Administrator" },
+          storageUsed: { value: totalStorageRaw._sum?.fileSize || 0, label: "Storage Used" },
+        },
+        popularDocs: popularDocs.map(d => ({ name: d.title, views: d.viewCount, category: d.category, size: d.fileSize })),
+        recentDocs: recentDocs.map(d => ({ name: d.title, date: d.createdAt, category: d.category, size: d.fileSize })),
+        trendingIssues,
+        searchTrends,
+        categoryDistribution: categories,
+        userDistribution: { pro: proUsers, free: freeUsers, admin: totalAdmins },
+      }
+    }, { status: 200, headers: { "Cache-Control": "no-store" } });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      console.error("DB Query Error:", error.code, error.message);
-    } else {
-      console.error("Unexpected Error:", error);
-    }
-    return NextResponse.json(
-      { success: false, message: "Internal Server Error" },
-      { status: 500 }
-    );
+    console.error("Dashboard Analytics Error:", error);
+    return NextResponse.json({ success: false, message: "Internal Server Error" }, { status: 500 });
   }
 }

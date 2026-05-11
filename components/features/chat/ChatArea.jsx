@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Header from "@/components/layout/Header";
-import ReactMarkdown from "react-markdown";
+import LegalResponse from "./LegalResponse";
 
 import {
   sendMessage,
@@ -162,7 +162,7 @@ export default function ChatArea({ user, onOpenAuth, onOpenSubscription }) {
   }, [messages, loading]);
 
   return (
-    <div className="h-full flex flex-col bg-white/70 backdrop-blur-md rounded-2xl shadow-lg min-h-0 overflow-hidden">
+    <div className="h-full flex flex-col min-h-0 relative">
 
       {/* HEADER */}
       <div className="flex-none border-b border-gray-200">
@@ -179,16 +179,16 @@ export default function ChatArea({ user, onOpenAuth, onOpenSubscription }) {
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center px-6">
 
-            <h1 className="text-4xl font-semibold text-gray-900 mb-2 text-center">
+            <h1 className="text-4xl font-semibold text-gray-900 mb-2 text-center animate-fade-down">
               {emptyTitle}
             </h1>
 
-            <p className="text-gray-600 text-lg mb-10 text-center max-w-xl">
+            <p className="text-gray-600 text-lg mb-10 text-center max-w-xl animate-fade-down delay-75">
               {emptyText}
             </p>
 
             {/* INPUT TENGAH */}
-            <div className="w-full max-w-2xl flex border-2 border-blue-100 rounded-2xl overflow-hidden bg-white shadow-sm">
+            <div className="w-full max-w-2xl flex border-2 border-blue-100 rounded-2xl overflow-hidden bg-white shadow-sm animate-fade-down delay-150 focus-ring premium-glow">
               
               <input
                 type="text"
@@ -210,7 +210,7 @@ export default function ChatArea({ user, onOpenAuth, onOpenSubscription }) {
                 disabled={loading}
                 className="px-6 hover:bg-blue-50"
               >
-                <img src="/icons/sendChat.svg" className="w-6 h-6" />
+                <img src="/icons/sendChat.svg" className="w-6 h-6 hover:animate-pulse-soft" />
               </button>
 
             </div>
@@ -230,16 +230,14 @@ export default function ChatArea({ user, onOpenAuth, onOpenSubscription }) {
                     } group mb-6 transition-all duration-300`}
                   >
                     <div
-                      className={`relative max-w-[90%] sm:max-w-[80%] px-6 py-5 rounded-3xl text-[15px] leading-[1.7] tracking-tight ${
+                      className={`relative max-w-[95%] sm:max-w-[85%] px-7 py-6 rounded-[2rem] text-[15.5px] leading-[1.75] tracking-tight ${
                         msg.role === "user"
-                          ? "bg-blue-600 text-white shadow-lg shadow-blue-100 rounded-tr-none border border-blue-700/10"
-                          : "bg-[#F9FAFB] border border-gray-200 shadow-sm text-gray-800 rounded-tl-none"
+                          ? "bg-blue-600 text-white shadow-xl shadow-blue-500/10 rounded-tr-none border border-blue-400/20"
+                          : "bg-white border border-gray-100 shadow-md shadow-gray-200/50 text-gray-800 rounded-tl-none"
                       }`}
                     >
                       {msg.role === "assistant" ? (
-                        <div className="prose prose-sm max-w-none prose-slate prose-p:leading-[1.8] prose-p:mb-4 prose-li:mb-2 prose-headings:mb-3">
-                          <ReactMarkdown>{msg.content}</ReactMarkdown>
-                        </div>
+                        <LegalResponse content={msg.content} />
                       ) : (
                         <div className="whitespace-pre-wrap font-medium">
                           {msg.content}
@@ -295,9 +293,8 @@ export default function ChatArea({ user, onOpenAuth, onOpenSubscription }) {
               </div>
             </div>
 
-            {/* INPUT BAWAH */}
-            <div className="p-6 border-t bg-white">
-              <div className="w-full flex border-2 border-blue-100 rounded-2xl overflow-hidden bg-white">
+            <div className="p-6 border-t bg-gray-50/50">
+              <div className="w-full flex border border-blue-200 rounded-[1.5rem] overflow-hidden bg-white shadow-xl shadow-blue-500/5 focus-ring transition-all">
                 
                 <input
                   type="text"
@@ -319,7 +316,7 @@ export default function ChatArea({ user, onOpenAuth, onOpenSubscription }) {
                   disabled={loading}
                   className="px-6 hover:bg-blue-50"
                 >
-                  <img src="/icons/sendChat.svg" className="w-6 h-6" />
+                  <img src="/icons/sendChat.svg" className="w-6 h-6 hover:animate-pulse-soft" />
                 </button>
 
               </div>

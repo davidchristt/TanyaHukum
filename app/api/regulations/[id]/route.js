@@ -6,7 +6,7 @@ import prisma from "@/lib/prisma";
 // ==========================================
 export async function GET(req, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json(
@@ -45,7 +45,7 @@ export async function GET(req, { params }) {
 // ==========================================
 export async function PATCH(req, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json(

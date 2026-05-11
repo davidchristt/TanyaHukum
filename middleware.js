@@ -7,20 +7,20 @@ export async function middleware(request) {
 
   // 2. Proteksi Lorong Endpoint API Admin
   if (request.nextUrl.pathname.startsWith('/api/admin')) {
-    
+
     // Jika tidak bawa ID Card sama sekali, tolak
     if (!token) {
-       return NextResponse.json(
-         { error: 'Unauthorized: Harap login terlebih dahulu' },
-         { status: 401 }
-       );
+      return NextResponse.json(
+        { error: 'Unauthorized: Harap login terlebih dahulu' },
+        { status: 401 }
+      );
     }
 
     try {
       // 3. Ambil "Stempel Rahasia" dari environment (biasanya di file .env)
       // Secara default biasanya process.env.JWT_SECRET
       const secretKey = process.env.JWT_SECRET || 'fallback_secret_key_sementara';
-      
+
       // jose mewajibkan secret key diubah ke format Uint8Array
       const encodedSecret = new TextEncoder().encode(secretKey);
 
@@ -48,7 +48,11 @@ export async function middleware(request) {
   }
 
   // Jika semua pengecekan aman, silakan lewat!
-  return NextResponse.next();
+  const response = NextResponse.next();
+  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  response.headers.set('Pragma', 'no-cache');
+  response.headers.set('Expires', '0');
+  return response;
 }
 
 export const config = {

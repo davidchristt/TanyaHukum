@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -11,76 +12,183 @@ import {
 } from "recharts";
 
 export default function ChartPlaceholder({ trends = [] }) {
-  // Tiru logika pintar admin: Kalau datanya cuma 1 hari, tambahkan padding biar garisnya bisa digambar
-  const chartData = trends.length === 1
-    ? [
-      { date: "Sebelumnya", searches: 0 },
-      ...trends,
-      { date: "Sekarang", searches: trends[0].searches }
-    ]
-    : trends;
+  const [timeRange, setTimeRange] = useState("30d");
+
+  const ranges = [
+    { id: "7d", label: "7 Hari", days: 7 },
+    { id: "30d", label: "30 Hari", days: 30 },
+    { id: "3m", label: "3 Bulan", days: 90 },
+    { id: "1y", label: "1 Tahun", days: 365 },
+  ];
+
+  // Filter trends based on selected range (Frontend only logic as requested)
+  const filteredTrends = useMemo(() => {
+    if (!trends || trends.length === 0) return [];
+    
+    const rangeObj = ranges.find(r => r.id === timeRange);
+    const daysToKeep = rangeObj ? rangeObj.days : 30;
+    
+    // Assume trends is sorted by date ascending. If not, we should sort.
+    // For now, we'll just take the last N items.
+    return trends.slice(-daysToKeep);
+  }, [trends, timeRange]);
+
+  const chartData = useMemo(() => {
+    if (filteredTrends.length === 1) {
+      return [
+        { date: "Sebelumnya", searches: 0 },
+        ...filteredTrends,
+        { date: "Sekarang", searches: filteredTrends[0].searches }
+      ];
+    }
+    return filteredTrends;
+  }, [filteredTrends]);
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-4 border border-gray-100 shadow-2xl rounded-2xl animate-fadeIn">
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{label}</p>
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-blue-600 shadow-sm" />
+            <p className="text-sm font-bold text-gray-900">
+              {payload[0].value} <span className="font-medium text-gray-500">Pencarian</span>
+            </p>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
-    <div className="bg-white/80 rounded-2xl p-5 shadow-sm border border-blue-100 flex flex-col h-full">
-      <h3 className="text-lg font-semibold text-gray-800 mb-6">
-        Tren Pencarian Hukum
-      </h3>
+    <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 flex flex-col h-full group transition-all duration-300 hover:shadow-md">
+      
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
+        <div>
+          <h3 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+            <div className="w-2 h-8 bg-blue-600 rounded-full" />
+            Tren Pencarian Hukum
+          </h3>
+          <p className="text-xs text-gray-500 mt-1">Volume aktivitas dan interaksi chatbot</p>
+        </div>
+        
+        {/* Modern Segmented Filter */}
+        <div className="flex items-center gap-1 bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
+          {ranges.map((r) => (
+            <button
+              key={r.id}
+              onClick={() => setTimeRange(r.id)}
+              className={`px-4 py-2 rounded-xl text-[11px] font-black tracking-tight transition-all duration-300 ${
+                timeRange === r.id 
+                  ? "bg-white text-blue-600 shadow-sm border border-gray-100 scale-105" 
+                  : "text-gray-400 hover:text-gray-600"
+              }`}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      {/* PERBAIKAN UTAMA: Kasih tinggi pasti (300px) biar Recharts nggak error -1 */}
-      <div style={{ width: '100%', minHeight: '300px', height: '300px' }}>
-        {trends && trends.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
+      <div style={{ width: '100%', minHeight: '380px', height: '380px' }} className="relative">
+        {filteredTrends && filteredTrends.length > 0 ? (
+          <ResponsiveContainer width="100%" height={380}>
             <AreaChart
               data={chartData}
-              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+              margin={{ top: 10, right: 20, left: 0, bottom: 60 }}
             >
               <defs>
-                <linearGradient id="colorSearchesUser" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                <linearGradient id="colorSearchesPremiumV2" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#2563eb" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
                 </linearGradient>
               </defs>
 
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#f1f5f9" />
 
               <XAxis
                 dataKey="date"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: '#6b7280', fontSize: 12 }}
-                dy={10}
+                tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 800 }}
+                minTickGap={80}
+                height={70}
+                dy={25}
+                tickFormatter={(val) => {
+                  try {
+                    const d = new Date(val);
+                    if (isNaN(d.getTime())) return val;
+                    return d.toLocaleDateString("id-ID", { 
+                      day: 'numeric', 
+                      month: 'short',
+                      year: 'numeric'
+                    });
+                  } catch (e) {
+                    return val;
+                  }
+                }}
               />
 
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: '#6b7280', fontSize: 12 }}
+                tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 800 }}
                 allowDecimals={false}
+                dx={-10}
               />
 
-              <Tooltip
-                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
-                labelStyle={{ fontWeight: 'bold', color: '#374151', marginBottom: '4px' }}
-                itemStyle={{ color: '#3b82f6', fontWeight: '500' }}
-                formatter={(value) => [`${value} Pencarian`, 'Total']}
+              <Tooltip 
+                content={<CustomTooltip />} 
+                cursor={{ stroke: '#2563eb', strokeWidth: 2, strokeDasharray: '6 6' }}
+                animationDuration={200}
               />
 
               <Area
                 type="monotone"
                 dataKey="searches"
-                stroke="#3b82f6"
-                strokeWidth={3}
+                stroke="#2563eb"
+                strokeWidth={5}
                 fillOpacity={1}
-                fill="url(#colorSearchesUser)"
-                activeDot={{ r: 6, fill: "#1e40af", stroke: "#fff", strokeWidth: 2 }}
+                fill="url(#colorSearchesPremiumV2)"
+                activeDot={{ 
+                  r: 8, 
+                  fill: "#2563eb", 
+                  stroke: "#fff", 
+                  strokeWidth: 4,
+                  className: "shadow-2xl"
+                }}
+                animationDuration={1500}
+                animationEasing="ease-in-out"
               />
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-full border border-dashed rounded-xl flex items-center justify-center text-gray-400 text-sm">
-            Data tren belum tersedia
+          <div className="h-full border-2 border-dashed border-gray-100 rounded-[2rem] flex flex-col items-center justify-center p-12 text-center bg-gray-50/20">
+            <div className="w-16 h-16 bg-white rounded-3xl shadow-sm flex items-center justify-center mb-6 text-blue-200">
+               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+              </svg>
+            </div>
+            <p className="text-sm font-bold text-gray-400 italic tracking-tight">Data tren belum tersedia untuk periode {ranges.find(r => r.id === timeRange)?.label}.</p>
           </div>
         )}
+      </div>
+
+      <div className="mt-10 pt-8 border-t border-gray-50 flex items-center justify-between">
+         <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+               <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+               <p className="text-xs font-bold text-gray-700">Volume Pencarian</p>
+            </div>
+            <div className="flex items-center gap-2">
+               <div className="w-2.5 h-2.5 rounded-full bg-blue-200" />
+               <p className="text-xs font-bold text-gray-400">Target Kuartal</p>
+            </div>
+         </div>
+         <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+            Analytics Aktif
+         </p>
       </div>
     </div>
   );

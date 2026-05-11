@@ -1,17 +1,21 @@
-"use client";
-
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
 import ForgotPasswordForm from "./ForgotPasswordForm";
 
 export default function AuthModal({ isOpen, onClose, initialMode = "login", onLoginSuccess }) {
   const [mode, setMode] = useState(initialMode);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
       setMode(initialMode);
-      // Focus trap and body scroll lock can be added here
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
@@ -28,7 +32,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onLo
     return () => window.removeEventListener("keydown", handleEsc);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
@@ -36,14 +40,14 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onLo
     }
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md transition-all duration-300 animate-in fade-in"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/20 backdrop-blur-md transition-all duration-500 animate-in fade-in"
       onClick={handleBackdropClick}
     >
-      <div className="relative w-full max-w-md mx-4 transform transition-all duration-300 animate-in zoom-in-95 slide-in-from-bottom-10">
+      <div className="relative w-full max-w-md mx-4 transform transition-all duration-500 animate-fade-up">
         {/* Modal Container */}
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-white/20">
+        <div className="bg-white rounded-3xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] overflow-hidden border border-white/20">
           {/* Close Button */}
           <button
             onClick={onClose}
@@ -80,6 +84,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login", onLo
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -55,7 +55,7 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { title, description, fileUrl, category } = body;
+    const { title, description, fileUrl, category, fileSize, fileName } = body;
 
     if (!title || !fileUrl) {
       return NextResponse.json(
@@ -70,6 +70,8 @@ export async function POST(req) {
         description,
         fileUrl,
         category,
+        fileName: fileName || null,
+        fileSize: fileSize ? parseInt(fileSize) : null,
         isActive: true,
       },
     });

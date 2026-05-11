@@ -24,7 +24,7 @@ export async function GET() {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { title, description, publishDate, newsLink } = body;
+    const { title, description, publishDate, newsLink, location } = body;
 
     if (!title || !description) {
       return NextResponse.json(
@@ -39,6 +39,7 @@ export async function POST(req) {
         description,
         publishDate: publishDate ? new Date(publishDate) : new Date(),
         newsLink,
+        location: location || null,
         isActive: true,
       },
     });

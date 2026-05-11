@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import ProfileCard from "./ProfileCard";
 import { getProfile, updateProfile, logout } from "@/src/lib/profile";
 import LogoutConfirmModal from "./LogoutConfirmModal";
+import { createPortal } from "react-dom";
 
 export default function ProfileModal({ isOpen, onClose, user }) {
-  const [activeTab, setActiveTab] = useState("umum"); // "umum" | "personalisasi" | "keamanan"
+  const [activeTab, setActiveTab] = useState("profile"); // "profile" | "personalisasi" | "keamanan"
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [profileData, setProfileData] = useState({
     name: "",
@@ -14,6 +15,27 @@ export default function ProfileModal({ isOpen, onClose, user }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  // SCROLL LOCK & ESC KEY
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      const handleEsc = (e) => {
+        if (e.key === "Escape") onClose();
+      };
+      window.addEventListener("keydown", handleEsc);
+      return () => {
+        document.body.style.overflow = "auto";
+        window.removeEventListener("keydown", handleEsc);
+      };
+    }
+  }, [isOpen, onClose]);
 
   // LOAD DATA ONCE
   useEffect(() => {
@@ -33,7 +55,7 @@ export default function ProfileModal({ isOpen, onClose, user }) {
     load();
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const handleSave = async (dataToSave) => {
     setLoading(true);
@@ -70,20 +92,20 @@ export default function ProfileModal({ isOpen, onClose, user }) {
   };
 
   const menuItems = [
-    { id: "umum", label: "Umum", icon: "👤" },
-    { id: "personalisasi", label: "Personalisasi", icon: "🤖" },
-    { id: "keamanan", label: "Keamanan", icon: "🔒" },
-    { id: "notifikasi", label: "Notifikasi", icon: "🔔", disabled: true },
+    { id: "profile", label: "Profile", icon: null },
+    { id: "personalisasi", label: "Personalisasi", icon: null },
+    { id: "keamanan", label: "Keamanan", icon: null },
+    { id: "notifikasi", label: "Notifikasi", icon: null, disabled: true },
   ];
 
-  return (
+  return createPortal(
     <>
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+        className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/20 backdrop-blur-md animate-in fade-in duration-300"
         onClick={onClose}
       >
         <div
-          className="relative w-full max-w-4xl h-[640px] bg-white rounded-[2.5rem] shadow-2xl flex overflow-hidden animate-in zoom-in-95 duration-300"
+          className="relative w-full max-w-4xl h-[90vh] md:h-[640px] bg-white rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] flex overflow-hidden animate-in zoom-in-95 duration-300 mx-4"
           onClick={(e) => e.stopPropagation()}
         >
           {/* CLOSE BUTTON */}
@@ -95,7 +117,7 @@ export default function ProfileModal({ isOpen, onClose, user }) {
           </button>
 
           {/* SIDEBAR */}
-          <div className="w-64 bg-gray-50/50 border-r border-gray-100 flex flex-col p-6">
+          <div className="hidden md:flex w-64 bg-gray-50/50 border-r border-gray-100 flex-col p-6">
             <div className="mb-8">
               <h2 className="text-xl font-black text-gray-900 tracking-tight">Pengaturan</h2>
               <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">TanyaHukum Account</p>
@@ -113,7 +135,6 @@ export default function ProfileModal({ isOpen, onClose, user }) {
                       ? "bg-white text-blue-600 shadow-sm border border-gray-100" 
                       : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"}`}
                 >
-                  <span className="text-lg">{item.icon}</span>
                   {item.label}
                 </button>
               ))}
@@ -123,10 +144,14 @@ export default function ProfileModal({ isOpen, onClose, user }) {
             <div className="pt-6 border-t border-gray-100 space-y-4">
               <button
                 onClick={() => setShowLogoutModal(true)}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-red-500 hover:bg-red-50 transition-all"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-red-500 hover:bg-red-50 transition-all group/logout active:scale-95"
               >
-                <span className="text-lg">🚪</span>
-                Keluar Akun
+                <div className="text-red-500 group-hover/logout:scale-110 group-hover/logout:-translate-x-0.5 transition-all duration-300">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                </div>
+                <span className="group-hover/logout:translate-x-0.5 transition-all duration-300">
+                  Keluar Akun
+                </span>
               </button>
 
               <div className="flex items-center gap-3 px-2">
@@ -142,10 +167,10 @@ export default function ProfileModal({ isOpen, onClose, user }) {
           </div>
 
           {/* CONTENT PANEL */}
-          <div className="flex-1 flex flex-col bg-white overflow-y-auto">
+          <div className="flex-1 flex flex-col bg-white overflow-y-auto custom-scrollbar">
             <div className="p-10 max-w-2xl mx-auto w-full space-y-8">
               
-              {activeTab === "umum" && (
+              {activeTab === "profile" && (
                 <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                   <div>
                     <h3 className="text-2xl font-black text-gray-900 mb-1">Informasi Umum</h3>
@@ -219,7 +244,8 @@ export default function ProfileModal({ isOpen, onClose, user }) {
         onClose={() => setShowLogoutModal(false)}
         onConfirm={handleConfirmLogout}
       />
-    </>
+    </>,
+    document.body
   );
 }
 

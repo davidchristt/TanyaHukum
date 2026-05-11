@@ -9,40 +9,36 @@ datasource db {
 }
 
 model User {
-  id               String    @id @default(uuid())
-  supabaseId       String?   @unique // ← agar meski user ganti email atau password, semua data yang telah ada sebelumnya tidak error
-  name             String? // ✅ TAMBAHKAN INI: Untuk input "Nama"
-  avatarUrl        String? // ✅ TAMBAHKAN INI: Untuk "Unggah Foto"
-  email            String    @unique
+  id               String          @id @default(uuid())
+  supabaseId       String?         @unique
+  name             String?
+  avatarUrl        String?
+  email            String          @unique
   passwordHash     String?
-  authProvider     String    @default("CREDENTIALS")
-  resetToken       String?   @unique
+  authProvider     String          @default("CREDENTIALS")
+  resetToken       String?         @unique
   resetTokenExpiry DateTime?
-  role             Role      @default(USER) // Default sebagai user biasa
-
-  personalContext String? @db.Text // Menampung instruksi bebas/personalisasi dari user
-
-  tier        Tier     @default(FREE)
-  promptLimit Int      @default(50)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  chats          Chat[]
-  messages       ChatHistory[]
-  transactions   Transaction[]
-  searchLogs     SearchLog[] // Relasi baru untuk melacak pencarian user
-  trendingIssues TrendingIssue[]
+  role             Role            @default(USER)
+  personalContext  String?
+  tier             Tier            @default(FREE)
+  promptLimit      Int             @default(50)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  chats            Chat[]
+  messages         ChatHistory[]
+  searchLogs       SearchLog[]
+  transactions     Transaction[]
+  trendingIssues   TrendingIssue[]
 }
 
 model Chat {
-  id        String   @id @default(uuid())
+  id        String        @id @default(uuid())
   userId    String
   title     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  messages ChatHistory[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  ChatHistory[]
 }
 
 model ChatHistory {
@@ -50,11 +46,10 @@ model ChatHistory {
   userId    String
   chatId    String
   role      Role
-  content   String   @db.Text
+  content   String
   createdAt DateTime @default(now())
-
-  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Transaction {
@@ -66,27 +61,20 @@ model Transaction {
   paymentUrl String?
   createdAt  DateTime          @default(now())
   updatedAt  DateTime          @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// ==========================================
-// ENTITAS BARU UNTUK KEBUTUHAN DASHBOARD
-// ==========================================
-
-// 1. Model untuk "Total Regulasi" & "Dokumen Terpopuler"
 model Regulation {
   id          String   @id @default(uuid())
-  title       String // Input Judul
-  description String?  @db.Text // Deskripsi (Metadata)
-  fileUrl     String // URL file dari Supabase Storage / S3
-  // ✅ TAMBAHAN UNTUK SCRAPER & LOKASI FILE 47GB
-  filePath    String? // Path lokal di folder golden-dataset
-  fileName    String? // Nama file PDF aslinya
-  fileSize    Int? // Ukuran file
-  isProcessed Boolean  @default(false) // Penanda sudah masuk Pinecone
-  category    String? // Contoh: "Undang-undang", "Peraturan Daerah"
-  content     String?  @db.Text // Untuk ekstraksi teks (opsional)
+  title       String
+  description String?
+  fileUrl     String
+  filePath    String?
+  fileName    String?
+  fileSize    Int?
+  isProcessed Boolean  @default(false)
+  category    String?
+  content     String?
   viewCount   Int      @default(0)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -95,30 +83,26 @@ model Regulation {
   @@index([viewCount(sort: Desc)])
 }
 
-// 2. Model untuk "Isu Terkini"
 model TrendingIssue {
   id          String   @id @default(uuid())
-  title       String // Input Judul
-  description String   @db.Text // Deskripsi Singkat
-  publishDate DateTime @default(now()) // Waktu Publish
-  newsLink    String? // Link ke Berita
+  title       String
+  description String
+  publishDate DateTime @default(now())
+  newsLink    String?
   location    String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  createdBy String?
-  author    User?   @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  createdBy   String?
+  author      User?    @relation(fields: [createdBy], references: [id])
 }
 
-// 3. Model untuk "Tren Pencarian Hukum" (Time-series data)
 model SearchLog {
   id        String   @id @default(uuid())
   query     String
   userId    String?
   createdAt DateTime @default(now())
-
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user      User?    @relation(fields: [userId], references: [id])
 
   @@index([createdAt])
   @@index([query, createdAt])

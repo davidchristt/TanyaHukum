@@ -1,12 +1,13 @@
-"use client";
-
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 export default function AboutModal({ onOpenAuth }) {
   const [isOpen, setIsOpen] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const hideAboutModal = localStorage.getItem("hide_about_modal");
     const user = localStorage.getItem("user");
     
@@ -15,6 +16,16 @@ export default function AboutModal({ onOpenAuth }) {
       setIsOpen(true);
     }
   }, []);
+
+  // Lock scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "auto";
+      };
+    }
+  }, [isOpen]);
 
   const handleClose = () => {
     if (dontShowAgain) {
@@ -31,10 +42,10 @@ export default function AboutModal({ onOpenAuth }) {
     onOpenAuth(mode);
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-500 animate-in fade-in">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/20 backdrop-blur-md transition-all duration-500 animate-in fade-in">
       <div 
         className="relative w-full max-w-lg mx-4 bg-white rounded-[2rem] shadow-2xl overflow-hidden transform transition-all duration-500 animate-in zoom-in-95 slide-in-from-bottom-20"
       >
@@ -111,6 +122,7 @@ export default function AboutModal({ onOpenAuth }) {
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -12,6 +12,7 @@ import SubscriptionList from "@/components/features/subscription/SubscriptionLis
 
 import ProfileModal from "@/components/features/profile/ProfileModal";
 import AboutModal from "@/components/features/about/AboutModal";
+import AppShell from "@/components/layout/AppShell";
 
 import { getProfile } from "@/src/lib/profile";
 
@@ -19,21 +20,13 @@ export default function ChatbotPage() {
   const [isOpen, setIsOpen] = useState(true);
 
   // AUTH
-  const [authMode, setAuthMode] = useState(null);
-
-  // USER (source of truth)
+  const [authModal, setAuthModal] = useState({ isOpen: false, mode: "login" });
   const [user, setUser] = useState(null);
-
-  // SUBSCRIPTION
-  const [showSubscription, setShowSubscription] = useState(false);
-
-  const [showProfile, setShowProfile] = useState(false);
-
   const [showToast, setShowToast] = useState(false);
 
   const handleLoginSuccess = (userData) => {
     setUser(userData); 
-    setAuthMode(null);
+    setAuthModal({ ...authModal, isOpen: false });
   };
 
   // ==============================
@@ -79,57 +72,24 @@ export default function ChatbotPage() {
   }, []);
 
   return (
-    <div className="h-screen flex relative overflow-hidden">
-      {/* ABOUT MODAL (Guest Only) */}
-      <AboutModal onOpenAuth={(mode) => setAuthMode(mode)} />
-
-      {/* SIDEBAR */}
-      <div
-        className={`transition-all duration-300 relative z-20 ${
-          isOpen ? "w-[280px]" : "w-[80px]"
-        }`}
-      >
+    <AppShell
+      sidebarOpen={isOpen}
+      setSidebarOpen={setIsOpen}
+      sidebar={
         <Sidebar
           isOpen={isOpen}
           setIsOpen={setIsOpen}
-          onOpenProfile={() => setShowProfile(true)}
-          user={user}
         />
-      </div>
-
-      {/* CHAT AREA */}
-      <div className="flex-1 relative z-10">
-        <ChatArea
-          user={user}
-          onOpenAuth={(mode) => setAuthMode(mode || "login")}
-          onOpenSubscription={() => setShowSubscription(true)}
-        />
-      </div>
-
-      {/* ================= AUTH MODAL ================= */}
-      <AuthModal
-        isOpen={!!authMode}
-        initialMode={authMode || "login"}
-        onClose={() => setAuthMode(null)}
-        onLoginSuccess={handleLoginSuccess}
+      }
+      hideHeader={true} // ChatArea has its own specific Header logic for now
+    >
+      <AboutModal onOpenAuth={(mode) => setAuthModal({ isOpen: true, mode })} />
+      
+      <ChatArea
+        user={user}
+        onOpenAuth={(mode) => setAuthModal({ isOpen: true, mode: mode || "login" })}
       />
 
-      {/* ================= SUBSCRIPTION POPUP ================= */}
-      {showSubscription && (
-        <SubscriptionList
-          user={user}
-          onComplete={() => setShowSubscription(false)}
-        />
-      )}
-
-      {/* ================= PROFILE POPUP ================= */}
-      {showProfile && (
-        <ProfileModal
-          isOpen={showProfile}
-          onClose={() => setShowProfile(false)}
-          user={user} 
-        />
-      )}
 
       {/* ================= TOAST ================= */}
       {showToast && (
@@ -152,6 +112,12 @@ export default function ChatbotPage() {
           </div>
         </div>
       )}
-    </div>
+      <AuthModal
+        isOpen={authModal.isOpen}
+        initialMode={authModal.mode}
+        onClose={() => setAuthModal({ ...authModal, isOpen: false })}
+        onLoginSuccess={handleLoginSuccess}
+      />
+    </AppShell>
   );
 }

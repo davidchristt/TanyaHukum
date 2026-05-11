@@ -1,160 +1,73 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
+import { uploadAvatar } from "@/src/lib/profile";
 
 export default function AdminProfileCard({ userData, updateLocalUser }) {
-  const fileInputRef = useRef(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [toast, setToast] = useState(null);
-  const [showLogoutModal, setShowLogoutModal] = useState(false); // <-- State buat modal logout
+  const [uploading, setUploading] = useState(false);
 
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  const convertToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const fileReader = new FileReader();
-      fileReader.readAsDataURL(file);
-      fileReader.onload = () => resolve(fileReader.result);
-      fileReader.onerror = (error) => reject(error);
-    });
-  };
-
-  const handleFileChange = async (e) => {
+  const handleUpload = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        showToast("Ukuran gambar terlalu besar! Maksimal 2MB.", "error");
-        return;
+    if (!file) return;
+
+    // VALIDASI CLIENT SIDE
+    const MAX_SIZE = 2 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      alert("Ukuran file terlalu besar. Maksimal 2MB.");
+      return;
+    }
+
+    const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      alert("Format file tidak didukung. Gunakan JPG, PNG, atau WebP.");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const res = await uploadAvatar(file);
+
+      if (res && res.user) {
+        updateLocalUser({ avatarUrl: res.user.avatarUrl });
+      } else {
+        alert("Gagal mengunggah foto ke Supabase.");
       }
-
-      setIsUploading(true);
-      try {
-        const base64Image = await convertToBase64(file);
-
-        const response = await fetch(`/api/admin/users/${userData.id}`, {
-          method: "PATCH",
-          headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${userData.id}`
-          },
-          body: JSON.stringify({ avatarUrl: base64Image }),
-        });
-
-        if (response.ok) {
-          updateLocalUser({ avatarUrl: base64Image });
-          showToast("Foto profil berhasil diperbarui!");
-        } else {
-          showToast("Gagal mengunggah foto ke database.", "error");
-        }
-      } catch (error) {
-        console.error("Error upload:", error);
-        showToast("Terjadi kesalahan sistem.", "error");
-      } finally {
-        setIsUploading(false);
-      }
+    } catch (error) {
+      console.error(error);
+      alert(error.message || "Terjadi kesalahan sistem saat upload.");
+    } finally {
+      setUploading(false);
     }
   };
 
-  // Fungsi saat tombol Ya, Keluar diklik di dalam modal
-  const confirmLogout = () => {
-    // 1. Hapus semua sesi (tambahkan jika bos punya key localStorage lain)
-    localStorage.removeItem("user");
-    localStorage.removeItem("token"); // Jaga-jaga kalau bos pakai token
-
-    window.location.href = "/chatbot"; 
-  };
-
   return (
-    <>
-      <div className="bg-white rounded-2xl p-5 shadow-md flex items-center gap-4 relative">
-        
-        {/* Notifikasi Cantik */}
-        {toast && (
-          <div className={`absolute -top-12 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg shadow-lg text-sm font-medium text-white transition-all duration-300 ${toast.type === 'error' ? 'bg-red-500' : 'bg-green-500'}`}>
-            {toast.message}
-          </div>
-        )}
+    <div className="flex items-center gap-6 p-6 bg-gray-50 rounded-3xl border border-gray-100">
+      <div className="relative group">
+        <div className={`w-20 h-20 rounded-full border-4 transition-all duration-500 overflow-hidden flex items-center justify-center bg-white shadow-inner
+          ${uploading ? "border-blue-400 animate-pulse" : "border-blue-100"}`}>
 
-        <div className="w-20 h-20 rounded-full border-4 border-blue-400 flex items-center justify-center overflow-hidden shrink-0 bg-blue-50 relative">
-          {userData.avatarUrl ? (
-            <img src={userData.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+          {userData?.avatarUrl ? (
+            <img src={userData.avatarUrl} className="w-full h-full object-cover" alt="Profile" />
           ) : (
-            <img src="/icons/profile.svg" alt="Default Profile" className="w-10 h-10 object-contain opacity-60" />
-          )}
-          
-          {isUploading && (
-            <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-              <span className="animate-spin text-blue-500 font-bold">↻</span>
-            </div>
+            // PERUBAHAN: Pakai SVG lokal bos
+            <img src="/icons/profile.svg" className="w-10 h-10 object-contain opacity-60" alt="Default Profile" />
           )}
         </div>
 
-        <div className="flex-1">
-          <h2 className="text-xl font-semibold text-gray-800">
-            {userData.nama || "Admin Superuser"}
-          </h2>
-          <p className="text-sm text-gray-500">
-            {userData.email || "admin@tanyahukum.com"}
-          </p>
+        <label
+          htmlFor="upload-avatar-admin-settings"
+          className="absolute -bottom-1 -right-1 w-8 h-8 bg-white shadow-md rounded-full flex items-center justify-center cursor-pointer border border-gray-100 hover:scale-110 transition-all text-blue-500"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+        </label>
 
-          <div className="flex gap-2 mt-3">
-            <input 
-              type="file" 
-              className="hidden" 
-              ref={fileInputRef} 
-              onChange={handleFileChange}
-              accept="image/png, image/jpeg, image/webp" 
-            />
-            
-            <button 
-              onClick={() => fileInputRef.current.click()}
-              disabled={isUploading}
-              className={`px-4 py-1.5 rounded-lg text-white text-sm font-medium transition shadow-sm ${
-                isUploading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-400 hover:bg-blue-500"
-              }`}
-            >
-              {isUploading ? "Mengunggah..." : "Unggah Foto"}
-            </button>
-            
-            {/* Tombol ini sekarang cuma ngebuka modal, bukan alert jelek lagi */}
-            <button 
-              onClick={() => setShowLogoutModal(true)}
-              className="px-4 py-1.5 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition shadow-sm"
-            >
-              Keluar
-            </button>
-          </div>
-        </div>
+        <input type="file" accept="image/*" id="upload-avatar-admin-settings" className="hidden" onChange={handleUpload} disabled={uploading} />
       </div>
 
-      {/* --- MODAL LOGOUT CANTIK --- */}
-      {showLogoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 shadow-xl w-full max-w-sm transform transition-all">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Konfirmasi Keluar</h3>
-            <p className="text-sm text-gray-600 mb-6">
-              Apakah Anda yakin ingin keluar dari halaman Admin? Anda akan diarahkan ke halaman Chatbot.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button 
-                onClick={() => setShowLogoutModal(false)}
-                className="px-4 py-2 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition"
-              >
-                Batal
-              </button>
-              <button 
-                onClick={confirmLogout}
-                className="px-4 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 shadow-md transition"
-              >
-                Ya, Keluar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+      <div>
+        <h4 className="text-sm font-black text-gray-900">Foto Profil</h4>
+        <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Maksimal 2MB (JPG, PNG, WebP)</p>
+      </div>
+    </div>
   );
 }
