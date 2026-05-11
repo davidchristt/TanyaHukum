@@ -16,6 +16,10 @@ export async function POST(request) {
 
     const payload = await verifyToken(token);
 
+    if (!payload?.userId) {
+      return NextResponse.json({ error: "Token tidak valid." }, { status: 401 });
+    }
+
     // Gunakan admin client untuk bypass RLS di storage
     const supabase = await createAdminClient();
 
@@ -33,16 +37,16 @@ export async function POST(request) {
     }
 
     // VALIDASI FORMAT
-    const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
-    const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json({ error: "Format file tidak didukung (Gunakan JPG, PNG, atau WebP)." }, { status: 400 });
+    const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
+    if (!ALLOWED_EXTENSIONS.includes(fileExt)) {
+      return NextResponse.json({ error: "Ekstensi file tidak valid." }, { status: 400 });
     }
 
     const fileExt = file.name.split(".").pop().toLowerCase();
+    if (!fileExt || !ALLOWED_EXTENSIONS.includes(fileExt)) {
     // Gunakan userId langsung sebagai nama file untuk mempermudah management & cache
-    const fileName = `${payload.userId}.${fileExt}`;
-    const filePath = `${fileName}`; // Simpan di root bucket agar lebih simpel
+      const fileName = `${payload.userId}.${fileExt}`;
+    }
 
     // ======================
     // UPLOAD (Convert to Buffer for stability)
@@ -69,7 +73,7 @@ export async function POST(request) {
       .from("avatars")
       .getPublicUrl(filePath);
 
-    const publicUrl = urlData.publicUrl;
+    const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
 
     // ======================
     // UPDATE DB
@@ -103,9 +107,6 @@ export async function POST(request) {
       );
     }
 
-    return NextResponse.json(
-      { error: `Internal Server Error: ${err.message}` },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Terjadi kesalahan pada server." }, { status: 500 });
   }
 }
