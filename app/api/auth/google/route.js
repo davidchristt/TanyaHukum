@@ -22,7 +22,8 @@ export async function POST(request) {
     // 2. Ambil data user dari tiket Google
     const payload = ticket.getPayload();
     const email = payload.email;
-    // const name = payload.name; // Opsional: Jika kamu ingin menyimpan nama dari akun Google
+    const name = payload.name;
+    const picture = payload.picture;
 
     if (!email) {
       return NextResponse.json({ error: 'Gagal mendapatkan email dari Google' }, { status: 400 });
@@ -35,26 +36,53 @@ export async function POST(request) {
 
     // 4. Jika user belum ada, daftarkan secara otomatis (Register)
     if (!user) {
+      console.log("[GOOGLE-AUTH] Creating new user for:", email);
       user = await prisma.user.create({
         data: {
           email: email,
-          authProvider: 'GOOGLE', // Penanda bahwa ini akun Google
-          // passwordHash dibiarkan kosong (null) karena akun Google tidak punya password
+          name: name,
+          avatarUrl: picture,
+          authProvider: 'GOOGLE',
+          tier: 'FREE', // Default
+          role: 'USER', // Default
         }
       });
     }
 
-    // 5. Berhasil! Kembalikan data user seperti login biasa
-    return NextResponse.json({ 
+    // 5. Buat JWT (Sama seperti login biasa)
+    const { createToken } = await import('@/lib/auth');
+    const token = await createToken({
+      userId: user.id,
+      email: user.email,
+      tier: user.tier,
+      role: user.role || 'USER',
+    });
+
+    // 6. Berhasil! Kembalikan data user + Set Cookie HttpOnly
+    const response = NextResponse.json({ 
       message: 'Login Google berhasil', 
       user: { 
         id: user.id, 
         email: user.email,
         tier: user.tier,
         promptLimit: user.promptLimit,
-        authProvider: user.authProvider
+        authProvider: user.authProvider,
+        role: user.role || 'USER',
+        name: user.name,
+        avatarUrl: user.avatarUrl
       }
     }, { status: 200 });
+
+    response.cookies.set('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7, // 7 hari
+    });
+
+    console.log("[GOOGLE-AUTH] Session created for user:", user.email);
+    return response;
 
   } catch (error) {
     console.error("Google Login Error:", error);

@@ -27,8 +27,9 @@ export async function POST(req) {
     }
 
     // 2. Definisikan Harga & Order ID
-    const amount = 49999; 
+    const amount = 49900; 
     const orderId = `TRX-${Date.now()}-${userId.substring(0, 5)}`;
+    console.log("[CHECKOUT] Generated orderId:", orderId, "for userId:", userId);
 
     // 3. Buat Transaksi di Database kita (Status PENDING)
     await prisma.transaction.create({

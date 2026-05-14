@@ -73,7 +73,7 @@ export default function Header({ onOpenSubscription, onOpenAuth }) {
         className="flex items-center gap-3 cursor-pointer"
       >
         <img src={icon} className={iconSize} />
-        <h1 className="text-lg font-semibold text-gray-900">
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-white transition-colors">
           {title}
         </h1>
       </div>
@@ -86,14 +86,14 @@ export default function Header({ onOpenSubscription, onOpenAuth }) {
           <>
             <button
               onClick={() => handleOpenAuth("login")}
-              className="text-sm font-bold text-gray-600 hover:text-[#2f6fed] transition-colors px-2"
+              className="text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-[#2f6fed] dark:hover:text-[#4f8eff] transition-colors px-2 py-1 rounded-lg dark:hover:bg-transparent"
             >
               Masuk
             </button>
 
             <button
               onClick={() => handleOpenAuth("register")}
-              className="text-sm px-6 py-2 bg-[#2f6fed] hover:bg-[#255cd6] text-white rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-[0.98] font-bold"
+              className="text-sm px-6 py-2 bg-[#2f6fed] hover:bg-[#255cd6] text-white rounded-xl shadow-lg shadow-blue-200 dark:shadow-none transition-all active:scale-[0.98] font-bold"
             >
               Daftar
             </button>
@@ -116,7 +116,7 @@ export default function Header({ onOpenSubscription, onOpenAuth }) {
         {user && user.tier === "PRO" && (
           <button
             onClick={onOpenSubscription}
-            className="flex items-center gap-2 px-4 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg font-medium transition-all active:scale-[0.98]"
+            className="flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 hover:bg-green-200 dark:hover:bg-green-900/50 text-green-700 dark:text-green-400 rounded-lg font-medium transition-all active:scale-[0.98]"
           >
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             PRO Member

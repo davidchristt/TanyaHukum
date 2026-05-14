@@ -45,7 +45,7 @@ export default function AdminSidebar({ isOpen, setIsOpen, onOpenProfile }) {
 
   return (
     <div
-      className={`relative z-10 h-full bg-white/60 backdrop-blur-md rounded-2xl p-4 shadow-lg 
+      className={`relative z-10 h-full bg-white/60 dark:bg-slate-900/60 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/20 dark:border-slate-800
       flex flex-col justify-between transition-all duration-300 
       ${isOpen ? "w-64" : "w-20 items-center"}`}
     >
@@ -59,9 +59,9 @@ export default function AdminSidebar({ isOpen, setIsOpen, onOpenProfile }) {
 
             <button
               onClick={() => setIsOpen(false)}
-              className="p-2 rounded-lg border border-blue-300 hover:bg-blue-50 transition"
+              className="p-2 rounded-lg border border-blue-300 dark:border-blue-900/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
             >
-              <img src="/icons/sidebar.svg" className="w-5 h-5" alt="toggle" />
+              <img src="/icons/sidebar.svg" className="w-5 h-5 transition-all" alt="toggle" />
             </button>
           </div>
         ) : (
@@ -72,9 +72,9 @@ export default function AdminSidebar({ isOpen, setIsOpen, onOpenProfile }) {
                 onClick={() => setIsOpen(true)}
                 className="absolute inset-0 flex items-center justify-center 
                 opacity-0 group-hover/logo:opacity-100 transition z-50
-                rounded-lg bg-white/90 border border-blue-300"
+                rounded-lg bg-white/90 dark:bg-slate-800/90 border border-blue-300 dark:border-blue-900/50"
               >
-                <img src="/icons/sidebar.svg" className="w-5 h-5" alt="toggle" />
+                <img src="/icons/sidebar.svg" className="w-5 h-5 transition-all" alt="toggle" />
               </button>
             </div>
           </div>
@@ -100,20 +100,20 @@ export default function AdminSidebar({ isOpen, setIsOpen, onOpenProfile }) {
         onClick={onOpenProfile}
         className={`flex items-center ${
           isOpen ? "gap-3 px-2" : "justify-center"
-        } cursor-pointer hover:bg-blue-50 rounded-xl p-2 transition`}
+        } cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl p-2 transition-all`}
       >
         <img 
           src={user?.avatarUrl || "/icons/profile.svg"} 
-          className={`w-9 h-9 shrink-0 ${user?.avatarUrl ? "rounded-full object-cover border border-gray-200" : "object-contain opacity-60"}`} 
+          className={`w-9 h-9 shrink-0 ${user?.avatarUrl ? "rounded-full object-cover border border-gray-200 dark:border-slate-700" : "object-contain opacity-60 transition-all"}`} 
           alt="Profile"
         />
 
         {isOpen && (
           <div className="overflow-hidden">
-            <p className="text-sm font-black text-gray-900 truncate">
+            <p className="text-sm font-black text-gray-900 dark:text-white truncate transition-colors">
               {user?.nama || user?.name || "Admin"}
             </p>
-            <p className="text-xs font-bold text-blue-500">Superuser</p>
+            <p className="text-xs font-bold text-blue-500 dark:text-blue-400">Superuser</p>
           </div>
         )}
       </div>
@@ -128,25 +128,25 @@ function AdminMenuItem({ icon, label, isOpen, isActive, onClick }) {
         onClick={onClick}
         className={`w-full flex items-center ${
           isOpen ? "justify-start px-3" : "justify-center"
-        } gap-3 py-3 border rounded-xl transition
+        } gap-3 py-3 border rounded-xl transition-all
         ${
           isActive
-            ? "border-blue-600 bg-blue-50 shadow-sm"
-            : "border-transparent hover:bg-blue-50 hover:border-blue-200"
+            ? "border-blue-600 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-sm"
+            : "border-transparent hover:bg-blue-50 dark:hover:bg-slate-800/50 hover:border-blue-200 dark:hover:border-slate-700"
         }`}
       >
         <img
           src={icon}
-          className="w-5 h-5 object-contain bg-transparent"
+          className={`w-5 h-5 object-contain bg-transparent transition-all ${isActive ? "" : "opacity-60"}`}
           alt={label}
         />
-        {isOpen && <span className={`text-sm font-bold ${isActive ? "text-blue-700" : "text-gray-600"}`}>{label}</span>}
+        {isOpen && <span className={`text-sm font-bold transition-colors ${isActive ? "text-blue-700 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"}`}>{label}</span>}
       </button>
 
       {!isOpen && (
         <span className="absolute left-14 top-1/2 -translate-y-1/2 
         opacity-0 group-hover/item:opacity-100 pointer-events-none transition z-50
-        bg-gray-900 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg shadow-lg whitespace-nowrap">
+        bg-gray-900 dark:bg-slate-800 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg shadow-lg whitespace-nowrap border border-white/10">
           {label}
         </span>
       )}

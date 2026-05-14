@@ -10,6 +10,7 @@ import DashboardSection from "@/components/features/dashboard/DashboardSection";
 import AdminPopularDocs from "@/components/features/dashboardAdmin/AdminPopularDocs";
 import AdminActivityList from "@/components/features/dashboardAdmin/AdminActivityList";
 import AdminChart from "@/components/features/dashboardAdmin/AdminChart";
+import AdminDocDetailModal from "@/components/features/dataAdmin/AdminDocDetailModal";
 
 // Utility
 function formatBytes(bytes) {
@@ -42,7 +43,7 @@ function MiniStatCard({ label, value, growth, icon, color = "blue", formatAsByte
     blue: "from-blue-600 to-blue-500",
     emerald: "from-emerald-600 to-emerald-500",
     violet: "from-violet-600 to-violet-500",
-    amber: "from-amber-500 to-orange-500",
+    amber: "from-cyan-500 to-blue-600",
     rose: "from-rose-500 to-pink-500",
     slate: "from-slate-700 to-slate-600",
     cyan: "from-cyan-600 to-cyan-500",
@@ -80,7 +81,7 @@ function MiniStatCard({ label, value, growth, icon, color = "blue", formatAsByte
 // Donut Chart (Pure CSS)
 function DonutChart({ data, title }) {
   const total = data.reduce((s, d) => s + d.count, 0);
-  const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899"];
+  const colors = ["#3b82f6", "#06b6d4", "#60a5fa", "#22d3ee", "#818cf8", "#2dd4bf", "#4f46e5"];
   let cumPct = 0;
   const segments = data.map((d, i) => {
     const pct = total > 0 ? (d.count / total) * 100 : 0;
@@ -91,23 +92,23 @@ function DonutChart({ data, title }) {
   const gradient = segments.map(s => `${s.color} ${s.start}% ${s.start + s.pct}%`).join(', ');
 
   return (
-    <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 transition-all hover:shadow-md">
+    <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-gray-100 dark:border-slate-800 transition-all hover:shadow-md">
       <div className="flex items-center gap-2 mb-6">
         <div className="w-1.5 h-5 bg-blue-600 rounded-full" />
-        <h3 className="text-sm font-black text-gray-900">{title}</h3>
+        <h3 className="text-sm font-black text-gray-900 dark:text-white transition-colors">{title}</h3>
       </div>
       <div className="flex items-center gap-6">
         <div className="w-28 h-28 rounded-full shrink-0" style={{
           background: total > 0 ? `conic-gradient(${gradient})` : '#f3f4f6',
           mask: 'radial-gradient(farthest-side, transparent 55%, #000 56%)',
           WebkitMask: 'radial-gradient(farthest-side, transparent 55%, #000 56%)'
-        }} />
+        }} className={total === 0 ? "dark:bg-slate-800" : ""} />
         <div className="flex-1 space-y-2">
           {segments.slice(0, 5).map((s, i) => (
             <div key={i} className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: s.color }} />
-              <span className="text-[10px] font-bold text-gray-600 truncate flex-1">{s.name}</span>
-              <span className="text-[10px] font-black text-gray-900">{s.count}</span>
+              <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400 truncate flex-1 transition-colors">{s.name}</span>
+              <span className="text-[10px] font-black text-gray-900 dark:text-gray-200 transition-colors">{s.count}</span>
             </div>
           ))}
         </div>
@@ -121,6 +122,20 @@ export default function AdminDashboardPage() {
   const [adminName, setAdminName] = useState("Admin");
   const [isLoading, setIsLoading] = useState(true);
   const [dashData, setDashData] = useState(null);
+  const [viewingDoc, setViewingDoc] = useState(null);
+
+  const handleViewDoc = (doc) => {
+    setViewingDoc({
+      id: doc.id,
+      title: doc.name,
+      category: doc.category,
+      fileSize: doc.size,
+      viewCount: doc.views || 0,
+      createdAt: doc.date || null,
+      deskripsi: doc.description,
+      fileUrl: doc.fileUrl,
+    });
+  };
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -163,19 +178,19 @@ export default function AdminDashboardPage() {
           <DashboardSection delay={100}>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black tracking-widest uppercase mb-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-black tracking-widest uppercase mb-2 transition-colors">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
                   </span>
                   Admin Intelligence
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">Dashboard Statistik</h1>
-                <p className="text-lg text-gray-500 font-medium max-w-2xl leading-relaxed">
-                  Selamat datang, <span className="text-blue-600 font-bold">{adminName}</span>. Pantau performa platform melalui metrik real-time.
+                <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tight transition-colors">Dashboard Statistik</h1>
+                <p className="text-lg text-gray-500 dark:text-gray-400 font-medium max-w-2xl leading-relaxed transition-colors">
+                  Selamat datang, <span className="text-blue-600 dark:text-blue-400 font-bold">{adminName}</span>. Pantau performa platform melalui metrik real-time.
                 </p>
               </div>
-              <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-xl border border-gray-100 shrink-0">
+              <div className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest bg-gray-50 dark:bg-slate-800/50 px-4 py-2 rounded-xl border border-gray-100 dark:border-slate-800 shrink-0 transition-colors">
                 Last refresh: {new Date().toLocaleString("id-ID", { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
               </div>
             </div>
@@ -183,8 +198,8 @@ export default function AdminDashboardPage() {
 
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-96 space-y-4">
-              <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
-              <p className="text-sm font-bold text-gray-400 animate-pulse">Mengagregasi data analytics...</p>
+              <div className="w-12 h-12 border-4 border-blue-100 dark:border-blue-900/20 border-t-blue-600 rounded-full animate-spin transition-colors" />
+              <p className="text-sm font-bold text-gray-400 dark:text-gray-500 animate-pulse transition-colors">Mengagregasi data analytics...</p>
             </div>
           ) : (
             <>
@@ -195,7 +210,7 @@ export default function AdminDashboardPage() {
                   <MiniStatCard label={cards.totalUsers?.label} value={cards.totalUsers?.value} growth={cards.totalUsers?.growth} icon="👥" color="violet" />
                   <MiniStatCard label={cards.activeUsersToday?.label} value={cards.activeUsersToday?.value} icon="🟢" color="emerald" />
                   <MiniStatCard label={cards.totalViews?.label} value={cards.totalViews?.value} icon="👁️" color="cyan" />
-                  <MiniStatCard label={cards.chatRequestsToday?.label} value={cards.chatRequestsToday?.value} icon="💬" color="amber" />
+                  <MiniStatCard label={cards.chatRequestsToday?.label} value={cards.chatRequestsToday?.value} icon="💬" color="blue" />
                   <MiniStatCard label={cards.totalChatMessages?.label} value={cards.totalChatMessages?.value} icon="🗨️" color="indigo" />
                   <MiniStatCard label={cards.proUsers?.label} value={cards.proUsers?.value} icon="⭐" color="teal" />
                   <MiniStatCard label={cards.freeUsers?.label} value={cards.freeUsers?.value} icon="🆓" color="slate" />
@@ -222,7 +237,7 @@ export default function AdminDashboardPage() {
               {/* BOTTOM ROW: POPULAR DOCS + ISU TERKINI */}
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 <DashboardSection delay={600} className="lg:col-span-3">
-                  <AdminPopularDocs dataDocs={dashData?.popularDocs || []} />
+                  <AdminPopularDocs dataDocs={dashData?.popularDocs || []} onItemClick={handleViewDoc} />
                 </DashboardSection>
                 <DashboardSection delay={700} className="lg:col-span-2">
                   <AdminActivityList />
@@ -231,35 +246,45 @@ export default function AdminDashboardPage() {
 
               {/* RECENT UPLOADS */}
               <DashboardSection delay={800}>
-                <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 transition-all hover:shadow-md">
+                <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-gray-100 dark:border-slate-800 transition-all hover:shadow-md transition-colors">
                   <div className="flex items-center gap-2 mb-6">
                     <div className="w-1.5 h-5 bg-blue-600 rounded-full" />
-                    <h3 className="text-sm font-black text-gray-900">Dokumen Terbaru</h3>
+                    <h3 className="text-sm font-black text-gray-900 dark:text-white transition-colors">Dokumen Terbaru</h3>
                   </div>
                   <div className="space-y-3">
                     {(dashData?.recentDocs || []).map((doc, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition group">
+                      <div 
+                        key={i} 
+                        onClick={() => handleViewDoc(doc)}
+                        className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-all group cursor-pointer transition-colors"
+                      >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center border border-blue-100 shrink-0">
-                            <span className="text-[8px] font-black text-blue-600">DOC</span>
+                          <div className="w-8 h-8 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center border border-blue-100 dark:border-blue-900/30 shrink-0 transition-colors">
+                            <span className="text-[8px] font-black text-blue-600 dark:text-blue-400">DOC</span>
                           </div>
                           <div className="min-w-0">
-                            <p className="text-xs font-black text-gray-900 truncate max-w-[300px]">{doc.name}</p>
-                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{doc.category || "—"}</p>
+                            <p className="text-xs font-black text-gray-900 dark:text-white truncate max-w-[300px] transition-colors">{doc.name}</p>
+                            <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest transition-colors">{doc.category || "—"}</p>
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-[10px] font-black text-gray-600">{doc.date ? new Date(doc.date).toLocaleDateString("id-ID", { day: 'numeric', month: 'short' }) : "—"}</p>
-                          <p className="text-[9px] font-bold text-gray-400">{doc.size ? formatBytes(doc.size) : "—"}</p>
+                          <p className="text-[10px] font-black text-gray-600 dark:text-gray-400 transition-colors">{doc.date ? new Date(doc.date).toLocaleDateString("id-ID", { day: 'numeric', month: 'short' }) : "—"}</p>
+                          <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 transition-colors">{doc.size ? formatBytes(doc.size) : "—"}</p>
                         </div>
                       </div>
                     ))}
                     {(!dashData?.recentDocs || dashData.recentDocs.length === 0) && (
-                      <div className="text-center py-8 text-sm font-bold text-gray-400 italic">Belum ada dokumen terbaru.</div>
+                      <div className="text-center py-8 text-sm font-bold text-gray-400 dark:text-gray-500 italic transition-colors">Belum ada dokumen terbaru.</div>
                     )}
                   </div>
                 </div>
               </DashboardSection>
+              {viewingDoc && (
+                <AdminDocDetailModal
+                  item={viewingDoc}
+                  onClose={() => setViewingDoc(null)}
+                />
+              )}
             </>
           )}
         </div>

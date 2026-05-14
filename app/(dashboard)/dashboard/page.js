@@ -9,9 +9,6 @@ import ActivityList from "@/components/features/dashboard/ActivityList";
 import ChartPlaceholder from "@/components/features/dashboard/ChartPlaceholder";
 import PopularDocs from "@/components/features/dashboard/PopularDocs";
 import DashboardSection from "@/components/features/dashboard/DashboardSection";
-import ProfileModal from "@/components/features/profile/ProfileModal";
-import SubscriptionModal from "@/components/features/subscription/SubscriptionModal";
-import AuthModal from "@/components/features/auth/AuthModal";
 import AppShell from "@/components/layout/AppShell";
 
 export default function DashboardPage() {
@@ -20,11 +17,6 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [user, setUser] = useState(null);
-
-  // Modal States
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
-  const [authModal, setAuthModal] = useState({ isOpen: false, mode: "login" });
 
   useEffect(() => {
     const fetchDashboardStats = async () => {
@@ -76,14 +68,10 @@ export default function DashboardPage() {
         <Sidebar 
           isOpen={isOpen} 
           setIsOpen={setIsOpen} 
-          onOpenProfile={() => setIsProfileOpen(true)}
         />
       }
       header={
-        <Header 
-          onOpenSubscription={() => setIsSubscriptionOpen(true)}
-          onOpenAuth={(mode) => setAuthModal({ isOpen: true, mode })}
-        />
+        <Header />
       }
     >
       <div className="p-8">
@@ -93,24 +81,24 @@ export default function DashboardPage() {
           <DashboardSection delay={100}>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black tracking-widest uppercase mb-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-black tracking-widest uppercase mb-2 border border-blue-100 dark:border-blue-900/30 transition-colors">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
                   </span>
                   Live Analytics
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">
+                <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tight transition-colors">
                   Dashboard Statistik
                 </h1>
-                <p className="text-lg text-gray-500 font-medium max-w-2xl leading-relaxed">
-                  Pantau aktivitas dan tren hukum secara <span className="text-blue-600 font-bold underline decoration-blue-200 underline-offset-4">real-time</span>. Insight terbaru dari interaksi pengguna dan regulasi.
+                <p className="text-lg text-gray-500 dark:text-gray-400 font-medium max-w-2xl leading-relaxed transition-colors">
+                  Pantau aktivitas dan tren hukum secara <span className="text-blue-600 dark:text-blue-400 font-bold underline decoration-blue-200 underline-offset-4">real-time</span>. Insight terbaru dari interaksi pengguna dan regulasi.
                 </p>
               </div>
 
               <div className="flex flex-col items-end gap-1">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Waktu Server</p>
-                <p className="text-sm font-bold text-gray-900 bg-gray-50 px-4 py-2 rounded-2xl border border-gray-100 shadow-sm">
+                <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest transition-colors">Waktu Server</p>
+                <p className="text-sm font-bold text-gray-900 dark:text-white bg-gray-50 dark:bg-slate-800/80 px-4 py-2 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm transition-colors">
                   {formatDate(currentTime)} • {currentTime.toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
@@ -119,8 +107,8 @@ export default function DashboardPage() {
 
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-96 space-y-4">
-              <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
-              <p className="text-sm font-bold text-gray-400 animate-pulse">Menyiapkan data analytics...</p>
+              <div className="w-12 h-12 border-4 border-blue-100 dark:border-slate-700 border-t-blue-600 rounded-full animate-spin" />
+              <p className="text-sm font-bold text-gray-400 dark:text-gray-500 animate-pulse transition-colors">Menyiapkan data analytics...</p>
             </div>
           ) : (
             <>
@@ -162,25 +150,6 @@ export default function DashboardPage() {
 
         </div>
       </div>
-
-      {/* Modals */}
-      <ProfileModal 
-        isOpen={isProfileOpen} 
-        onClose={() => setIsProfileOpen(false)} 
-        user={user}
-      />
-      
-      <SubscriptionModal 
-        isOpen={isSubscriptionOpen} 
-        onClose={() => setIsSubscriptionOpen(false)} 
-        user={user}
-      />
-
-      <AuthModal 
-        isOpen={authModal.isOpen} 
-        onClose={() => setAuthModal({ ...authModal, isOpen: false })} 
-        initialMode={authModal.mode}
-      />
     </AppShell>
   );
 }

@@ -58,6 +58,11 @@ export default function RegisterForm({ onClose, onSwitchToLogin, isModal = false
       });
 
       localStorage.setItem("user", JSON.stringify(data.user));
+      
+      // Sinkronkan state global & tutup modal
+      window.dispatchEvent(new Event("auth-change"));
+      if (onClose) onClose();
+      
       router.push("/chatbot");
     } catch (err) {
       setError(err.message);
@@ -86,10 +91,10 @@ export default function RegisterForm({ onClose, onSwitchToLogin, isModal = false
   const formContent = (
     <>
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2 text-center md:text-left">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 text-center md:text-left transition-colors">
           Buat Akun
         </h2>
-        <p className="text-gray-500 text-center md:text-left">
+        <p className="text-gray-500 dark:text-gray-400 text-center md:text-left transition-colors">
           Daftar sekarang untuk mulai berkonsultasi
         </p>
       </div>
@@ -97,20 +102,20 @@ export default function RegisterForm({ onClose, onSwitchToLogin, isModal = false
       <div className="space-y-5">
         {/* Email */}
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-gray-700 ml-1">Email</label>
+          <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1 transition-colors">Email</label>
           <input
             type="email"
             placeholder="nama@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl 
-            focus:outline-none focus:ring-2 focus:ring-[#2f6fed]/20 focus:border-[#2f6fed] transition-all"
+            className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-2xl 
+            focus:outline-none focus:ring-2 focus:ring-[#2f6fed]/20 focus:border-[#2f6fed] text-gray-900 dark:text-white transition-all"
           />
         </div>
 
         {/* Password */}
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-gray-700 ml-1">
+          <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1 transition-colors">
             Kata Sandi
           </label>
 
@@ -120,8 +125,8 @@ export default function RegisterForm({ onClose, onSwitchToLogin, isModal = false
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl 
-              focus:outline-none focus:ring-2 focus:ring-[#2f6fed]/20 focus:border-[#2f6fed] transition-all"
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-2xl 
+              focus:outline-none focus:ring-2 focus:ring-[#2f6fed]/20 focus:border-[#2f6fed] text-gray-900 dark:text-white transition-all"
             />
 
             <button
@@ -132,7 +137,7 @@ export default function RegisterForm({ onClose, onSwitchToLogin, isModal = false
               <img
                 src={showPassword ? "/icons/mataPW.svg" : "/icons/tutupMata.svg"}
                 alt="toggle"
-                className="w-5 h-5 opacity-70"
+                className="w-5 h-5 opacity-70 dark:invert"
               />
             </button>
           </div>
@@ -168,10 +173,10 @@ export default function RegisterForm({ onClose, onSwitchToLogin, isModal = false
 
         <div className="relative py-2">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-100"></div>
+            <div className="w-full border-t border-gray-100 dark:border-slate-800"></div>
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-gray-400">Atau daftar dengan</span>
+            <span className="bg-white dark:bg-slate-900 px-2 text-gray-400 dark:text-gray-500 transition-colors">Atau daftar dengan</span>
           </div>
         </div>
 
@@ -181,7 +186,7 @@ export default function RegisterForm({ onClose, onSwitchToLogin, isModal = false
         </div>
 
         {/* Login */}
-        <p className="text-center text-sm text-gray-500 pt-2">
+        <p className="text-center text-sm text-gray-500 dark:text-gray-400 pt-2 transition-colors">
           Sudah punya akun?{" "}
           <button
             type="button"
@@ -197,8 +202,8 @@ export default function RegisterForm({ onClose, onSwitchToLogin, isModal = false
 
   if (!isModal) {
     return (
-      <div className="min-h-screen bg-[#e6eef8] flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white p-10 rounded-3xl shadow-xl">
+      <div className="min-h-screen bg-[#e6eef8] dark:bg-[#0b1120] flex items-center justify-center p-4 transition-colors duration-500">
+        <div className="w-full max-w-md bg-white dark:bg-slate-900 p-10 rounded-3xl shadow-xl border border-transparent dark:border-slate-800 transition-colors">
           {formContent}
         </div>
       </div>

@@ -38,6 +38,57 @@ export async function GET(request) {
       );
     }
 
+    // ==========================================
+    // SELF-HEALING: Cek jika ada transaksi PENDING yang sudah sukses di Midtrans
+    // Ini menangani kasus jika Webhook (ngrok) gagal/telat.
+    // ==========================================
+    if (user.tier === "FREE") {
+      const pendingTx = await prisma.transaction.findFirst({
+        where: { 
+          userId: user.id,
+          status: "PENDING"
+        },
+        orderBy: { createdAt: "desc" }
+      });
+
+      if (pendingTx) {
+        console.log("[SYNC-STATUS] Checking Midtrans status for orderId:", pendingTx.orderId);
+        try {
+          const Midtrans = (await import("midtrans-client")).default;
+          // Gunakan CoreApi untuk pengecekan status yang lebih reliabel
+          const core = new Midtrans.CoreApi({
+            isProduction: false,
+            serverKey: (process.env.MIDTRANS_SERVER_KEY || "").trim(),
+            clientKey: (process.env.MIDTRANS_CLIENT_KEY || "").trim(),
+          });
+
+          const status = await core.transaction.status(pendingTx.orderId);
+          console.log("[SYNC-STATUS] Midtrans returned status:", status.transaction_status, "for", pendingTx.orderId);
+          
+          if (status.transaction_status === "settlement" || status.transaction_status === "capture") {
+             console.log(`[SYNC-STATUS] Transaction ${pendingTx.orderId} is SUCCESS in Midtrans. Upgrading user...`);
+             
+             await prisma.$transaction([
+               prisma.transaction.update({
+                 where: { orderId: pendingTx.orderId },
+                 data: { status: "SUCCESS" }
+               }),
+               prisma.user.update({
+                 where: { id: user.id },
+                 data: { tier: "PRO", promptLimit: 0 }
+               })
+             ]);
+             
+             // Kembalikan data yang sudah di-update
+             user.tier = "PRO";
+             user.promptLimit = 0;
+          }
+        } catch (syncError) {
+          console.error("[SYNC-STATUS] Error syncing status:", syncError.message);
+        }
+      }
+    }
+
     return NextResponse.json(user);
 
   } catch (err) {
@@ -82,8 +133,8 @@ export async function PATCH(request) {
 
     if (name) updateData.name = name;
 
-    if (avatarUrl) {
-      if (!avatarUrl.startsWith("http")) {
+    if (avatarUrl !== undefined) {
+      if (avatarUrl !== null && !avatarUrl.startsWith("http")) {
         return NextResponse.json(
           { error: "URL Avatar tidak valid" },
           { status: 400 }
@@ -154,6 +205,51 @@ export async function PATCH(request) {
     return NextResponse.json(
       { error: "Unauthorized" },
       { status: 401 }
+    );
+  }
+}
+
+// ==========================
+// DELETE ACCOUNT
+// ==========================
+export async function DELETE(request) {
+  try {
+    const token = request.cookies.get("token")?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const payload = await verifyToken(token);
+
+    // 1. Hapus dari database (Prisma Cascade handle chats, histories, transactions)
+    await prisma.user.delete({
+      where: { id: payload.userId },
+    });
+
+    // 2. Clear cookie
+    const response = NextResponse.json({
+      message: "Akun berhasil dihapus selamanya",
+    });
+
+    response.cookies.set("token", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      expires: new Date(0),
+      path: "/",
+    });
+
+    return response;
+
+  } catch (err) {
+    console.error("[DELETE_ACCOUNT_ERROR]:", err);
+    return NextResponse.json(
+      { error: "Gagal menghapus akun. Silakan coba lagi nanti." },
+      { status: 500 }
     );
   }
 }

@@ -161,17 +161,17 @@ export default function AdminDataList() {
   };
 
   return (
-    <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 min-h-[600px] flex flex-col group transition-all duration-300 hover:shadow-md relative overflow-hidden">
+    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-gray-100 dark:border-slate-800 min-h-[600px] flex flex-col group transition-all duration-300 hover:shadow-md relative overflow-hidden transition-colors">
       
       {/* HEADER SECTION */}
       <div className="mb-10">
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8">
           <div>
-            <h2 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+            <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3 transition-colors">
               <div className="w-2 h-8 bg-blue-600 rounded-full" />
               Pusat Data Hukum
             </h2>
-            <p className="text-sm text-gray-500 mt-1 font-medium">Administrasi regulasi dan metadata dokumen nasional.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium transition-colors">Administrasi regulasi dan metadata dokumen nasional.</p>
           </div>
           
           <button 
@@ -179,7 +179,7 @@ export default function AdminDataList() {
               setEditingItem(null);
               setIsModalOpen(true);
             }} 
-            className="bg-blue-600 text-white px-8 py-4 rounded-[1.25rem] font-bold hover:bg-blue-700 transition shadow-xl shadow-blue-200 flex items-center justify-center gap-3 shrink-0 active:scale-95"
+            className="bg-blue-600 text-white px-8 py-4 rounded-[1.25rem] font-bold hover:bg-blue-700 transition shadow-xl shadow-blue-200 dark:shadow-blue-900/20 flex items-center justify-center gap-3 shrink-0 active:scale-95 transition-all"
           >
             <span className="text-xl">+</span>
             <span>Tambah Dokumen</span>
@@ -187,27 +187,27 @@ export default function AdminDataList() {
         </div>
 
         {/* SEARCH & FILTERS */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-gray-50/50 p-4 rounded-[2rem] border border-gray-100">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-gray-50/50 dark:bg-slate-800/50 p-4 rounded-[2rem] border border-gray-100 dark:border-slate-800 transition-colors">
           <div className="relative md:col-span-3">
             <input 
               type="text" 
               placeholder="Cari regulasi atau metadata..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-gray-200 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 outline-none transition shadow-sm"
+              className="w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-gray-900 dark:text-white focus:ring-4 focus:ring-blue-500/10 outline-none transition shadow-sm transition-colors"
             />
             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-              <img src="/icons/search.svg" alt="Search" className="w-5 h-5 opacity-40" />
+              <img src="/icons/search.svg" alt="Search" className="w-5 h-5 opacity-40 transition-all" />
             </div>
           </div>
 
           <select 
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="bg-white border border-gray-200 rounded-2xl py-3.5 px-4 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 outline-none shadow-sm cursor-pointer"
+            className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl py-3.5 px-4 text-sm font-bold text-gray-900 dark:text-white focus:ring-4 focus:ring-blue-500/10 outline-none shadow-sm cursor-pointer transition-colors"
           >
             {CATEGORIES.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
+              <option key={cat} value={cat} className="dark:bg-slate-900">{cat}</option>
             ))}
           </select>
         </div>
@@ -216,12 +216,12 @@ export default function AdminDataList() {
       {/* PRODUCTION TABLE */}
       <div className="flex-1 overflow-x-auto custom-scrollbar -mx-8 px-8">
         <table className="w-full border-separate border-spacing-y-3">
-          <thead className="sticky top-0 z-20 bg-white/80 backdrop-blur-md">
+          <thead className="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md transition-colors">
             <tr className="text-left">
-              <th className="pb-4 px-6 text-[11px] font-black text-gray-400 uppercase tracking-widest">Informasi Dokumen</th>
-              <th className="pb-4 px-4 text-[11px] font-black text-gray-400 uppercase tracking-widest">Metadata & Kategori</th>
-              <th className="pb-4 px-4 text-[11px] font-black text-gray-400 uppercase tracking-widest text-center">Ukuran & Views</th>
-              <th className="pb-4 px-4 text-[11px] font-black text-gray-400 uppercase tracking-widest text-center">Tgl Unggah</th>
+              <th className="pb-4 px-6 text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest transition-colors">Informasi Dokumen</th>
+              <th className="pb-4 px-4 text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest transition-colors">Metadata & Kategori</th>
+              <th className="pb-4 px-4 text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest text-center transition-colors">Ukuran & Views</th>
+              <th className="pb-4 px-4 text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest text-center transition-colors">Tgl Unggah</th>
               <th className="pb-4 px-6"></th>
             </tr>
           </thead>
@@ -230,16 +230,16 @@ export default function AdminDataList() {
               <tr>
                 <td colSpan="5" className="py-20 text-center">
                    <div className="flex flex-col items-center gap-4">
-                      <div className="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin" />
-                      <p className="text-sm font-bold text-gray-400 animate-pulse">Menghubungkan ke database hukum...</p>
+                      <div className="w-10 h-10 border-4 border-blue-100 dark:border-blue-900/20 border-t-blue-600 rounded-full animate-spin transition-colors" />
+                      <p className="text-sm font-bold text-gray-400 dark:text-gray-500 animate-pulse transition-colors">Menghubungkan ke database hukum...</p>
                    </div>
                 </td>
               </tr>
             ) : data.length === 0 ? (
               <tr>
                 <td colSpan="5" className="py-20 text-center">
-                   <div className="border-2 border-dashed border-gray-100 rounded-[2rem] p-12 inline-block">
-                      <p className="text-sm font-bold text-gray-400 italic">Dokumen tidak ditemukan dalam database.</p>
+                   <div className="border-2 border-dashed border-gray-100 dark:border-slate-800 rounded-[2rem] p-12 inline-block transition-colors">
+                      <p className="text-sm font-bold text-gray-400 dark:text-gray-500 italic transition-colors">Dokumen tidak ditemukan dalam database.</p>
                    </div>
                 </td>
               </tr>
@@ -261,25 +261,25 @@ export default function AdminDataList() {
 
       {/* PAGINATION FOOTER */}
       {!isLoading && totalPages > 1 && (
-        <div className="mt-8 pt-8 border-t border-gray-50 flex items-center justify-between">
-          <p className="text-xs font-bold text-gray-400">
-            Halaman <span className="text-gray-900 font-black">{currentPage}</span> dari <span className="text-gray-900 font-black">{totalPages}</span>
+        <div className="mt-8 pt-8 border-t border-gray-50 dark:border-slate-800 flex items-center justify-between transition-colors">
+          <p className="text-xs font-bold text-gray-400 dark:text-gray-500 transition-colors">
+            Halaman <span className="text-gray-900 dark:text-white font-black">{currentPage}</span> dari <span className="text-gray-900 dark:text-white font-black">{totalPages}</span>
           </p>
 
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="p-2.5 rounded-xl border border-gray-100 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition"
+              className="p-2.5 rounded-xl border border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><polyline points="15 18 9 12 15 6"></polyline></svg>
             </button>
             <button 
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
-              className="p-2.5 rounded-xl border border-gray-100 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition"
+              className="p-2.5 rounded-xl border border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </button>
           </div>
         </div>
@@ -302,27 +302,27 @@ export default function AdminDataList() {
 
       {/* DELETE CONFIRMATION MODAL */}
       {mounted && itemToDelete && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/20 backdrop-blur-md animate-fadeIn p-4">
-          <div className="bg-white p-10 rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] w-full max-w-[450px] text-center transform transition-all animate-slideUp">
-            <div className="w-20 h-20 bg-red-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-red-100">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/20 backdrop-blur-md animate-fadeIn p-4 transition-colors">
+          <div className="bg-white dark:bg-slate-900 p-10 rounded-[2.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] w-full max-w-[450px] text-center transform transition-all animate-slideUp border border-gray-100 dark:border-slate-800 transition-colors">
+            <div className="w-20 h-20 bg-red-50 dark:bg-red-900/10 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-red-100 dark:border-red-900/30 transition-colors">
               <img src="/icons/hapus.svg" alt="Warning" className="w-10 h-10 opacity-80" />
             </div>
-            <h2 className="text-2xl font-black text-gray-900 mb-3 tracking-tight">Hapus Dokumen?</h2>
-            <p className="text-sm text-gray-500 mb-10 leading-relaxed font-medium px-4">
+            <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-3 tracking-tight transition-colors">Hapus Dokumen?</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-10 leading-relaxed font-medium px-4 transition-colors">
               Apakah Anda yakin ingin menghapus dokumen <br />
-              <span className="font-bold text-gray-900">"{itemToDelete.dokumen}"</span>?<br />
+              <span className="font-bold text-gray-900 dark:text-white">"{itemToDelete.dokumen}"</span>?<br />
               Tindakan ini permanen dan tidak dapat dibatalkan.
             </p>
             <div className="flex gap-4">
               <button
                 onClick={() => setItemToDelete(null)}
-                className="flex-1 bg-gray-50 text-gray-400 font-bold py-4 rounded-[1.25rem] hover:bg-gray-100 transition active:scale-95 text-xs uppercase tracking-widest"
+                className="flex-1 bg-gray-50 dark:bg-slate-800 text-gray-400 dark:text-gray-500 font-bold py-4 rounded-[1.25rem] hover:bg-gray-100 dark:hover:bg-slate-700 transition active:scale-95 text-xs uppercase tracking-widest transition-colors"
               >
                 Batalkan
               </button>
               <button
                 onClick={executeDelete}
-                className="flex-1 bg-red-500 text-white font-bold py-4 rounded-[1.25rem] hover:bg-red-600 transition shadow-xl shadow-red-200 active:scale-95 text-xs uppercase tracking-widest"
+                className="flex-1 bg-red-500 text-white font-bold py-4 rounded-[1.25rem] hover:bg-red-600 transition shadow-xl shadow-red-200 dark:shadow-red-900/20 active:scale-95 text-xs uppercase tracking-widest transition-all"
               >
                 Ya, Hapus
               </button>

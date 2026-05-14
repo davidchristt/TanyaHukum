@@ -62,10 +62,10 @@ export default function ForgotPasswordForm({ onSwitchToLogin }) {
   return (
     <div className="animate-in fade-in slide-in-from-right-4 duration-300">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2 text-center md:text-left">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 text-center md:text-left transition-colors">
           Lupa Password?
         </h2>
-        <p className="text-gray-500 text-center md:text-left">
+        <p className="text-gray-500 dark:text-gray-400 text-center md:text-left transition-colors">
           Masukkan email Anda untuk menerima link reset password
         </p>
       </div>
@@ -73,15 +73,15 @@ export default function ForgotPasswordForm({ onSwitchToLogin }) {
       <div className="space-y-5">
         {/* Email */}
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-gray-700 ml-1">Email</label>
+          <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1 transition-colors">Email</label>
           <input
             type="email"
             placeholder="nama@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={countdown > 0}
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl 
-            focus:outline-none focus:ring-2 focus:ring-[#2f6fed]/20 focus:border-[#2f6fed] transition-all
+            className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-2xl 
+            focus:outline-none focus:ring-2 focus:ring-[#2f6fed]/20 focus:border-[#2f6fed] text-gray-900 dark:text-white transition-all
             disabled:opacity-60 disabled:cursor-not-allowed"
           />
         </div>
@@ -122,7 +122,7 @@ export default function ForgotPasswordForm({ onSwitchToLogin }) {
         <div className="pt-2">
           <button
             onClick={onSwitchToLogin}
-            className="w-full flex items-center justify-center gap-2 text-sm font-bold text-gray-500 hover:text-[#2f6fed] transition-colors"
+            className="w-full flex items-center justify-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-[#2f6fed] dark:hover:text-[#4f8eff] transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="12" x2="5" y2="12"></line>

@@ -40,12 +40,12 @@ export async function GET() {
       // Total storage
       prisma.regulation.aggregate({ _sum: { fileSize: true } }),
       // Popular docs (top 5)
-      prisma.regulation.findMany({ orderBy: { viewCount: 'desc' }, take: 5, select: { id: true, title: true, viewCount: true, category: true, fileSize: true } }),
+      prisma.regulation.findMany({ orderBy: { viewCount: 'desc' }, take: 5, select: { id: true, title: true, viewCount: true, category: true, fileSize: true, fileUrl: true, description: true } }),
       // Recent docs
-      prisma.regulation.findMany({ orderBy: { createdAt: 'desc' }, take: 5, select: { id: true, title: true, createdAt: true, category: true, fileSize: true } }),
+      prisma.regulation.findMany({ orderBy: { createdAt: 'desc' }, take: 5, select: { id: true, title: true, createdAt: true, category: true, fileSize: true, fileUrl: true, description: true } }),
       // Trending issues
       prisma.trendingIssue.findMany({ orderBy: { publishDate: 'desc' }, take: 5, select: { id: true, title: true, description: true, publishDate: true, location: true, newsLink: true, isActive: true } }),
-      // Search trends (last 14 days)
+      // Search trends (last 30 days)
       prisma.searchLog.groupBy({ by: ['createdAt'], _count: { id: true }, orderBy: { createdAt: 'asc' } }),
       // Category distribution
       prisma.regulation.groupBy({ by: ['category'], _count: { id: true }, where: { category: { not: null } } }),
@@ -59,7 +59,7 @@ export async function GET() {
       const dateKey = log.createdAt.toISOString().split('T')[0];
       trendMap[dateKey] = (trendMap[dateKey] || 0) + log._count.id;
     });
-    const searchTrends = Object.keys(trendMap).slice(-14).map(date => ({
+    const searchTrends = Object.keys(trendMap).slice(-30).map(date => ({
       date, searches: trendMap[date]
     }));
 
@@ -92,8 +92,8 @@ export async function GET() {
           totalAdmins: { value: totalAdmins, label: "Administrator" },
           storageUsed: { value: totalStorageRaw._sum?.fileSize || 0, label: "Storage Used" },
         },
-        popularDocs: popularDocs.map(d => ({ name: d.title, views: d.viewCount, category: d.category, size: d.fileSize })),
-        recentDocs: recentDocs.map(d => ({ name: d.title, date: d.createdAt, category: d.category, size: d.fileSize })),
+        popularDocs: popularDocs.map(d => ({ id: d.id, name: d.title, views: d.viewCount, category: d.category, size: d.fileSize, fileUrl: d.fileUrl, description: d.description })),
+        recentDocs: recentDocs.map(d => ({ id: d.id, name: d.title, date: d.createdAt, category: d.category, size: d.fileSize, fileUrl: d.fileUrl, description: d.description })),
         trendingIssues,
         searchTrends,
         categoryDistribution: categories,

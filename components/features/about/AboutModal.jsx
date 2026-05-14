@@ -45,9 +45,9 @@ export default function AboutModal({ onOpenAuth }) {
   if (!isOpen || !mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/20 backdrop-blur-md transition-all duration-500 animate-in fade-in">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/40 backdrop-blur-md transition-all duration-500 animate-in fade-in">
       <div 
-        className="relative w-full max-w-lg mx-4 bg-white rounded-[2rem] shadow-2xl overflow-hidden transform transition-all duration-500 animate-in zoom-in-95 slide-in-from-bottom-20"
+        className="relative w-full max-w-lg mx-4 bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl overflow-hidden transform transition-all duration-500 animate-in zoom-in-95 slide-in-from-bottom-20 border border-transparent dark:border-slate-800"
       >
         {/* Header/Banner */}
         <div className="h-32 bg-gradient-to-r from-[#2f6fed] to-[#4a89ff] relative flex items-center justify-center">
@@ -56,9 +56,9 @@ export default function AboutModal({ onOpenAuth }) {
         </div>
 
         <div className="p-8 pt-10 text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Selamat Datang di TanyaHukum</h2>
+          <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-4 transition-colors">Selamat Datang di TanyaHukum</h2>
           
-          <div className="space-y-4 text-gray-600 leading-relaxed text-sm">
+          <div className="space-y-4 text-gray-600 dark:text-gray-300 leading-relaxed text-sm transition-colors">
             <p>
               <span className="font-bold text-[#2f6fed]">TanyaHukum</span> adalah asisten hukum virtual cerdas berbasis teknologi RAG (Retrieval-Augmented Generation) yang dirancang khusus untuk hukum di Indonesia.
             </p>
@@ -67,11 +67,11 @@ export default function AboutModal({ onOpenAuth }) {
             </p>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-gray-100">
-            <p className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-3">Dikembangkan Oleh</p>
+          <div className="mt-8 pt-6 border-t border-gray-100 dark:border-slate-700 transition-colors">
+            <p className="text-[10px] uppercase tracking-widest text-gray-400 dark:text-gray-500 font-bold mb-3">Dikembangkan Oleh</p>
             <div className="flex flex-wrap justify-center gap-x-4 gap-y-2">
               {["Kresna Bayu", "Dzacky Ahmad", "Fawwaz Areefa", "David Christian", "Azmi Naifah"].map((name) => (
-                <span key={name} className="text-xs font-semibold text-gray-500 bg-gray-50 px-3 py-1 rounded-full">{name}</span>
+                <span key={name} className="text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-800 px-3 py-1 rounded-full border border-gray-100 dark:border-slate-700 transition-colors">{name}</span>
               ))}
             </div>
           </div>
@@ -79,13 +79,13 @@ export default function AboutModal({ onOpenAuth }) {
           <div className="mt-10 grid grid-cols-2 gap-4">
             <button
               onClick={() => handleAction("register")}
-              className="py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl transition-all active:scale-[0.98]"
+              className="py-4 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 font-bold rounded-2xl transition-all active:scale-[0.98]"
             >
               Daftar
             </button>
             <button
               onClick={() => handleAction("login")}
-              className="py-4 bg-[#2f6fed] hover:bg-[#255cd6] text-white font-bold rounded-2xl shadow-lg shadow-blue-200 transition-all active:scale-[0.98]"
+              className="py-4 bg-[#2f6fed] hover:bg-[#255cd6] text-white font-bold rounded-2xl shadow-lg shadow-blue-200 dark:shadow-none transition-all active:scale-[0.98]"
             >
               Masuk
             </button>
@@ -98,16 +98,16 @@ export default function AboutModal({ onOpenAuth }) {
                 type="checkbox" 
                 checked={dontShowAgain}
                 onChange={(e) => setDontShowAgain(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-[#2f6fed] focus:ring-[#2f6fed]"
+                className="w-4 h-4 rounded border-gray-300 dark:border-slate-600 text-[#2f6fed] focus:ring-[#2f6fed] dark:bg-slate-700 accent-blue-500"
               />
-              <span className="text-xs font-medium text-gray-400 group-hover:text-gray-600 transition-colors">
+              <span className="text-xs font-medium text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
                 Jangan tampilkan lagi
               </span>
             </label>
 
             <button
               onClick={handleClose}
-              className="text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-xs font-bold text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             >
               Nanti Saja
             </button>

@@ -47,12 +47,12 @@ export default function ChartPlaceholder({ trends = [] }) {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-4 border border-gray-100 shadow-2xl rounded-2xl animate-fadeIn">
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{label}</p>
+        <div className="bg-white dark:bg-slate-800/80 p-4 border border-gray-100 dark:border-slate-700 shadow-2xl rounded-2xl animate-fadeIn transition-colors">
+          <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">{label}</p>
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-blue-600 shadow-sm" />
-            <p className="text-sm font-bold text-gray-900">
-              {payload[0].value} <span className="font-medium text-gray-500">Pencarian</span>
+            <p className="text-sm font-bold text-gray-900 dark:text-white transition-colors">
+              {payload[0].value} <span className="font-medium text-gray-500 dark:text-gray-400">Pencarian</span>
             </p>
           </div>
         </div>
@@ -62,27 +62,27 @@ export default function ChartPlaceholder({ trends = [] }) {
   };
 
   return (
-    <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 flex flex-col h-full group transition-all duration-300 hover:shadow-md">
+    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col h-full group transition-all duration-300 hover:shadow-md">
       
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
         <div>
-          <h3 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+          <h3 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3 transition-colors">
             <div className="w-2 h-8 bg-blue-600 rounded-full" />
             Tren Pencarian Hukum
           </h3>
-          <p className="text-xs text-gray-500 mt-1">Volume aktivitas dan interaksi chatbot</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 transition-colors">Volume aktivitas dan interaksi chatbot</p>
         </div>
         
         {/* Modern Segmented Filter */}
-        <div className="flex items-center gap-1 bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
+        <div className="flex items-center gap-1 bg-gray-50 dark:bg-slate-800 p-1.5 rounded-2xl border border-gray-100 dark:border-slate-700 transition-colors">
           {ranges.map((r) => (
             <button
               key={r.id}
               onClick={() => setTimeRange(r.id)}
               className={`px-4 py-2 rounded-xl text-[11px] font-black tracking-tight transition-all duration-300 ${
                 timeRange === r.id 
-                  ? "bg-white text-blue-600 shadow-sm border border-gray-100 scale-105" 
-                  : "text-gray-400 hover:text-gray-600"
+                  ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-100 dark:border-slate-600 scale-105" 
+                  : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
               }`}
             >
               {r.label}
@@ -164,29 +164,29 @@ export default function ChartPlaceholder({ trends = [] }) {
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-full border-2 border-dashed border-gray-100 rounded-[2rem] flex flex-col items-center justify-center p-12 text-center bg-gray-50/20">
-            <div className="w-16 h-16 bg-white rounded-3xl shadow-sm flex items-center justify-center mb-6 text-blue-200">
+          <div className="h-full border-2 border-dashed border-gray-100 dark:border-slate-800 rounded-[2rem] flex flex-col items-center justify-center p-12 text-center bg-gray-50/20 dark:bg-slate-800/20">
+            <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-3xl shadow-sm flex items-center justify-center mb-6 text-blue-200 dark:text-blue-900 transition-colors">
                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
               </svg>
             </div>
-            <p className="text-sm font-bold text-gray-400 italic tracking-tight">Data tren belum tersedia untuk periode {ranges.find(r => r.id === timeRange)?.label}.</p>
+            <p className="text-sm font-bold text-gray-400 dark:text-gray-500 italic tracking-tight">Data tren belum tersedia untuk periode {ranges.find(r => r.id === timeRange)?.label}.</p>
           </div>
         )}
       </div>
 
-      <div className="mt-10 pt-8 border-t border-gray-50 flex items-center justify-between">
+      <div className="mt-10 pt-8 border-t border-gray-50 dark:border-slate-800 flex items-center justify-between transition-colors">
          <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
                <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
-               <p className="text-xs font-bold text-gray-700">Volume Pencarian</p>
+               <p className="text-xs font-bold text-gray-700 dark:text-gray-300 transition-colors">Volume Pencarian</p>
             </div>
             <div className="flex items-center gap-2">
-               <div className="w-2.5 h-2.5 rounded-full bg-blue-200" />
-               <p className="text-xs font-bold text-gray-400">Target Kuartal</p>
+               <div className="w-2.5 h-2.5 rounded-full bg-blue-200 dark:bg-blue-800" />
+               <p className="text-xs font-bold text-gray-400 dark:text-gray-500 transition-colors">Target Kuartal</p>
             </div>
          </div>
-         <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+         <p className="text-[11px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full border border-blue-100 dark:border-blue-900/30 transition-colors">
             Analytics Aktif
          </p>
       </div>

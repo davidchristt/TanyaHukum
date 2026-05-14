@@ -21,15 +21,15 @@ export default function AnimatedBackground() {
   }, []);
 
   return (
-    <div className="fixed inset-0 -z-50 overflow-hidden bg-[#f8fbff]">
+    <div className="fixed inset-0 -z-50 overflow-hidden bg-[#f8fbff] dark:bg-[#0b1120] transition-colors duration-500">
       {/* Dynamic Gradient Shifting */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(47,111,237,0.05),transparent_70%)] animate-pulse"></div>
       
       {/* Central Glowing Blur */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-blue-100/30 rounded-full blur-[120px] animate-pulse"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-blue-100/30 dark:bg-blue-900/10 rounded-full blur-[120px] animate-pulse transition-colors duration-500"></div>
 
       {/* Abstract Hexagon Pattern (Subtle) */}
-      <div className="absolute inset-0 opacity-[0.03]" 
+      <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.01]" 
            style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/carbon-fibre.png")' }}>
       </div>
 
@@ -38,7 +38,7 @@ export default function AnimatedBackground() {
         {mounted && particles.map((style, i) => (
           <div
             key={i}
-            className="absolute rounded-full bg-blue-400/10 blur-xl animate-float"
+            className="absolute rounded-full bg-blue-400/10 dark:bg-blue-500/5 blur-xl animate-float transition-colors duration-500"
             style={style}
           ></div>
         ))}

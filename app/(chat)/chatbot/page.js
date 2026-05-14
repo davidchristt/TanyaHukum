@@ -5,12 +5,7 @@ import { useState, useEffect } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import ChatArea from "@/components/features/chat/ChatArea";
 
-import AuthModal from "@/components/features/auth/AuthModal";
-
 // SUBSCRIPTION
-import SubscriptionList from "@/components/features/subscription/SubscriptionList";
-
-import ProfileModal from "@/components/features/profile/ProfileModal";
 import AboutModal from "@/components/features/about/AboutModal";
 import AppShell from "@/components/layout/AppShell";
 
@@ -20,14 +15,8 @@ export default function ChatbotPage() {
   const [isOpen, setIsOpen] = useState(true);
 
   // AUTH
-  const [authModal, setAuthModal] = useState({ isOpen: false, mode: "login" });
   const [user, setUser] = useState(null);
   const [showToast, setShowToast] = useState(false);
-
-  const handleLoginSuccess = (userData) => {
-    setUser(userData); 
-    setAuthModal({ ...authModal, isOpen: false });
-  };
 
   // ==============================
   // LOAD USER (API BASED)
@@ -83,11 +72,11 @@ export default function ChatbotPage() {
       }
       hideHeader={true} // ChatArea has its own specific Header logic for now
     >
-      <AboutModal onOpenAuth={(mode) => setAuthModal({ isOpen: true, mode })} />
+      <AboutModal onOpenAuth={(mode) => window.dispatchEvent(new CustomEvent("open-auth", { detail: { mode: mode || "login" } }))} />
       
       <ChatArea
         user={user}
-        onOpenAuth={(mode) => setAuthModal({ isOpen: true, mode: mode || "login" })}
+        onOpenAuth={(mode) => window.dispatchEvent(new CustomEvent("open-auth", { detail: { mode: mode || "login" } }))}
       />
 
 
@@ -112,12 +101,6 @@ export default function ChatbotPage() {
           </div>
         </div>
       )}
-      <AuthModal
-        isOpen={authModal.isOpen}
-        initialMode={authModal.mode}
-        onClose={() => setAuthModal({ ...authModal, isOpen: false })}
-        onLoginSuccess={handleLoginSuccess}
-      />
     </AppShell>
   );
 }

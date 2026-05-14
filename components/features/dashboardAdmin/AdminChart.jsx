@@ -1,5 +1,5 @@
-"use client";
-
+import { useState } from "react";
+import { useTheme } from "@/components/shared/ThemeProvider";
 import {
   AreaChart,
   Area,
@@ -11,21 +11,38 @@ import {
 } from "recharts";
 
 export default function AdminChart({ dataTren = [] }) {
-  const chartData = dataTren.length === 1 
+  const [filterDays, setFilterDays] = useState(14);
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  
+  const filteredData = dataTren.length > 0 ? dataTren.slice(-filterDays) : [];
+  
+  const chartData = filteredData.length === 1 
     ? [
         { date: "Sebelumnya", searches: 0 }, 
-        ...dataTren,
-        { date: "Sekarang", searches: dataTren[0].searches }
+        ...filteredData,
+        { date: "Sekarang", searches: filteredData[0].searches }
       ] 
-    : dataTren;
+    : filteredData;
 
   return (
-    <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 flex flex-col h-full group transition-all duration-300 hover:shadow-md">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
-        <h3 className="text-lg font-bold text-gray-900">
-          Tren Pencarian Hukum
-        </h3>
+    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col h-full group transition-all duration-300 hover:shadow-md transition-colors">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white transition-colors">
+            Tren Pencarian Hukum
+          </h3>
+        </div>
+        <select 
+          value={filterDays}
+          onChange={(e) => setFilterDays(Number(e.target.value))}
+          className="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 text-xs rounded-xl px-3 py-2 font-bold outline-none cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700 transition transition-colors"
+        >
+          <option value={7}>7 Hari Terakhir</option>
+          <option value={14}>14 Hari Terakhir</option>
+          <option value={30}>30 Hari Terakhir</option>
+        </select>
       </div>
 
       <div style={{ width: '100%', minHeight: '300px', height: '300px' }}>
@@ -42,26 +59,31 @@ export default function AdminChart({ dataTren = [] }) {
                 </linearGradient>
               </defs>
               
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "#334155" : "#e5e7eb"} />
               
               <XAxis 
                 dataKey="date" 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fill: '#6b7280', fontSize: 12 }} 
+                tick={{ fill: isDark ? '#94a3b8' : '#6b7280', fontSize: 12 }} 
                 dy={10}
               />
               
               <YAxis 
                 axisLine={false} 
                 tickLine={false} 
-                tick={{ fill: '#6b7280', fontSize: 12 }}
+                tick={{ fill: isDark ? '#94a3b8' : '#6b7280', fontSize: 12 }}
                 allowDecimals={false} 
               />
               
               <Tooltip 
-                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
-                labelStyle={{ fontWeight: 'bold', color: '#374151', marginBottom: '4px' }}
+                contentStyle={{ 
+                  borderRadius: '12px', 
+                  border: isDark ? '1px solid #334155' : 'none', 
+                  backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' 
+                }}
+                labelStyle={{ fontWeight: 'bold', color: isDark ? '#f8fafc' : '#374151', marginBottom: '4px' }}
                 itemStyle={{ color: '#3b82f6', fontWeight: '500' }}
                 formatter={(value) => [`${value} Pencarian`, 'Total']}
               />
@@ -73,12 +95,12 @@ export default function AdminChart({ dataTren = [] }) {
                 strokeWidth={3}
                 fillOpacity={1} 
                 fill="url(#colorSearches)" 
-                activeDot={{ r: 6, fill: "#1e40af", stroke: "#fff", strokeWidth: 2 }}
+                activeDot={{ r: 6, fill: "#1e40af", stroke: isDark ? "#0f172a" : "#fff", strokeWidth: 2 }}
               />
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-full border border-dashed rounded-xl flex items-center justify-center text-gray-400 text-sm">
+          <div className="h-full border border-dashed border-gray-200 dark:border-slate-800 rounded-xl flex items-center justify-center text-gray-400 dark:text-gray-600 text-sm transition-colors">
             Data tren belum tersedia
           </div>
         )}

@@ -83,7 +83,11 @@ export default function Sidebar({ isOpen, setIsOpen, onOpenProfile, user }) {
             isOpen ? "gap-3 px-2" : "justify-center"
           }`}
         >
-          <img src="/icons/profile.svg" className="w-9 h-9" />
+          {user?.avatarUrl ? (
+            <img src={user.avatarUrl} className="w-9 h-9 rounded-full object-cover border border-blue-200 shadow-sm" />
+          ) : (
+            <img src="/icons/profile.svg" className="w-9 h-9 opacity-80" />
+          )}
 
           {isOpen && (
             <div>

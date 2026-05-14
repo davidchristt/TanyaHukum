@@ -102,3 +102,32 @@ export async function logout() {
   // 🔥 stay di chatbot (no redirect ke login)
   window.location.href = "/chatbot";
 }
+
+// ==============================
+// DELETE ACCOUNT
+// ==============================
+export async function deleteAccount() {
+  const res = await fetch("/api/profile", {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.error || "Gagal menghapus akun");
+  }
+
+  // Clear local state after deletion
+  localStorage.removeItem("user");
+  localStorage.removeItem("active_conversation_id");
+  localStorage.removeItem("conversations");
+
+  // 🔥 trigger global update
+  window.dispatchEvent(new Event("auth-change"));
+
+  // 🔥 stay di chatbot (no redirect ke login yang mungkin tidak ada)
+  window.location.href = "/chatbot";
+  
+  return data;
+}

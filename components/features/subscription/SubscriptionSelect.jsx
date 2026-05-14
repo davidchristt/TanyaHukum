@@ -7,25 +7,21 @@ export default function SubscriptionSelect({
   setStep,
   user,
   onClose,
+  embedded = false,
 }) {
-  return (
-    <div className="relative w-full bg-white rounded-3xl shadow-xl p-10">
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition"
-      >
-        ✕
-      </button>
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Pilih Paket
-        </h1>
+  const Content = () => (
+    <>
+      {/* Header */}
+      <div className="mb-8">
+        <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight transition-colors">Pilih Paket</h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium transition-colors">Bandingkan paket dan temukan yang sesuai untuk Anda</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
-
+      {/* Plan Cards - Vertical List for better flow */}
+      <div className="grid grid-cols-1 gap-5">
         {plans.map((plan) => {
           const isActive = selected === plan.id;
+          const isPro = plan.id === "pro";
 
           const isCurrent =
             (user?.tier === "FREE" && plan.id === "basic") ||
@@ -34,52 +30,104 @@ export default function SubscriptionSelect({
           return (
             <div
               key={plan.id}
-              onClick={() => setSelected(plan.id)}
-              className={`rounded-2xl border p-6 cursor-pointer transition
-              ${
-                isActive
-                  ? "border-blue-500 shadow-md"
-                  : "border-gray-200 hover:border-blue-400"
-              }`}
+              onClick={() => {
+                if (!isCurrent) setSelected(plan.id);
+              }}
+              className={`relative rounded-[1.75rem] border-2 p-6 transition-all duration-300 ${
+                isPro
+                  ? "border-blue-600 dark:border-blue-600/70 bg-white dark:bg-slate-800/80 shadow-xl shadow-blue-100/50 dark:shadow-none"
+                  : "border-gray-200 dark:border-slate-700/80 bg-white dark:bg-slate-800/40"
+              } ${!isCurrent && "cursor-pointer hover:border-blue-300 dark:hover:border-slate-600"}`}
             >
-              <h2 className="text-lg font-semibold text-center mb-2">
-                {plan.name}
-              </h2>
+              {/* Pro Badge */}
+              {isPro && !isCurrent && (
+                <div className="absolute -top-3.5 left-6 px-4 py-1 bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-blue-200/50 dark:shadow-none">
+                  Recommended
+                </div>
+              )}
 
-              <p className="text-center text-gray-700 mb-4">
-                {plan.price}
-              </p>
+              {/* Current Plan Badge */}
+              {isCurrent && (
+                <div className={`absolute -top-3.5 ${isPro ? "right-6" : "left-6"} px-3 py-1 bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest rounded-full`}>
+                  Aktif
+                </div>
+              )}
 
-              <ul className="text-sm text-gray-600 space-y-2 mb-6">
+              <div className="flex justify-between items-start mb-5">
+                <div>
+                  <h4 className="text-base font-black text-gray-900 dark:text-white tracking-tight transition-colors">{plan.name}</h4>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-0.5 transition-colors">
+                    {isPro ? "Untuk profesional & mahasiswa hukum" : "Untuk eksplorasi awal hukum"}
+                  </p>
+                </div>
+                <div className="text-right shrink-0 ml-4">
+                  <p className={`font-black transition-colors ${isPro ? "text-2xl text-gray-900 dark:text-white" : "text-xl text-gray-600 dark:text-gray-300"}`}>
+                    {plan.price}
+                  </p>
+                  {isPro && (
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider transition-colors">
+                      /bulan
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Features */}
+              <div className={`grid gap-y-2 gap-x-4 mb-6 ${isPro ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
                 {plan.benefits.map((b, i) => (
-                  <li key={i}>• {b}</li>
+                  <li key={i} className="flex items-center gap-2.5 text-[11px] font-semibold text-gray-600 dark:text-gray-300 transition-colors list-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-3.5 w-3.5 shrink-0 ${isPro ? "text-blue-600 dark:text-blue-400" : "text-gray-300 dark:text-gray-600"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {b}
+                  </li>
                 ))}
-              </ul>
+              </div>
 
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (!isCurrent && plan.id === "pro") {
+                  if (!isCurrent && isPro) {
+                    setSelected("pro");
                     setStep("summary");
                   }
                 }}
                 disabled={isCurrent}
-                className={`w-full py-2 rounded-lg text-sm font-medium
-                ${
+                className={`w-full py-3.5 rounded-2xl font-bold text-sm transition-all active:scale-[0.98] ${
                   isCurrent
-                    ? "bg-gray-200 text-gray-500"
-                    : plan.id === "pro"
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-gray-100 text-gray-500"
+                    ? "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 cursor-default border border-emerald-200 dark:border-emerald-900/30"
+                    : isPro
+                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 dark:shadow-none"
+                    : "bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400 cursor-default"
                 }`}
               >
-                {isCurrent ? "Paket Saat Ini" : "Pilih"}
+                {isCurrent ? "Paket Saat Ini" : isPro ? "Upgrade Sekarang" : "Gratis"}
               </button>
             </div>
           );
         })}
-
       </div>
+    </>
+  );
+
+  // When embedded inside SubscriptionList modal shell, render content directly
+  if (embedded) {
+    return <Content />;
+  }
+
+  // Standalone mode (used by subscription page) — render own card wrapper
+  return (
+    <div className="relative w-full bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-9 border border-transparent dark:border-slate-800 transition-colors">
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-5 right-5 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-slate-700 hover:text-gray-700 dark:hover:text-gray-300 transition-all"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      <Content />
     </div>
   );
 }

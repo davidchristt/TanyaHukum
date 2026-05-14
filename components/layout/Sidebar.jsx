@@ -144,8 +144,8 @@ export default function Sidebar({ isOpen, setIsOpen, onOpenProfile }) {
   return (
     <>
       <div
-        className={`relative z-10 h-full bg-white/60 backdrop-blur-md rounded-2xl p-4 shadow-lg 
-        flex flex-col justify-between transition-all duration-300 
+        className={`relative z-10 h-full bg-white/60 dark:bg-slate-900/60 backdrop-blur-md rounded-2xl p-4 shadow-lg 
+        flex flex-col justify-between transition-all duration-300 border border-transparent dark:border-slate-800
         ${isOpen ? "w-64" : "w-20 items-center"}`}
       >
         {/* TOP */}
@@ -157,9 +157,15 @@ export default function Sidebar({ isOpen, setIsOpen, onOpenProfile }) {
               <img src="/icons/logo.svg" className="w-14 h-14" />
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-2 rounded-lg border border-blue-300 hover:bg-blue-50 transition"
+                className="p-2 rounded-lg border border-blue-300 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-slate-800 transition"
               >
-                <img src="/icons/sidebar.svg" className="w-5 h-5" />
+                <img 
+                  src="/icons/sidebar.svg" 
+                  className="w-5 h-5 transition-all" 
+                  style={{ 
+                    filter: "invert(37%) sepia(93%) saturate(1352%) hue-rotate(200deg) brightness(88%) contrast(101%)" 
+                  }} 
+                />
               </button>
             </div>
           ) : (
@@ -170,9 +176,15 @@ export default function Sidebar({ isOpen, setIsOpen, onOpenProfile }) {
                   onClick={() => setIsOpen(true)}
                   className="absolute inset-0 flex items-center justify-center 
                   opacity-0 group-hover/logo:opacity-100 transition z-50
-                  rounded-lg bg-white/90 border border-blue-300"
+                  rounded-lg bg-white/90 dark:bg-slate-800/90 border border-blue-300 dark:border-slate-600"
                 >
-                  <img src="/icons/sidebar.svg" className="w-5 h-5" />
+                  <img 
+                    src="/icons/sidebar.svg" 
+                    className="w-5 h-5 transition-all" 
+                    style={{ 
+                      filter: "invert(37%) sepia(93%) saturate(1352%) hue-rotate(200deg) brightness(88%) contrast(101%)" 
+                    }} 
+                  />
                 </button>
               </div>
             </div>
@@ -195,19 +207,19 @@ export default function Sidebar({ isOpen, setIsOpen, onOpenProfile }) {
           {/* HISTORY */}
           {isOpen && pathname === "/chatbot" && (
             <>
-              <p className="text-xs text-gray-500 mt-6 mb-2 px-1 font-bold uppercase tracking-wider">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-6 mb-2 px-1 font-bold uppercase tracking-wider">
                 Riwayat Obrolan
               </p>
 
               <div className="space-y-1.5 flex-1 overflow-y-auto overflow-x-visible pr-1">
                 {!user ? (
-                  <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100 border-dashed animate-in fade-in duration-500">
-                    <p className="text-[10px] text-gray-500 text-center leading-relaxed">
+                  <div className="p-4 bg-blue-50/50 dark:bg-slate-800/50 rounded-xl border border-blue-100 dark:border-slate-700 border-dashed animate-in fade-in duration-500">
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 text-center leading-relaxed">
                       Masuk untuk melihat riwayat obrolan Anda
                     </p>
                   </div>
                 ) : chatHistory.length === 0 ? (
-                  <p className="text-xs text-gray-400 px-2 italic">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 px-2 italic">
                     Belum ada obrolan
                   </p>
                 ) : (
@@ -236,15 +248,26 @@ export default function Sidebar({ isOpen, setIsOpen, onOpenProfile }) {
             onClick={onOpenProfile}
             className={`flex items-center ${
               isOpen ? "gap-3 px-2" : "justify-center"
-            } cursor-pointer hover:bg-blue-50 rounded-xl p-2 transition`}
+            } cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-800 rounded-xl p-2 transition`}
           >
-            <img src="/icons/profile.svg" className="w-9 h-9" />
+            {user?.avatarUrl ? (
+              <img src={user.avatarUrl} className="w-9 h-9 rounded-full object-cover border border-blue-200 shadow-sm" alt="Profile" />
+            ) : (
+              <img 
+                src="/icons/profile.svg" 
+                className="w-9 h-9 opacity-80 transition-all" 
+                alt="Default Profile" 
+                style={{ 
+                  filter: "invert(37%) sepia(93%) saturate(1352%) hue-rotate(200deg) brightness(88%) contrast(101%)" 
+                }}
+              />
+            )}
             {isOpen && (
               <div>
-                <p className="text-sm font-medium text-gray-900 leading-tight">
+                <p className="text-sm font-medium text-gray-900 dark:text-white leading-tight">
                   {user.nama || user.name || "User"}
                 </p>
-                <p className="text-[10px] text-blue-600 font-bold">
+                <p className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">
                   {user.tier || "Gratis"}
                 </p>
               </div>
@@ -259,7 +282,7 @@ export default function Sidebar({ isOpen, setIsOpen, onOpenProfile }) {
           <div
             key={t.id}
             className={`px-4 py-3 rounded-xl shadow-2xl border text-sm font-medium animate-in slide-in-from-right-full duration-300 flex items-center gap-3 backdrop-blur-md
-            ${t.type === "error" ? "bg-red-50 border-red-100 text-red-700" : "bg-white/90 border-blue-100 text-gray-800"}`}
+            ${t.type === "error" ? "bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-900/30 text-red-700 dark:text-red-400" : "bg-white/90 dark:bg-slate-800/90 border-blue-100 dark:border-slate-700 text-gray-800 dark:text-slate-200"}`}
           >
             <div className={`w-2 h-2 rounded-full ${t.type === "error" ? "bg-red-500" : "bg-blue-500"}`} />
             {t.message}
@@ -281,11 +304,17 @@ function MenuItem({ icon, label, isOpen, onClick, disabled }) {
           isOpen ? "justify-start px-3" : "justify-center"
         } gap-3 py-3 border rounded-xl transition-all duration-300
         ${disabled
-          ? "opacity-40 grayscale cursor-not-allowed border-gray-100"
-          : "border-blue-200 hover:bg-blue-50 active:scale-[0.98] shadow-sm"}`}
+          ? "opacity-40 grayscale cursor-not-allowed border-gray-100 dark:border-slate-800"
+          : "border-blue-200 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-slate-800 active:scale-[0.98] shadow-sm"}`}
       >
-        <img src={icon} className="w-5 h-5" />
-        {isOpen && <span className="text-gray-800 text-sm font-medium">{label}</span>}
+        <img 
+          src={icon} 
+          className="w-5 h-5 dark:invert transition-all" 
+          style={{ 
+            filter: "invert(37%) sepia(93%) saturate(1352%) hue-rotate(200deg) brightness(88%) contrast(101%)" 
+          }} 
+        />
+        {isOpen && <span className="text-gray-800 dark:text-slate-200 text-sm font-medium">{label}</span>}
       </button>
 
       {/* Tooltip */}
@@ -353,8 +382,8 @@ function ChatItem({ text, onClick, onRename, onDelete, isActive }) {
         onClick={onClick}
         className={`p-3 pr-10 border rounded-xl text-sm transition-all cursor-pointer truncate font-medium
         ${isActive
-          ? "bg-blue-600 text-white shadow-md border-blue-500"
-          : "text-gray-700 border-transparent hover:bg-blue-50/80 hover:border-blue-100"}`}
+          ? "bg-blue-600 dark:bg-blue-500 text-white shadow-md border-blue-500 dark:border-blue-400"
+          : "text-gray-700 dark:text-slate-300 border-transparent hover:bg-blue-50/80 dark:hover:bg-slate-800 hover:border-blue-100 dark:hover:border-slate-700"}`}
       >
         {text}
       </div>
@@ -365,7 +394,7 @@ function ChatItem({ text, onClick, onRename, onDelete, isActive }) {
           ref={btnRef}
           onClick={openMenu}
           className={`w-7 h-7 flex items-center justify-center rounded-lg transition-all text-base leading-none
-          ${isActive ? "hover:bg-white/20 text-white" : "hover:bg-blue-100 text-gray-400 opacity-0 group-hover:opacity-100"}`}
+          ${isActive ? "hover:bg-white/20 text-white" : "hover:bg-blue-100 dark:hover:bg-slate-700 text-gray-400 dark:text-slate-500 opacity-0 group-hover:opacity-100"}`}
         >
           •••
         </button>
@@ -377,7 +406,7 @@ function ChatItem({ text, onClick, onRename, onDelete, isActive }) {
           <div className="fixed inset-0 z-[9998]" onClick={closeMenu} />
           <div
             style={{ top: menuPos.top, left: menuPos.left }}
-            className="fixed z-[9999] w-44 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 animate-in fade-in zoom-in-95 duration-150 overflow-hidden"
+            className="fixed z-[9999] w-44 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-gray-100 dark:border-slate-700 py-1.5 animate-in fade-in zoom-in-95 duration-150 overflow-hidden"
           >
             <button
               onClick={(e) => {
@@ -386,19 +415,19 @@ function ChatItem({ text, onClick, onRename, onDelete, isActive }) {
                 setRenameValue(text);
                 closeMenu();
               }}
-              className="w-full text-left px-3.5 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+              className="w-full text-left px-3.5 py-2.5 text-[13px] text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 flex items-center gap-3 transition-colors"
             >
-              <img src="/icons/pen.svg" className="w-4 h-4 opacity-70" />
+              <img src="/icons/pen.svg" className="w-4 h-4 opacity-70 dark:invert" />
               <span>Ganti Nama</span>
             </button>
-            <div className="h-[1px] bg-gray-100 mx-2" />
+            <div className="h-[1px] bg-gray-100 dark:bg-slate-700 mx-2" />
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setShowDeleteConfirm(true);
                 closeMenu();
               }}
-              className="w-full text-left px-3.5 py-2.5 text-[13px] text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
+              className="w-full text-left px-3.5 py-2.5 text-[13px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 transition-colors"
             >
               <img src="/icons/delete.svg" className="w-4 h-4 opacity-80" />
               <span className="font-medium">Hapus Obrolan</span>
@@ -413,8 +442,8 @@ function ChatItem({ text, onClick, onRename, onDelete, isActive }) {
         <>
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[10000]" onClick={() => setShowRename(false)} />
           <div className="fixed inset-0 flex items-center justify-center z-[10001]">
-            <div className="bg-white rounded-xl shadow-lg w-80 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Ganti Nama Obrolan</h2>
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg w-80 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Ganti Nama Obrolan</h2>
               <input
                 autoFocus
                 type="text"
@@ -423,11 +452,11 @@ function ChatItem({ text, onClick, onRename, onDelete, isActive }) {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleRenameSubmit(e);
                 }}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+                className="w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 mb-4 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
               />
               <div className="flex justify-end gap-2">
                 <button
-                  className="px-4 py-2 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                  className="px-4 py-2 text-sm rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
                   onClick={() => setShowRename(false)}
                 >
                   Batal
@@ -450,12 +479,12 @@ function ChatItem({ text, onClick, onRename, onDelete, isActive }) {
         <>
           <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[10000]" onClick={() => setShowDeleteConfirm(false)} />
           <div className="fixed inset-0 flex items-center justify-center z-[10001]">
-            <div className="bg-white rounded-xl shadow-lg w-80 p-6">
-              <h2 className="text-lg font-semibold text-red-600 mb-2">Hapus Obrolan?</h2>
-              <p className="text-sm text-gray-500 mb-6">Tindakan ini tidak dapat dibatalkan.</p>
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg w-80 p-6">
+              <h2 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">Hapus Obrolan?</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Tindakan ini tidak dapat dibatalkan.</p>
               <div className="flex justify-end gap-2">
                 <button
-                  className="px-4 py-2 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+                  className="px-4 py-2 text-sm rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
                   onClick={() => setShowDeleteConfirm(false)}
                 >
                   Batal

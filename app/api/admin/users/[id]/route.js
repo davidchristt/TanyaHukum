@@ -59,6 +59,7 @@ export async function PATCH(request, { params }) {
         promptLimit: body.promptLimit,
         email: body.email, 
         name: body.name, // PERBAIKAN: Tambahkan ini agar nama bisa diedit!
+        avatarUrl: body.avatarUrl,
       },
     });
 

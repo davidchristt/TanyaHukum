@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ProfileModal from "@/components/features/profile/ProfileModal";
-import SubscriptionModal from "@/components/features/subscription/SubscriptionModal";
+import SubscriptionList from "@/components/features/subscription/SubscriptionList";
 import AuthModal from "@/components/features/auth/AuthModal";
 import AdminProfileModal from "@/components/features/profileAdmin/AdminProfileModal";
 
@@ -24,13 +24,44 @@ export default function AppShell({
   const [authMode, setAuthMode] = useState(null);
 
   useEffect(() => {
-    const loadUser = () => {
+    const loadUser = async () => {
+      // 1. Ambil dari localStorage dulu untuk kecepatan (UI instant)
       const stored = localStorage.getItem("user");
-      setUser(stored ? JSON.parse(stored) : null);
+      if (stored) {
+        setUser(JSON.parse(stored));
+      }
+
+      // 2. Selalu fetch data terbaru dari DB untuk memastikan status (Tier PRO, dsb) sinkron
+      try {
+        const { getProfile } = await import("@/src/lib/profile");
+        const freshData = await getProfile();
+        
+        if (freshData) {
+          setUser(freshData);
+          localStorage.setItem("user", JSON.stringify(freshData));
+        }
+      } catch (err) {
+        // Jika unauthorized, berarti session habis atau akun baru saja dihapus
+        if (err.message.includes("Unauthorized") || err.message.includes("401")) {
+          setUser(null);
+          localStorage.removeItem("user");
+        } else {
+          console.error("Gagal sinkronisasi profil:", err);
+        }
+      }
     };
+
     loadUser();
     window.addEventListener("auth-change", loadUser);
     return () => window.removeEventListener("auth-change", loadUser);
+  }, []);
+
+  useEffect(() => {
+    const handleOpenAuth = (e) => {
+      setAuthMode(e.detail?.mode || "login");
+    };
+    window.addEventListener("open-auth", handleOpenAuth);
+    return () => window.removeEventListener("open-auth", handleOpenAuth);
   }, []);
 
   const handleUpdateLocalUser = (newData) => {
@@ -41,13 +72,13 @@ export default function AppShell({
   };
 
   return (
-    <div className="h-screen flex relative overflow-hidden bg-[#e6eef8]">
+    <div className="h-screen flex relative overflow-hidden bg-[#e6eef8] dark:bg-[#0b1120] transition-colors duration-500">
       
       {/* Ambient Glow Effects - Unified Background Atmosphere */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute top-[-15%] right-[-10%] w-[60%] h-[60%] bg-blue-400/10 blur-[140px] rounded-full" />
-        <div className="absolute bottom-[-15%] left-[-10%] w-[50%] h-[50%] bg-blue-600/5 blur-[120px] rounded-full" />
-        <div className="absolute top-[40%] left-[10%] w-[30%] h-[30%] bg-blue-500/5 blur-[100px] rounded-full" />
+        <div className="absolute top-[-15%] right-[-10%] w-[60%] h-[60%] bg-blue-400/10 dark:bg-blue-500/5 blur-[140px] rounded-full transition-colors duration-500" />
+        <div className="absolute bottom-[-15%] left-[-10%] w-[50%] h-[50%] bg-blue-600/5 dark:bg-blue-700/5 blur-[120px] rounded-full transition-colors duration-500" />
+        <div className="absolute top-[40%] left-[10%] w-[30%] h-[30%] bg-blue-500/5 dark:bg-blue-600/5 blur-[100px] rounded-full transition-colors duration-500" />
       </div>
 
       {/* Sidebar Wrapper - Exact spacing match across all pages */}
@@ -66,11 +97,11 @@ export default function AppShell({
 
       {/* Main Content Area - Immersive Glass Panel */}
       <div className="flex-1 relative z-10 overflow-hidden">
-        <div className="h-full flex flex-col bg-white/70 backdrop-blur-md rounded-2xl shadow-lg min-h-0 overflow-hidden relative border border-white/20">
+        <div className="h-full flex flex-col bg-white/70 dark:bg-slate-900/70 backdrop-blur-md rounded-2xl shadow-lg min-h-0 overflow-hidden relative border border-white/20 dark:border-slate-800/50 transition-colors duration-500">
           
           {/* Internal Header (if provided and not hidden) */}
           {!hideHeader && header && (
-            <div className="flex-none border-b border-gray-200/60">
+            <div className="flex-none border-b border-gray-200/60 dark:border-slate-800/60 transition-colors duration-300">
               {React.cloneElement(header, { 
                 onOpenSubscription: () => setShowSubscription(true),
                 onOpenAuth: (mode) => setAuthMode(mode || "login"),
@@ -106,11 +137,12 @@ export default function AppShell({
               user={user} 
             />
 
-            <SubscriptionModal 
-              isOpen={showSubscription} 
-              onClose={() => setShowSubscription(false)} 
-              user={user} 
-            />
+            {showSubscription && (
+              <SubscriptionList 
+                user={user}
+                onComplete={() => setShowSubscription(false)} 
+              />
+            )}
 
             <AuthModal
               isOpen={!!authMode}
