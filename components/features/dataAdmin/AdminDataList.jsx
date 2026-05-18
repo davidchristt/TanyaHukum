@@ -129,11 +129,12 @@ export default function AdminDataList() {
   };
 
   const handleSave = async (savedItem) => {
-    const dummyFileUrl = `https://orueivtvfcdgfqpkqddw.supabase.co/storage/v1/object/public/documents/${encodeURIComponent(savedItem.dokumen)}`;
+    // Gunakan fileUrl dari hasil upload (atau yang sudah ada), fallback ke dummy jika entah kenapa kosong
+    const fileUrl = savedItem.fileUrl || `https://orueivtvfcdgfqpkqddw.supabase.co/storage/v1/object/public/legal-documents/${encodeURIComponent(savedItem.dokumen)}`;
     const payload = {
       title: savedItem.title,
       description: savedItem.deskripsi,
-      fileUrl: dummyFileUrl,
+      fileUrl: fileUrl,
       category: savedItem.kategori,
       fileSize: savedItem.fileSize || null,
       fileName: savedItem.fileName || null

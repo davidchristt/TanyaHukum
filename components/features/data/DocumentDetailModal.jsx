@@ -101,7 +101,7 @@ export default function DocumentDetailModal({ isOpen, onClose, document: doc, on
             <button 
               onClick={() => {
                 onIncrementView?.(doc.id, 'read');
-                window.open(doc.fileUrl, '_blank');
+                window.open(doc.fileUrl, '_blank', 'noopener,noreferrer');
               }}
               className="flex-1 py-4 bg-gray-900 dark:bg-blue-600 hover:bg-black dark:hover:bg-blue-700 text-white font-bold rounded-2xl shadow-xl shadow-gray-200 dark:shadow-none transition-all active:scale-[0.98] flex items-center justify-center gap-2"
             >
@@ -111,10 +111,10 @@ export default function DocumentDetailModal({ isOpen, onClose, document: doc, on
               <button 
               onClick={() => {
                 onIncrementView?.(doc.id, 'download');
-                const downloadUrl = doc.fileUrl.includes('?') ? `${doc.fileUrl}&download=` : `${doc.fileUrl}?download=`;
+                const proxyUrl = `/api/regulations/download?url=${encodeURIComponent(doc.fileUrl)}&name=${encodeURIComponent(doc.fileName || doc.title || "document.pdf")}`;
                 const link = document.createElement("a");
-                link.href = downloadUrl;
-                link.setAttribute("download", "");
+                link.href = proxyUrl;
+                link.download = doc.fileName || doc.title || "document.pdf";
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);

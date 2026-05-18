@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
-export default function AdminIssueModal({ onClose, onSave }) {
+export default function AdminIssueModal({ onClose, onSave, initialData = null }) {
+  const isEdit = !!initialData;
+
   const [formData, setFormData] = useState({
     title: "",
     desc: "",
@@ -12,6 +14,18 @@ export default function AdminIssueModal({ onClose, onSave }) {
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Prefill when editing
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        title: initialData.title || "",
+        desc: initialData.desc || "",
+        link: initialData.link || "",
+        location: initialData.location || "",
+      });
+    }
+  }, [initialData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,10 +51,10 @@ export default function AdminIssueModal({ onClose, onSave }) {
           <div>
             <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3 transition-colors">
               <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
-              Tambah Isu Terkini
+              {isEdit ? "Edit Isu Terkini" : "Tambah Isu Terkini"}
             </h2>
             <p className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1 transition-colors">
-              Kelola berita dan isu hukum nasional
+              {isEdit ? "Perbarui detail isu hukum" : "Kelola berita dan isu hukum nasional"}
             </p>
           </div>
           <button onClick={onClose} className="p-2.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-all">
@@ -115,7 +129,7 @@ export default function AdminIssueModal({ onClose, onSave }) {
               disabled={isSubmitting}
               className="w-full bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition py-4 rounded-xl shadow-lg shadow-blue-100 dark:shadow-blue-900/20 active:scale-95 flex items-center justify-center gap-2 transition-all"
             >
-              {isSubmitting ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Publikasikan Isu"}
+              {isSubmitting ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : (isEdit ? "Simpan Perubahan" : "Publikasikan Isu")}
             </button>
           </div>
         </form>

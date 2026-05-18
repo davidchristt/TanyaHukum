@@ -30,20 +30,21 @@ export default function AdminDocDetailModal({ item, onClose, onEdit, onDelete })
 
   // Admin open: uses GET only, no PATCH (no viewCount increment)
   const handleOpenDoc = () => {
-    if (item.fileUrl) window.open(item.fileUrl, '_blank');
+    if (item.fileUrl) {
+      window.open(item.fileUrl, '_blank', 'noopener,noreferrer');
+    }
   };
 
-  // Admin download: direct link, no analytics increment
+  // Admin download: proxy through server to force Content-Disposition: attachment
   const handleDownload = () => {
-    if (item.fileUrl) {
-      const a = document.createElement('a');
-      a.href = item.fileUrl;
-      a.download = fileName;
-      a.target = '_blank';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
+    if (!item.fileUrl) return;
+    const proxyUrl = `/api/regulations/download?url=${encodeURIComponent(item.fileUrl)}&name=${encodeURIComponent(fileName || "document.pdf")}`;
+    const a = document.createElement('a');
+    a.href = proxyUrl;
+    a.download = fileName || "document.pdf";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   const modalContent = (

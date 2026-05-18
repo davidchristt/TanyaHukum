@@ -78,41 +78,72 @@ function MiniStatCard({ label, value, growth, icon, color = "blue", formatAsByte
   );
 }
 
-// Donut Chart (Pure CSS)
+// Donut Chart (Recharts)
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
+
+const DONUT_COLORS = ["#3b82f6", "#06b6d4", "#60a5fa", "#22d3ee", "#818cf8", "#2dd4bf", "#4f46e5"];
+
+const DonutTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl px-3 py-2 shadow-lg text-xs font-bold text-gray-900 dark:text-white">
+        {payload[0].name}: <span className="text-blue-600 dark:text-blue-400">{payload[0].value}</span>
+        <span className="ml-1 text-gray-400">({((payload[0].value / payload[0].payload.total) * 100).toFixed(1)}%)</span>
+      </div>
+    );
+  }
+  return null;
+};
+
 function DonutChart({ data, title }) {
   const total = data.reduce((s, d) => s + d.count, 0);
-  const colors = ["#3b82f6", "#06b6d4", "#60a5fa", "#22d3ee", "#818cf8", "#2dd4bf", "#4f46e5"];
-  let cumPct = 0;
-  const segments = data.map((d, i) => {
-    const pct = total > 0 ? (d.count / total) * 100 : 0;
-    const start = cumPct;
-    cumPct += pct;
-    return { ...d, pct, start, color: colors[i % colors.length] };
-  });
-  const gradient = segments.map(s => `${s.color} ${s.start}% ${s.start + s.pct}%`).join(', ');
+  const chartData = data.map(d => ({ name: d.name, value: d.count, total }));
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-gray-100 dark:border-slate-800 transition-all hover:shadow-md">
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-2 mb-4">
         <div className="w-1.5 h-5 bg-blue-600 rounded-full" />
         <h3 className="text-sm font-black text-gray-900 dark:text-white transition-colors">{title}</h3>
+        {total > 0 && <span className="ml-auto text-[10px] font-black text-gray-400 dark:text-gray-500">Total: {total}</span>}
       </div>
-      <div className="flex items-center gap-6">
-        <div className="w-28 h-28 rounded-full shrink-0" style={{
-          background: total > 0 ? `conic-gradient(${gradient})` : '#f3f4f6',
-          mask: 'radial-gradient(farthest-side, transparent 55%, #000 56%)',
-          WebkitMask: 'radial-gradient(farthest-side, transparent 55%, #000 56%)'
-        }} className={total === 0 ? "dark:bg-slate-800" : ""} />
-        <div className="flex-1 space-y-2">
-          {segments.slice(0, 5).map((s, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: s.color }} />
-              <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400 truncate flex-1 transition-colors">{s.name}</span>
-              <span className="text-[10px] font-black text-gray-900 dark:text-gray-200 transition-colors">{s.count}</span>
-            </div>
-          ))}
+      {total > 0 ? (
+        <div className="flex items-center gap-4">
+          <div style={{ width: 110, height: 110 }} className="shrink-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={30}
+                  outerRadius={50}
+                  paddingAngle={3}
+                  dataKey="value"
+                  strokeWidth={0}
+                >
+                  {chartData.map((_, i) => (
+                    <Cell key={i} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip content={<DonutTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex-1 space-y-1.5 min-w-0">
+            {chartData.slice(0, 6).map((d, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length] }} />
+                <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400 truncate flex-1 transition-colors">{d.name}</span>
+                <span className="text-[10px] font-black text-gray-900 dark:text-gray-200 transition-colors shrink-0">{d.value}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="h-24 flex items-center justify-center text-[10px] font-bold text-gray-400 dark:text-gray-600 italic">
+          Belum ada data
+        </div>
+      )}
     </div>
   );
 }

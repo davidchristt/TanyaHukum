@@ -59,17 +59,42 @@ export default function AdminDataModal({ onClose, onSave, initialData }) {
     
     setIsUploading(true);
     try {
-      // Simulate professional upload delay
-      await new Promise(resolve => setTimeout(resolve, 1200));
+      let uploadedFileUrl = initialData?.fileUrl || "";
+      let finalFileSize = selectedFile.size || initialData?.fileSize || 0;
+      let finalFileName = selectedFile.name;
+
+      if (!selectedFile.isExisting) {
+        const uploadData = new FormData();
+        uploadData.append("file", selectedFile);
+
+        const uploadRes = await fetch("/api/admin/regulations/upload", {
+          method: "POST",
+          body: uploadData,
+        });
+
+        const uploadResult = await uploadRes.json();
+
+        if (!uploadRes.ok) {
+          throw new Error(uploadResult.error || "Gagal mengunggah file");
+        }
+
+        uploadedFileUrl = uploadResult.fileUrl;
+        finalFileSize = uploadResult.fileSize;
+        finalFileName = uploadResult.fileName;
+      }
       
       await onSave({
         title: formData.title,
-        dokumen: selectedFile.name,
+        dokumen: finalFileName,
         deskripsi: formData.description,
         kategori: formData.category,
-        fileSize: selectedFile.size || 0,
-        fileName: selectedFile.name,
+        fileSize: finalFileSize,
+        fileName: finalFileName,
+        fileUrl: uploadedFileUrl,
       });
+    } catch (error) {
+      console.error("Error during submit:", error);
+      alert(error.message || "Gagal menyimpan dokumen");
     } finally {
       setIsUploading(false);
     }

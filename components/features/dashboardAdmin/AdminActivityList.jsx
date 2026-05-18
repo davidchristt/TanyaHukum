@@ -12,6 +12,7 @@ export default function AdminActivityList() {
   const [isLoading, setIsLoading] = useState(true);
   const [issueToDelete, setIssueToDelete] = useState(null);
   const [viewingIssue, setViewingIssue] = useState(null);
+  const [editingIssue, setEditingIssue] = useState(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -115,6 +116,29 @@ export default function AdminActivityList() {
     }
   };
 
+  const handleEdit = async (updatedIssue) => {
+    if (!editingIssue) return;
+    try {
+      const response = await fetch(`/api/admin/trending/${editingIssue.id}`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        credentials: 'include',
+        body: JSON.stringify({
+          title: updatedIssue.title,
+          description: updatedIssue.desc,
+          newsLink: updatedIssue.link,
+          location: updatedIssue.location,
+        })
+      });
+      if (response.ok) {
+        fetchIssues();
+        setEditingIssue(null);
+      }
+    } catch (error) {
+      console.error("Gagal edit isu:", error);
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-gray-100 dark:border-slate-800 h-full flex flex-col transition-all duration-300 hover:shadow-md relative transition-colors">
       <div className="flex items-center justify-between mb-6">
@@ -139,7 +163,7 @@ export default function AdminActivityList() {
           </div>
         ) : data.length > 0 ? (
           data.map((item) => (
-            <AdminActivityItem key={item.id} item={item} onDelete={() => setIssueToDelete(item)} onView={() => setViewingIssue(item)} />
+            <AdminActivityItem key={item.id} item={item} onDelete={() => setIssueToDelete(item)} onView={() => setViewingIssue(item)} onEdit={() => setEditingIssue(item)} />
           ))
         ) : (
           <div className="flex items-center justify-center h-full py-8">
@@ -151,6 +175,12 @@ export default function AdminActivityList() {
       {/* PORTAL: ADD ISSUE MODAL */}
       {mounted && isModalOpen && createPortal(
         <AdminIssueModal onClose={() => setIsModalOpen(false)} onSave={handleAdd} />,
+        document.body
+      )}
+
+      {/* PORTAL: EDIT ISSUE MODAL */}
+      {mounted && editingIssue && createPortal(
+        <AdminIssueModal onClose={() => setEditingIssue(null)} onSave={handleEdit} initialData={editingIssue} />,
         document.body
       )}
 

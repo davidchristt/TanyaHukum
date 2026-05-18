@@ -112,13 +112,13 @@ export default function DataList() {
   const handleOpenFile = (doc) => {
     if (doc?.fileUrl) {
       handleIncrementView(doc.id, 'read');
-      window.open(doc.fileUrl, '_blank');
+      window.open(doc.fileUrl, '_blank', 'noopener,noreferrer');
     } else {
       alert("Link file tidak tersedia.");
     }
   };
 
-  // Fungsi khusus untuk memaksa unduhan (Tombol Unduh)
+  // Fungsi khusus untuk memaksa unduhan (Tombol Unduh) — via server proxy
   const handleDownloadFile = (doc) => {
     if (!doc?.fileUrl) {
       alert("Link file tidak tersedia.");
@@ -127,13 +127,10 @@ export default function DataList() {
     
     handleIncrementView(doc.id, 'download');
 
-    // Trik memaksa download dengan atribut 'download' dan parameter Supabase
-    const url = doc.fileUrl;
-    const downloadUrl = url.includes('?') ? `${url}&download=` : `${url}?download=`;
-
+    const proxyUrl = `/api/regulations/download?url=${encodeURIComponent(doc.fileUrl)}&name=${encodeURIComponent(doc.fileName || doc.title || "document.pdf")}`;
     const link = document.createElement("a");
-    link.href = downloadUrl;
-    link.setAttribute("download", ""); // Memberi tahu browser ini file untuk diunduh
+    link.href = proxyUrl;
+    link.download = doc.fileName || doc.title || "document.pdf";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
