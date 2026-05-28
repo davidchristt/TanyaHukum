@@ -9,7 +9,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "npm run test:unit",
+    "test:unit": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.js",
+    "test:unit:ci": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.js --ci --runInBand --reporters=default --reporters=jest-junit",
+    "test:e2e": "playwright test",
+    "test:perf:smoke": "node ./tests/performance/run-smoke.mjs",
+    "test:security:lint": "node ./tests/security/run-security-checks.mjs",
+    "test:security:audit": "node ./tests/security/run-npm-audit.mjs"
   },
   "dependencies": {
     "@langchain/community": "^1.1.25",
@@ -17,7 +24,7 @@
     "@langchain/google-genai": "^2.1.26",
     "@langchain/pinecone": "^1.0.1",
     "@langchain/textsplitters": "^1.0.1",
-    "@pinecone-database/pinecone": "^7.1.0",
+    "@pinecone-database/pinecone": "^5.1.2",
     "@prisma/client": "6.19.2",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/ssr": "^0.10.2",
@@ -26,7 +33,7 @@
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.2.0",
-    "dotenv": "^17.3.1",
+    "dotenv": "^16.4.5",
     "fs-extra": "^11.3.4",
     "google-auth-library": "^10.6.2",
     "jose": "^6.2.3",
@@ -39,7 +46,7 @@
     "next": "16.1.1",
     "nodemailer": "^8.0.5",
     "pdf-lib": "^1.17.1",
-    "pdf-parse": "^1.1.4",
+    "pdf-parse": "^2.4.5",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-easy-crop": "^5.5.7",
@@ -51,8 +58,13 @@
     "autoprefixer": "^10.5.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "jest": "^30.0.5",
+    "jest-junit": "^16.0.0",
+    "@playwright/test": "^1.55.0",
+    "playwright": "^1.55.0",
     "postcss": "^8.5.10",
     "prisma": "6.19.2",
-    "tailwindcss": "^3.4.19"
+    "tailwindcss": "^3.4.19",
+    "undici": "^7.13.0"
   }
 }

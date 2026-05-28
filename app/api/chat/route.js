@@ -3,24 +3,25 @@ import { Pinecone } from "@pinecone-database/pinecone";
 import { VoyageEmbeddings } from "@langchain/community/embeddings/voyage";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { getSession } from "@/lib/auth";
 
 // 1. Import Prisma Client
-import prisma from "@/lib/prisma"; 
+import prisma from "@/lib/prisma";
 
 export async function POST(req) {
   try {
-    // 1. Tangkap pesan dan identitas dari Frontend
+    // 1. Verifikasi identitas dari JWT cookie (bukan dari body)
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized. Silakan login kembali." }, { status: 401 });
+    }
+
     const body = await req.json();
-    // 2. Tangkap userId dari body
-    const { message, userId, chatId } = body; 
+    const { message, chatId } = body;
+    const userId = session.userId; // Selalu dari token, bukan dari body
 
     if (!message) {
       return NextResponse.json({ error: "Pesan tidak boleh kosong" }, { status: 400 });
-    }
-
-    // 3. Verifikasi Identitas & Pengecekan Limit
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized. Identitas pengguna tidak ditemukan." }, { status: 401 });
     }
 
     // Cari data user di database
@@ -91,7 +92,7 @@ export async function POST(req) {
     const matches = queryResponse.matches || [];
     // [PERBAIKAN 3]: Format konteks dokumen diperjelas biar AI gampang bacanya
     const context = matches
-      .map((m, i) => `[DOKUMEN ${i + 1} | Sumber: ${m.metadata?.source || 'Tidak diketahui'} | Hal: ${m.metadata?.page || '?'}]\n${m.metadata?.text || ''}`)
+      .map((m, i) => `[DOKUMEN ${i + 1} | Sumber: ${m.metadata?.title|| 'Tidak diketahui'} | Hal: ${m.metadata?.page || '?'}]\n${m.metadata?.text || ''}`)
       .join("\n\n---\n\n");
 
     // ==========================================================
@@ -214,12 +215,13 @@ ATURAN WAJIB (HARUS DIIKUTI 100%):
 // ==========================================================
 export async function GET(req) {
   try {
+    const session = await getSession();
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
     const type = searchParams.get("type"); // "list" | "messages"
     const chatId = searchParams.get("chatId");
 
-    if (!userId) {
+    if (!session || !userId || session.userId !== userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -259,11 +261,21 @@ export async function GET(req) {
 // ==========================================================
 export async function PATCH(req) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json();
     const { chatId, title } = body;
 
     if (!chatId || !title) {
       return NextResponse.json({ error: "Data tidak lengkap" }, { status: 400 });
+    }
+
+    const chat = await prisma.chat.findUnique({ where: { id: chatId } });
+    if (!chat || chat.userId !== session.userId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const updated = await prisma.chat.update({
@@ -283,6 +295,11 @@ export async function PATCH(req) {
 // ==========================================================
 export async function DELETE(req) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const chatId = searchParams.get("chatId");
 
@@ -290,9 +307,12 @@ export async function DELETE(req) {
       return NextResponse.json({ error: "ID Chat diperlukan" }, { status: 400 });
     }
 
-    await prisma.chat.delete({
-      where: { id: chatId }
-    });
+    const chat = await prisma.chat.findUnique({ where: { id: chatId } });
+    if (!chat || chat.userId !== session.userId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    await prisma.chat.delete({ where: { id: chatId } });
 
     return NextResponse.json({ success: true });
   } catch (error) {

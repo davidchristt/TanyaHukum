@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="11" failures="0" errors="0" time="0.649">
+  <testsuite name="/api/chat authorization (IDOR probe)" errors="0" failures="0" skipped="0" timestamp="2026-05-28T09:10:07" time="0.39" tests="2">
+    <testcase classname="/api/chat authorization (IDOR probe) SECURITY: GET chat list can be accessed with only userId query (no token)" name="/api/chat authorization (IDOR probe) SECURITY: GET chat list can be accessed with only userId query (no token)" time="0.275">
+    </testcase>
+    <testcase classname="/api/chat authorization (IDOR probe) POST requires userId in body, but does not authenticate via token cookie" name="/api/chat authorization (IDOR probe) POST requires userId in body, but does not authenticate via token cookie" time="0.051">
+    </testcase>
+  </testsuite>
+  <testsuite name="/api/payment/checkout authorization (IDOR probe)" errors="0" failures="0" skipped="0" timestamp="2026-05-28T09:10:08" time="0.076" tests="2">
+    <testcase classname="/api/payment/checkout authorization (IDOR probe) returns 401 when userId missing" name="/api/payment/checkout authorization (IDOR probe) returns 401 when userId missing" time="0.047">
+    </testcase>
+    <testcase classname="/api/payment/checkout authorization (IDOR probe) SECURITY: accepts userId from body without verifying session token" name="/api/payment/checkout authorization (IDOR probe) SECURITY: accepts userId from body without verifying session token" time="0.006">
+    </testcase>
+  </testsuite>
+  <testsuite name="POST /api/auth/login" errors="0" failures="0" skipped="0" timestamp="2026-05-28T09:10:08" time="0.078" tests="3">
+    <testcase classname="POST /api/auth/login returns 400 on invalid body (non-json)" name="POST /api/auth/login returns 400 on invalid body (non-json)" time="0.029">
+    </testcase>
+    <testcase classname="POST /api/auth/login returns 400 on invalid email format" name="POST /api/auth/login returns 400 on invalid email format" time="0.012">
+    </testcase>
+    <testcase classname="POST /api/auth/login returns 401 when user not found" name="POST /api/auth/login returns 401 when user not found" time="0.017">
+    </testcase>
+  </testsuite>
+  <testsuite name="middleware admin protection" errors="0" failures="0" skipped="0" timestamp="2026-05-28T09:10:08" time="0.033" tests="3">
+    <testcase classname="middleware admin protection blocks /api/admin/* without token" name="middleware admin protection blocks /api/admin/* without token" time="0">
+    </testcase>
+    <testcase classname="middleware admin protection blocks /api/admin/* when role is not ADMIN" name="middleware admin protection blocks /api/admin/* when role is not ADMIN" time="0.002">
+    </testcase>
+    <testcase classname="middleware admin protection SECURITY: accepts token signed with hardcoded fallback when JWT_SECRET missing" name="middleware admin protection SECURITY: accepts token signed with hardcoded fallback when JWT_SECRET missing" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="POST /api/payment/webhook" errors="0" failures="0" skipped="0" timestamp="2026-05-28T09:10:08" time="0.029" tests="1">
+    <testcase classname="POST /api/payment/webhook SECURITY: sandbox bypass processes even with invalid signature when not production" name="POST /api/payment/webhook SECURITY: sandbox bypass processes even with invalid signature when not production" time="0.008">
+    </testcase>
+  </testsuite>
+</testsuites>

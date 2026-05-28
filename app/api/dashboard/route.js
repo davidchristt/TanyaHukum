@@ -1,9 +1,23 @@
 import { NextResponse } from "next/server";
 import prisma from '@/lib/prisma';
 import { Prisma } from "@prisma/client";
+import { getSession } from "@/lib/auth";
+
+// Cache sederhana 30 detik — kurangi beban 20 query ke DB setiap request
+const cache = { data: null, expiresAt: 0 };
+const CACHE_TTL = 30_000;
 
 export async function GET() {
     try {
+        const session = await getSession();
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        // Kembalikan data cache jika masih valid
+        if (cache.data && Date.now() < cache.expiresAt) {
+            return NextResponse.json(cache.data, { status: 200, headers: { "Cache-Control": "no-store" } });
+        }
 
         // --- KODE INI BUAT BIKIN BATAS WAKTU HARI INI ---
         // 1. Dapatkan tanggal hari ini (YYYY-MM-DD) versi waktu Indonesia (+7 jam)
@@ -136,6 +150,10 @@ export async function GET() {
                 tren_pencarian: formattedSearchTrends // <-- BOOM! Sekarang datanya 100% dari tabel SearchLog!
             }
         };
+
+        // Simpan ke cache sebelum dikirim
+        cache.data = responseData;
+        cache.expiresAt = Date.now() + CACHE_TTL;
 
         return NextResponse.json(responseData, {
             status: 200,

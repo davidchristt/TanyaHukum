@@ -175,7 +175,13 @@ export async function PATCH(request) {
     }
 
     if (personalContext !== undefined) {
-      updateData.personalContext = personalContext; 
+      if (personalContext !== null && personalContext.length > 500) {
+        return NextResponse.json(
+          { error: "Konteks personal maksimal 500 karakter." },
+          { status: 400 }
+        );
+      }
+      updateData.personalContext = personalContext;
     }
 
     if (Object.keys(updateData).length === 0) {

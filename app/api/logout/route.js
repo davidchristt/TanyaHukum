@@ -16,13 +16,18 @@ export async function POST(request) {
       await supabase.auth.signOut({ scope: 'global' });
     }
 
-    // 3. Buat URL tujuan redirect (ke halaman login)
+    // 3. Hapus JWT cookie dan redirect ke login
     const loginUrl = new URL('/login', request.url);
     const response = NextResponse.redirect(loginUrl, { status: 303 });
 
-    // Note: Library @supabase/ssr otomatis menghapus cookie auth 
-    // lewat middleware/server utilitas saat signOut dipanggil.
-    // Tidak perlu lagi menghapus cookie secara manual.
+    // Hapus JWT cookie (auth utama pakai JWT, bukan hanya Supabase)
+    response.cookies.set('token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      expires: new Date(0),
+    });
 
     return response;
 

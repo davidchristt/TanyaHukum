@@ -4,9 +4,22 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
+import { rateLimit } from '@/lib/rateLimit';
 
 export async function POST(request) {
   try {
+    const ip =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+      request.headers.get('x-real-ip') ??
+      'unknown';
+
+    if (!rateLimit(ip, 10)) {
+      return NextResponse.json(
+        { error: 'Terlalu banyak permintaan. Coba lagi nanti.' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const email = body.email?.trim().toLowerCase();
     const password = body.password?.trim();

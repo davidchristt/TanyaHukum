@@ -1,0 +1,1240 @@
+{
+  "baseUrl": "http://localhost:3000",
+  "concurrency": 10,
+  "requests": 200,
+  "summary": {
+    "dashboard": {
+      "total": 76,
+      "errors": 0,
+      "statusCodes": {
+        "401": 76
+      },
+      "p50_ms": 4,
+      "p95_ms": 23,
+      "p99_ms": 28
+    },
+    "payment_webhook_health": {
+      "total": 66,
+      "errors": 0,
+      "statusCodes": {
+        "200": 66
+      },
+      "p50_ms": 3,
+      "p95_ms": 12,
+      "p99_ms": 15
+    },
+    "regulations": {
+      "total": 67,
+      "errors": 0,
+      "statusCodes": {
+        "200": 67
+      },
+      "p50_ms": 273,
+      "p95_ms": 288,
+      "p99_ms": 305
+    }
+  },
+  "samples": [
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 16,
+      "bytes": 24
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 12,
+      "bytes": 24
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 12,
+      "bytes": 24
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 14,
+      "bytes": 24
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 16,
+      "bytes": 24
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 20,
+      "bytes": 24
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 23,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 12,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 25,
+      "bytes": 24
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 28,
+      "bytes": 24
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 16,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 15,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 33,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 14,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 19,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 13,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 17,
+      "bytes": 24
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 14,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 9,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 10,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 8,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 8,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 6,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 6,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 5,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 5,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 3,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 175,
+      "bytes": 3800
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 187,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 5,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 8,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 4,
+      "bytes": 281
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 197,
+      "bytes": 3800
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 5,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 5,
+      "bytes": 281
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 195,
+      "bytes": 3800
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 194,
+      "bytes": 3800
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 7,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 25,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 25,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 3,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 287,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 290,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 2,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 3,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 299,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 2,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 3,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 305,
+      "bytes": 3800
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 313,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 4,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 5,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 257,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 262,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 2,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 3,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 273,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 2,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 265,
+      "bytes": 3800
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 258,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 5,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 6,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 4,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 256,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 262,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 278,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 275,
+      "bytes": 3800
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 284,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 5,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 7,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 3,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 259,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 257,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 2,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 276,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 280,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 277,
+      "bytes": 3800
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 7,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 256,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 253,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 277,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 6,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 275,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 4,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 280,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 253,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 256,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 277,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 3,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 281,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 2,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 3,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 281,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 3,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 253,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 2,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 3,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 265,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 2,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 3,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 273,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 288,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 257,
+      "bytes": 3800
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 288,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 4,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 6,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 4,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 3,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 260,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 2,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 3,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 282,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 5,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 288,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 285,
+      "bytes": 3800
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 5,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 272,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 7,
+      "bytes": 281
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 259,
+      "bytes": 3800
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 9,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 7,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 9,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 4,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 285,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 4,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 5,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 280,
+      "bytes": 3800
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 272,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 6,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 6,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 4,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 270,
+      "bytes": 3800
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 280,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 6,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 9,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 4,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 278,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 4,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 5,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 259,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 273,
+      "bytes": 3800
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 3,
+      "bytes": 281
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 270,
+      "bytes": 3800
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 4,
+      "bytes": 281
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 268,
+      "bytes": 3800
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 3,
+      "bytes": 24
+    },
+    {
+      "target": "payment_webhook_health",
+      "statusCode": 200,
+      "ms": 4,
+      "bytes": 281
+    },
+    {
+      "target": "dashboard",
+      "statusCode": 401,
+      "ms": 4,
+      "bytes": 24
+    },
+    {
+      "target": "regulations",
+      "statusCode": 200,
+      "ms": 275,
+      "bytes": 3800
+    }
+  ],
+  "generatedAt": "2026-05-28T10:56:43.967Z"
+}

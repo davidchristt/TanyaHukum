@@ -19,7 +19,11 @@ export async function middleware(request) {
     try {
       // 3. Ambil "Stempel Rahasia" dari environment (biasanya di file .env)
       // Secara default biasanya process.env.JWT_SECRET
-      const secretKey = process.env.JWT_SECRET || 'fallback_secret_key_sementara';
+      if (!process.env.JWT_SECRET) {
+        console.error('[MIDDLEWARE] JWT_SECRET tidak di-set di environment!');
+        return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+      }
+      const secretKey = process.env.JWT_SECRET;
 
       // jose mewajibkan secret key diubah ke format Uint8Array
       const encodedSecret = new TextEncoder().encode(secretKey);

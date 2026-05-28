@@ -26,6 +26,12 @@ export async function GET(req, { params }) {
       );
     }
 
+    // Increment viewCount setiap kali detail dokumen dibuka (fire-and-forget)
+    prisma.regulation.update({
+      where: { id: id },
+      data: { viewCount: { increment: 1 } },
+    }).catch(err => console.error("viewCount update error:", err));
+
     return NextResponse.json({
       data: regulation,
       message: "Berhasil mengambil detail regulasi.",

@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="122" failures="0" errors="0" time="3.085">
+  <testsuite name="Integration: Register → Login → Profile Access Flow" errors="0" failures="0" skipped="0" timestamp="2026-05-28T11:08:36" time="0.638" tests="6">
+    <testcase classname="Integration: Register → Login → Profile Access Flow TC-INT-AUTH-01: full register → login → access profile cycle" name="Integration: Register → Login → Profile Access Flow TC-INT-AUTH-01: full register → login → access profile cycle" time="0.224">
+    </testcase>
+    <testcase classname="Integration: Register → Login → Profile Access Flow TC-INT-AUTH-02: cannot login with wrong password after registration" name="Integration: Register → Login → Profile Access Flow TC-INT-AUTH-02: cannot login with wrong password after registration" time="0.12">
+    </testcase>
+    <testcase classname="Integration: Register → Login → Profile Access Flow TC-INT-AUTH-03: rate limit blocks 6th login attempt from same IP" name="Integration: Register → Login → Profile Access Flow TC-INT-AUTH-03: rate limit blocks 6th login attempt from same IP" time="0.012">
+    </testcase>
+    <testcase classname="Integration: Forgot Password → Reset Password Flow TC-INT-AUTH-04: forgot password → reset password full cycle" name="Integration: Forgot Password → Reset Password Flow TC-INT-AUTH-04: forgot password → reset password full cycle" time="0.231">
+    </testcase>
+    <testcase classname="Integration: Role-Based Access Control TC-INT-AUTH-05: regular USER token cannot access /api/admin/* endpoints" name="Integration: Role-Based Access Control TC-INT-AUTH-05: regular USER token cannot access /api/admin/* endpoints" time="0.006">
+    </testcase>
+    <testcase classname="Integration: Role-Based Access Control TC-INT-AUTH-06: ADMIN token can access /api/admin/* endpoints" name="Integration: Role-Based Access Control TC-INT-AUTH-06: ADMIN token can access /api/admin/* endpoints" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="POST /api/auth/reset-password" errors="0" failures="0" skipped="0" timestamp="2026-05-28T11:08:37" time="0.492" tests="7">
+    <testcase classname="POST /api/auth/reset-password TC-RP-01: returns 200 and clears token on valid reset" name="POST /api/auth/reset-password TC-RP-01: returns 200 and clears token on valid reset" time="0.223">
+    </testcase>
+    <testcase classname="POST /api/auth/reset-password TC-RP-02: returns 400 when token is missing" name="POST /api/auth/reset-password TC-RP-02: returns 400 when token is missing" time="0.006">
+    </testcase>
+    <testcase classname="POST /api/auth/reset-password TC-RP-03: returns 400 when newPassword is missing" name="POST /api/auth/reset-password TC-RP-03: returns 400 when newPassword is missing" time="0.005">
+    </testcase>
+    <testcase classname="POST /api/auth/reset-password TC-RP-04: returns 400 when password shorter than 8 chars" name="POST /api/auth/reset-password TC-RP-04: returns 400 when password shorter than 8 chars" time="0.005">
+    </testcase>
+    <testcase classname="POST /api/auth/reset-password TC-RP-05: returns 400 when token is invalid (not found in DB)" name="POST /api/auth/reset-password TC-RP-05: returns 400 when token is invalid (not found in DB)" time="0.005">
+    </testcase>
+    <testcase classname="POST /api/auth/reset-password TC-RP-06: filters token by expiry date in DB query (expired token rejected)" name="POST /api/auth/reset-password TC-RP-06: filters token by expiry date in DB query (expired token rejected)" time="0.005">
+    </testcase>
+    <testcase classname="POST /api/auth/reset-password TC-RP-07: does not store plain-text password (passwordHash must change)" name="POST /api/auth/reset-password TC-RP-07: does not store plain-text password (passwordHash must change)" time="0.223">
+    </testcase>
+  </testsuite>
+  <testsuite name="POST /api/auth/register" errors="0" failures="0" skipped="0" timestamp="2026-05-28T11:08:37" time="0.316" tests="10">
+    <testcase classname="POST /api/auth/register TC-REG-01: returns 201 on successful registration" name="POST /api/auth/register TC-REG-01: returns 201 on successful registration" time="0.069">
+    </testcase>
+    <testcase classname="POST /api/auth/register TC-REG-02: returns 400 when email is missing" name="POST /api/auth/register TC-REG-02: returns 400 when email is missing" time="0.011">
+    </testcase>
+    <testcase classname="POST /api/auth/register TC-REG-03: returns 400 when password is missing" name="POST /api/auth/register TC-REG-03: returns 400 when password is missing" time="0.012">
+    </testcase>
+    <testcase classname="POST /api/auth/register TC-REG-04: returns 400 for invalid email format" name="POST /api/auth/register TC-REG-04: returns 400 for invalid email format" time="0.011">
+    </testcase>
+    <testcase classname="POST /api/auth/register TC-REG-05: returns 400 when password shorter than 8 chars" name="POST /api/auth/register TC-REG-05: returns 400 when password shorter than 8 chars" time="0.011">
+    </testcase>
+    <testcase classname="POST /api/auth/register TC-REG-06: normalizes email to lowercase before saving" name="POST /api/auth/register TC-REG-06: normalizes email to lowercase before saving" time="0.069">
+    </testcase>
+    <testcase classname="POST /api/auth/register TC-REG-07: returns 409 when email already registered" name="POST /api/auth/register TC-REG-07: returns 409 when email already registered" time="0.011">
+    </testcase>
+    <testcase classname="POST /api/auth/register TC-REG-08: returns 409 with Google hint when email registered via Google" name="POST /api/auth/register TC-REG-08: returns 409 with Google hint when email registered via Google" time="0.012">
+    </testcase>
+    <testcase classname="POST /api/auth/register TC-REG-09: P2002 error from DB is handled (409 in prod; 500 in isolated test due to module boundary)" name="POST /api/auth/register TC-REG-09: P2002 error from DB is handled (409 in prod; 500 in isolated test due to module boundary)" time="0.077">
+    </testcase>
+    <testcase classname="POST /api/auth/register TC-REG-10: handles SQL-injection-like email string without crash" name="POST /api/auth/register TC-REG-10: handles SQL-injection-like email string without crash" time="0.012">
+    </testcase>
+  </testsuite>
+  <testsuite name="SECURITY: SQL Injection Resistance (via Prisma ORM)" errors="0" failures="0" skipped="0" timestamp="2026-05-28T11:08:37" time="0.216" tests="12">
+    <testcase classname="SECURITY: SQL Injection Resistance (via Prisma ORM) S-INJ-01: login rejects SQL-like email before reaching DB" name="SECURITY: SQL Injection Resistance (via Prisma ORM) S-INJ-01: login rejects SQL-like email before reaching DB" time="0.012">
+    </testcase>
+    <testcase classname="SECURITY: SQL Injection Resistance (via Prisma ORM) S-INJ-02: login rejects OR-based injection email" name="SECURITY: SQL Injection Resistance (via Prisma ORM) S-INJ-02: login rejects OR-based injection email" time="0.01">
+    </testcase>
+    <testcase classname="SECURITY: SQL Injection Resistance (via Prisma ORM) S-INJ-03: register rejects SQL injection in email field" name="SECURITY: SQL Injection Resistance (via Prisma ORM) S-INJ-03: register rejects SQL injection in email field" time="0.014">
+    </testcase>
+    <testcase classname="SECURITY: XSS Payload Handling S-XSS-01: chat API stores XSS payload in DB (stored XSS risk — needs output sanitization)" name="SECURITY: XSS Payload Handling S-XSS-01: chat API stores XSS payload in DB (stored XSS risk — needs output sanitization)" time="0.022">
+    </testcase>
+    <testcase classname="SECURITY: XSS Payload Handling S-XSS-02: profile name update accepts HTML but response is JSON (not rendered server-side)" name="SECURITY: XSS Payload Handling S-XSS-02: profile name update accepts HTML but response is JSON (not rendered server-side)" time="0.032">
+    </testcase>
+    <testcase classname="SECURITY: Oversized Input &amp; Resource Exhaustion S-OVS-01: chat API handles extremely long message without crash" name="SECURITY: Oversized Input &amp; Resource Exhaustion S-OVS-01: chat API handles extremely long message without crash" time="0.01">
+    </testcase>
+    <testcase classname="SECURITY: Oversized Input &amp; Resource Exhaustion S-OVS-02: regulations search handles special characters without crash" name="SECURITY: Oversized Input &amp; Resource Exhaustion S-OVS-02: regulations search handles special characters without crash" time="0.006">
+    </testcase>
+    <testcase classname="SECURITY: Oversized Input &amp; Resource Exhaustion S-OVS-03: register handles Unicode emoji in password" name="SECURITY: Oversized Input &amp; Resource Exhaustion S-OVS-03: register handles Unicode emoji in password" time="0.068">
+    </testcase>
+    <testcase classname="SECURITY: Authorization Bypass Attempts S-AUTH-01: middleware blocks expired JWT token" name="SECURITY: Authorization Bypass Attempts S-AUTH-01: middleware blocks expired JWT token" time="0.006">
+    </testcase>
+    <testcase classname="SECURITY: Authorization Bypass Attempts S-AUTH-02: middleware blocks token signed with wrong secret" name="SECURITY: Authorization Bypass Attempts S-AUTH-02: middleware blocks token signed with wrong secret" time="0.001">
+    </testcase>
+    <testcase classname="SECURITY: Authorization Bypass Attempts S-AUTH-03: [FIXED] JWT_SECRET tidak di-set → middleware return 500, bukan bisa diforge" name="SECURITY: Authorization Bypass Attempts S-AUTH-03: [FIXED] JWT_SECRET tidak di-set → middleware return 500, bukan bisa diforge" time="0">
+    </testcase>
+    <testcase classname="SECURITY: Authorization Bypass Attempts S-AUTH-04: [FIXED] /api/dashboard sekarang butuh login — tanpa token ditolak 401" name="SECURITY: Authorization Bypass Attempts S-AUTH-04: [FIXED] /api/dashboard sekarang butuh login — tanpa token ditolak 401" time="0.012">
+    </testcase>
+  </testsuite>
+  <testsuite name="GET /api/regulations/[id] — viewCount" errors="0" failures="0" skipped="0" timestamp="2026-05-28T11:08:38" time="0.199" tests="3">
+    <testcase classname="GET /api/regulations/[id] — viewCount TC-VIEW-01: GET detail dokumen increment viewCount (fire-and-forget)" name="GET /api/regulations/[id] — viewCount TC-VIEW-01: GET detail dokumen increment viewCount (fire-and-forget)" time="0.058">
+    </testcase>
+    <testcase classname="GET /api/regulations/[id] — viewCount TC-VIEW-02: GET detail dokumen tetap return 200 meski update viewCount gagal" name="GET /api/regulations/[id] — viewCount TC-VIEW-02: GET detail dokumen tetap return 200 meski update viewCount gagal" time="0.061">
+    </testcase>
+    <testcase classname="GET /api/regulations/[id] — viewCount TC-VIEW-03: GET dokumen tidak ada → 404, viewCount tidak diincrement" name="GET /api/regulations/[id] — viewCount TC-VIEW-03: GET dokumen tidak ada → 404, viewCount tidak diincrement" time="0.058">
+    </testcase>
+  </testsuite>
+  <testsuite name="/api/chat authorization — IDOR FIXED" errors="0" failures="0" skipped="0" timestamp="2026-05-28T11:08:38" time="0.238" tests="2">
+    <testcase classname="/api/chat authorization — IDOR FIXED SECURITY: [FIXED] GET chat list tanpa token sekarang ditolak 401" name="/api/chat authorization — IDOR FIXED SECURITY: [FIXED] GET chat list tanpa token sekarang ditolak 401" time="0.158">
+    </testcase>
+    <testcase classname="/api/chat authorization — IDOR FIXED SECURITY: [FIXED] POST tanpa token sekarang ditolak 401" name="/api/chat authorization — IDOR FIXED SECURITY: [FIXED] POST tanpa token sekarang ditolak 401" time="0.049">
+    </testcase>
+  </testsuite>
+  <testsuite name="GET /api/regulations" errors="0" failures="0" skipped="0" timestamp="2026-05-28T11:08:38" time="0.169" tests="9">
+    <testcase classname="GET /api/regulations TC-REG-01: returns paginated list with meta on default request" name="GET /api/regulations TC-REG-01: returns paginated list with meta on default request" time="0.006">
+    </testcase>
+    <testcase classname="GET /api/regulations TC-REG-02: passes correct search where clause for title &amp; description" name="GET /api/regulations TC-REG-02: passes correct search where clause for title &amp; description" time="0.005">
+    </testcase>
+    <testcase classname="GET /api/regulations TC-REG-03: returns empty data array (not error) for search with no results" name="GET /api/regulations TC-REG-03: returns empty data array (not error) for search with no results" time="0.005">
+    </testcase>
+    <testcase classname="GET /api/regulations TC-REG-04: applies category filter when category param is not &quot;Semua&quot;" name="GET /api/regulations TC-REG-04: applies category filter when category param is not &quot;Semua&quot;" time="0.005">
+    </testcase>
+    <testcase classname="GET /api/regulations TC-REG-05: does NOT apply category filter when category is &quot;Semua&quot;" name="GET /api/regulations TC-REG-05: does NOT apply category filter when category is &quot;Semua&quot;" time="0.004">
+    </testcase>
+    <testcase classname="GET /api/regulations TC-REG-06: calculates skip correctly for page &gt; 1" name="GET /api/regulations TC-REG-06: calculates skip correctly for page &gt; 1" time="0.005">
+    </testcase>
+    <testcase classname="GET /api/regulations TC-REG-07: always filters isActive=true for public endpoint" name="GET /api/regulations TC-REG-07: always filters isActive=true for public endpoint" time="0.004">
+    </testcase>
+    <testcase classname="GET /api/regulations TC-REG-08: logs search query to SearchLog when search param present" name="GET /api/regulations TC-REG-08: logs search query to SearchLog when search param present" time="0.057">
+    </testcase>
+    <testcase classname="GET /api/regulations TC-REG-09: does NOT log search when search param is empty" name="GET /api/regulations TC-REG-09: does NOT log search when search param is empty" time="0.058">
+    </testcase>
+  </testsuite>
+  <testsuite name="GET /api/profile" errors="0" failures="0" skipped="0" timestamp="2026-05-28T11:08:38" time="0.167" tests="13">
+    <testcase classname="GET /api/profile TC-PROF-01: returns user profile for authenticated request" name="GET /api/profile TC-PROF-01: returns user profile for authenticated request" time="0.011">
+    </testcase>
+    <testcase classname="GET /api/profile TC-PROF-02: returns 401 when no token cookie present" name="GET /api/profile TC-PROF-02: returns 401 when no token cookie present" time="0.009">
+    </testcase>
+    <testcase classname="GET /api/profile TC-PROF-03: triggers self-healing tier sync when user is FREE with PENDING transaction" name="GET /api/profile TC-PROF-03: triggers self-healing tier sync when user is FREE with PENDING transaction" time="0.012">
+    </testcase>
+    <testcase classname="PATCH /api/profile TC-PROF-04: updates name successfully" name="PATCH /api/profile TC-PROF-04: updates name successfully" time="0.009">
+    </testcase>
+    <testcase classname="PATCH /api/profile TC-PROF-05: returns 400 when no update fields provided" name="PATCH /api/profile TC-PROF-05: returns 400 when no update fields provided" time="0.01">
+    </testcase>
+    <testcase classname="PATCH /api/profile TC-PROF-06: returns 400 when avatarUrl does not start with http" name="PATCH /api/profile TC-PROF-06: returns 400 when avatarUrl does not start with http" time="0.009">
+    </testcase>
+    <testcase classname="PATCH /api/profile TC-PROF-07: returns 400 when changing password without currentPassword" name="PATCH /api/profile TC-PROF-07: returns 400 when changing password without currentPassword" time="0.01">
+    </testcase>
+    <testcase classname="PATCH /api/profile TC-PROF-08: returns 401 when currentPassword is wrong" name="PATCH /api/profile TC-PROF-08: returns 401 when currentPassword is wrong" time="0.01">
+    </testcase>
+    <testcase classname="PATCH /api/profile TC-PROF-09: updates personalContext field" name="PATCH /api/profile TC-PROF-09: updates personalContext field" time="0.01">
+    </testcase>
+    <testcase classname="PATCH /api/profile — personalContext length TC-PROF-12: [FIXED] personalContext &gt; 500 karakter ditolak 400" name="PATCH /api/profile — personalContext length TC-PROF-12: [FIXED] personalContext &gt; 500 karakter ditolak 400" time="0.01">
+    </testcase>
+    <testcase classname="PATCH /api/profile — personalContext length TC-PROF-13: personalContext tepat 500 karakter diterima" name="PATCH /api/profile — personalContext length TC-PROF-13: personalContext tepat 500 karakter diterima" time="0.01">
+    </testcase>
+    <testcase classname="DELETE /api/profile TC-PROF-10: deletes account and clears token cookie" name="DELETE /api/profile TC-PROF-10: deletes account and clears token cookie" time="0.011">
+    </testcase>
+    <testcase classname="DELETE /api/profile TC-PROF-11: returns 401 when attempting delete without token" name="DELETE /api/profile TC-PROF-11: returns 401 when attempting delete without token" time="0.011">
+    </testcase>
+  </testsuite>
+  <testsuite name="POST /api/chat" errors="0" failures="0" skipped="0" timestamp="2026-05-28T11:08:38" time="0.113" tests="19">
+    <testcase classname="POST /api/chat TC-CHAT-01: returns AI answer for valid PRO user request" name="POST /api/chat TC-CHAT-01: returns AI answer for valid PRO user request" time="0.006">
+    </testcase>
+    <testcase classname="POST /api/chat TC-CHAT-02: returns 400 when message is empty string" name="POST /api/chat TC-CHAT-02: returns 400 when message is empty string" time="0.004">
+    </testcase>
+    <testcase classname="POST /api/chat TC-CHAT-03: returns 401 when no JWT session (not logged in)" name="POST /api/chat TC-CHAT-03: returns 401 when no JWT session (not logged in)" time="0.005">
+    </testcase>
+    <testcase classname="POST /api/chat TC-CHAT-04: returns 404 when userId from session does not exist in DB" name="POST /api/chat TC-CHAT-04: returns 404 when userId from session does not exist in DB" time="0.005">
+    </testcase>
+    <testcase classname="POST /api/chat TC-CHAT-05: returns 403 with limitReached flag when FREE user exceeds daily limit" name="POST /api/chat TC-CHAT-05: returns 403 with limitReached flag when FREE user exceeds daily limit" time="0.005">
+    </testcase>
+    <testcase classname="POST /api/chat TC-CHAT-06: PRO user bypasses prompt limit check" name="POST /api/chat TC-CHAT-06: PRO user bypasses prompt limit check" time="0.004">
+    </testcase>
+    <testcase classname="POST /api/chat TC-CHAT-07: uses existing chatId when provided" name="POST /api/chat TC-CHAT-07: uses existing chatId when provided" time="0.005">
+    </testcase>
+    <testcase classname="GET /api/chat TC-CHAT-08: [FIXED] GET tanpa JWT sekarang ditolak 401 (IDOR sudah ditutup)" name="GET /api/chat TC-CHAT-08: [FIXED] GET tanpa JWT sekarang ditolak 401 (IDOR sudah ditutup)" time="0.005">
+    </testcase>
+    <testcase classname="GET /api/chat TC-CHAT-09: returns 401 when userId param tidak cocok dengan session" name="GET /api/chat TC-CHAT-09: returns 401 when userId param tidak cocok dengan session" time="0.004">
+    </testcase>
+    <testcase classname="GET /api/chat TC-CHAT-10: returns chat list when userId cocok dengan session" name="GET /api/chat TC-CHAT-10: returns chat list when userId cocok dengan session" time="0.004">
+    </testcase>
+    <testcase classname="GET /api/chat TC-CHAT-11: returns messages for specific chatId" name="GET /api/chat TC-CHAT-11: returns messages for specific chatId" time="0.005">
+    </testcase>
+    <testcase classname="PATCH /api/chat TC-CHAT-12: renames a chat successfully (user owns the chat)" name="PATCH /api/chat TC-CHAT-12: renames a chat successfully (user owns the chat)" time="0.005">
+    </testcase>
+    <testcase classname="PATCH /api/chat TC-CHAT-13: returns 400 when chatId atau title tidak ada" name="PATCH /api/chat TC-CHAT-13: returns 400 when chatId atau title tidak ada" time="0.004">
+    </testcase>
+    <testcase classname="PATCH /api/chat TC-CHAT-14: [FIXED] PATCH tanpa login sekarang ditolak 401" name="PATCH /api/chat TC-CHAT-14: [FIXED] PATCH tanpa login sekarang ditolak 401" time="0.005">
+    </testcase>
+    <testcase classname="PATCH /api/chat TC-CHAT-15: [FIXED] PATCH ditolak 403 jika chat bukan milik user" name="PATCH /api/chat TC-CHAT-15: [FIXED] PATCH ditolak 403 jika chat bukan milik user" time="0.005">
+    </testcase>
+    <testcase classname="DELETE /api/chat TC-CHAT-16: deletes a chat successfully (user owns chat)" name="DELETE /api/chat TC-CHAT-16: deletes a chat successfully (user owns chat)" time="0.004">
+    </testcase>
+    <testcase classname="DELETE /api/chat TC-CHAT-17: returns 400 when chatId tidak ada" name="DELETE /api/chat TC-CHAT-17: returns 400 when chatId tidak ada" time="0.005">
+    </testcase>
+    <testcase classname="DELETE /api/chat TC-CHAT-18: [FIXED] DELETE tanpa login sekarang ditolak 401" name="DELETE /api/chat TC-CHAT-18: [FIXED] DELETE tanpa login sekarang ditolak 401" time="0.004">
+    </testcase>
+    <testcase classname="DELETE /api/chat TC-CHAT-19: [FIXED] DELETE ditolak 403 jika chat bukan milik user" name="DELETE /api/chat TC-CHAT-19: [FIXED] DELETE ditolak 403 jika chat bukan milik user" time="0.004">
+    </testcase>
+  </testsuite>
+  <testsuite name="POST /api/payment/checkout" errors="0" failures="0" skipped="0" timestamp="2026-05-28T11:08:38" time="0.066" tests="8">
+    <testcase classname="POST /api/payment/checkout TC-PAY-01: returns snap token and redirect_url on success" name="POST /api/payment/checkout TC-PAY-01: returns snap token and redirect_url on success" time="0.007">
+    </testcase>
+    <testcase classname="POST /api/payment/checkout TC-PAY-02: creates PENDING transaction record before calling Midtrans" name="POST /api/payment/checkout TC-PAY-02: creates PENDING transaction record before calling Midtrans" time="0.005">
+    </testcase>
+    <testcase classname="POST /api/payment/checkout TC-PAY-03: updates transaction with paymentUrl after Midtrans success" name="POST /api/payment/checkout TC-PAY-03: updates transaction with paymentUrl after Midtrans success" time="0.005">
+    </testcase>
+    <testcase classname="POST /api/payment/checkout TC-PAY-04: returns 401 when userId is missing" name="POST /api/payment/checkout TC-PAY-04: returns 401 when userId is missing" time="0.004">
+    </testcase>
+    <testcase classname="POST /api/payment/checkout TC-PAY-05: returns 404 when user does not exist" name="POST /api/payment/checkout TC-PAY-05: returns 404 when user does not exist" time="0.005">
+    </testcase>
+    <testcase classname="POST /api/payment/checkout TC-PAY-06: generates unique orderId with timestamp prefix" name="POST /api/payment/checkout TC-PAY-06: generates unique orderId with timestamp prefix" time="0.005">
+    </testcase>
+    <testcase classname="POST /api/payment/checkout TC-PAY-07: [FIXED] user yang sudah PRO ditolak checkout — 400" name="POST /api/payment/checkout TC-PAY-07: [FIXED] user yang sudah PRO ditolak checkout — 400" time="0.005">
+    </testcase>
+    <testcase classname="POST /api/payment/checkout TC-PAY-09: returns 500 when Midtrans createTransaction throws" name="POST /api/payment/checkout TC-PAY-09: returns 500 when Midtrans createTransaction throws" time="0.008">
+    </testcase>
+  </testsuite>
+  <testsuite name="POST /api/auth/forgot-password" errors="0" failures="0" skipped="0" timestamp="2026-05-28T11:08:39" time="0.051" tests="6">
+    <testcase classname="POST /api/auth/forgot-password TC-FP-01: returns 200 with generic message for registered email" name="POST /api/auth/forgot-password TC-FP-01: returns 200 with generic message for registered email" time="0.006">
+    </testcase>
+    <testcase classname="POST /api/auth/forgot-password TC-FP-02: returns same generic message for unregistered email (no user enumeration)" name="POST /api/auth/forgot-password TC-FP-02: returns same generic message for unregistered email (no user enumeration)" time="0.005">
+    </testcase>
+    <testcase classname="POST /api/auth/forgot-password TC-FP-03: returns 400 when email is missing" name="POST /api/auth/forgot-password TC-FP-03: returns 400 when email is missing" time="0.005">
+    </testcase>
+    <testcase classname="POST /api/auth/forgot-password TC-FP-04: returns 400 for invalid email format" name="POST /api/auth/forgot-password TC-FP-04: returns 400 for invalid email format" time="0.005">
+    </testcase>
+    <testcase classname="POST /api/auth/forgot-password TC-FP-05: returns 429 after 3 requests from same IP within 15 min window" name="POST /api/auth/forgot-password TC-FP-05: returns 429 after 3 requests from same IP within 15 min window" time="0.005">
+    </testcase>
+    <testcase classname="POST /api/auth/forgot-password TC-FP-06: saves hashed (not plain) reset token to database" name="POST /api/auth/forgot-password TC-FP-06: saves hashed (not plain) reset token to database" time="0.005">
+    </testcase>
+  </testsuite>
+  <testsuite name="POST /api/auth/google" errors="0" failures="0" skipped="0" timestamp="2026-05-28T11:08:39" time="0.057" tests="4">
+    <testcase classname="POST /api/auth/google TC-GAUTH-01: logs in existing Google user and sets cookie" name="POST /api/auth/google TC-GAUTH-01: logs in existing Google user and sets cookie" time="0.013">
+    </testcase>
+    <testcase classname="POST /api/auth/google TC-GAUTH-02: auto-registers new Google user with correct defaults" name="POST /api/auth/google TC-GAUTH-02: auto-registers new Google user with correct defaults" time="0.01">
+    </testcase>
+    <testcase classname="POST /api/auth/google TC-GAUTH-03: returns 400 when credentialToken is missing" name="POST /api/auth/google TC-GAUTH-03: returns 400 when credentialToken is missing" time="0.006">
+    </testcase>
+    <testcase classname="POST /api/auth/google TC-GAUTH-04: returns 401 when Google token verification fails" name="POST /api/auth/google TC-GAUTH-04: returns 401 when Google token verification fails" time="0.007">
+    </testcase>
+  </testsuite>
+  <testsuite name="GET /api/regulations/download" errors="0" failures="0" skipped="0" timestamp="2026-05-28T11:08:39" time="0.055" tests="6">
+    <testcase classname="GET /api/regulations/download TC-DL-01: returns PDF buffer with correct headers for valid Supabase URL" name="GET /api/regulations/download TC-DL-01: returns PDF buffer with correct headers for valid Supabase URL" time="0.007">
+    </testcase>
+    <testcase classname="GET /api/regulations/download TC-DL-02: returns 400 when url param is missing" name="GET /api/regulations/download TC-DL-02: returns 400 when url param is missing" time="0.005">
+    </testcase>
+    <testcase classname="GET /api/regulations/download TC-DL-03: returns upstream status code when Supabase file not found (404)" name="GET /api/regulations/download TC-DL-03: returns upstream status code when Supabase file not found (404)" time="0.005">
+    </testcase>
+    <testcase classname="GET /api/regulations/download TC-DL-04: returns 500 when fetch throws (network error)" name="GET /api/regulations/download TC-DL-04: returns 500 when fetch throws (network error)" time="0.008">
+    </testcase>
+    <testcase classname="GET /api/regulations/download TC-DL-05: sanitizes filename — replaces path traversal slashes and special chars" name="GET /api/regulations/download TC-DL-05: sanitizes filename — replaces path traversal slashes and special chars" time="0.005">
+    </testcase>
+    <testcase classname="GET /api/regulations/download TC-DL-06: [FIXED] URL non-Supabase ditolak 400 — SSRF sudah diblok" name="GET /api/regulations/download TC-DL-06: [FIXED] URL non-Supabase ditolak 400 — SSRF sudah diblok" time="0.005">
+    </testcase>
+  </testsuite>
+  <testsuite name="POST /api/auth/login" errors="0" failures="0" skipped="0" timestamp="2026-05-28T11:08:39" time="0.055" tests="3">
+    <testcase classname="POST /api/auth/login returns 400 on invalid body (non-json)" name="POST /api/auth/login returns 400 on invalid body (non-json)" time="0.012">
+    </testcase>
+    <testcase classname="POST /api/auth/login returns 400 on invalid email format" name="POST /api/auth/login returns 400 on invalid email format" time="0.011">
+    </testcase>
+    <testcase classname="POST /api/auth/login returns 401 when user not found" name="POST /api/auth/login returns 401 when user not found" time="0.01">
+    </testcase>
+  </testsuite>
+  <testsuite name="Integration: Checkout → Webhook → User Upgrade" errors="0" failures="0" skipped="0" timestamp="2026-05-28T11:08:39" time="0.056" tests="6">
+    <testcase classname="Integration: Checkout → Webhook → User Upgrade TC-INT-PAY-01: settlement webhook upgrades user to PRO (simulates post-checkout state)" name="Integration: Checkout → Webhook → User Upgrade TC-INT-PAY-01: settlement webhook upgrades user to PRO (simulates post-checkout state)" time="0.008">
+    </testcase>
+    <testcase classname="Integration: Checkout → Webhook → User Upgrade TC-INT-PAY-02: webhook idempotency — already-SUCCESS order is not reprocessed" name="Integration: Checkout → Webhook → User Upgrade TC-INT-PAY-02: webhook idempotency — already-SUCCESS order is not reprocessed" time="0.006">
+    </testcase>
+    <testcase classname="Integration: Checkout → Webhook → User Upgrade TC-INT-PAY-03: failed payment sets transaction status to FAILED" name="Integration: Checkout → Webhook → User Upgrade TC-INT-PAY-03: failed payment sets transaction status to FAILED" time="0.005">
+    </testcase>
+    <testcase classname="Integration: Checkout → Webhook → User Upgrade TC-INT-PAY-04: fraud_status=challenge keeps payment as PENDING" name="Integration: Checkout → Webhook → User Upgrade TC-INT-PAY-04: fraud_status=challenge keeps payment as PENDING" time="0.006">
+    </testcase>
+    <testcase classname="Integration: Checkout → Webhook → User Upgrade TC-INT-PAY-05: webhook returns 404 when order not found in database" name="Integration: Checkout → Webhook → User Upgrade TC-INT-PAY-05: webhook returns 404 when order not found in database" time="0.005">
+    </testcase>
+    <testcase classname="Integration: Checkout → Webhook → User Upgrade TC-INT-PAY-06: production mode rejects webhook with invalid signature" name="Integration: Checkout → Webhook → User Upgrade TC-INT-PAY-06: production mode rejects webhook with invalid signature" time="0.005">
+    </testcase>
+  </testsuite>
+  <testsuite name="SECURITY: SSRF via /api/regulations/download — FIXED" errors="0" failures="0" skipped="0" timestamp="2026-05-28T11:08:39" time="0.042" tests="4">
+    <testcase classname="SECURITY: SSRF via /api/regulations/download — FIXED S-SSRF-01: [FIXED] AWS metadata URL sekarang ditolak 400" name="SECURITY: SSRF via /api/regulations/download — FIXED S-SSRF-01: [FIXED] AWS metadata URL sekarang ditolak 400" time="0.007">
+    </testcase>
+    <testcase classname="SECURITY: SSRF via /api/regulations/download — FIXED S-SSRF-02: [FIXED] URL localhost internal sekarang ditolak 400" name="SECURITY: SSRF via /api/regulations/download — FIXED S-SSRF-02: [FIXED] URL localhost internal sekarang ditolak 400" time="0.005">
+    </testcase>
+    <testcase classname="SECURITY: SSRF via /api/regulations/download — FIXED S-SSRF-03: [FIXED] URL non-Supabase (domain acak) sekarang ditolak 400" name="SECURITY: SSRF via /api/regulations/download — FIXED S-SSRF-03: [FIXED] URL non-Supabase (domain acak) sekarang ditolak 400" time="0.005">
+    </testcase>
+    <testcase classname="SECURITY: SSRF via /api/regulations/download — FIXED S-SSRF-04: URL Supabase valid tetap bisa didownload" name="SECURITY: SSRF via /api/regulations/download — FIXED S-SSRF-04: URL Supabase valid tetap bisa didownload" time="0.005">
+    </testcase>
+  </testsuite>
+  <testsuite name="middleware admin protection" errors="0" failures="0" skipped="0" timestamp="2026-05-28T11:08:39" time="0.033" tests="3">
+    <testcase classname="middleware admin protection blocks /api/admin/* without token" name="middleware admin protection blocks /api/admin/* without token" time="0.001">
+    </testcase>
+    <testcase classname="middleware admin protection blocks /api/admin/* when role is not ADMIN" name="middleware admin protection blocks /api/admin/* when role is not ADMIN" time="0.001">
+    </testcase>
+    <testcase classname="middleware admin protection SECURITY: [FIXED] JWT_SECRET missing → middleware return 500 (fail-closed, token forgery tidak bisa)" name="middleware admin protection SECURITY: [FIXED] JWT_SECRET missing → middleware return 500 (fail-closed, token forgery tidak bisa)" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="POST /api/payment/webhook" errors="0" failures="0" skipped="0" timestamp="2026-05-28T11:08:39" time="0.029" tests="1">
+    <testcase classname="POST /api/payment/webhook SECURITY: sandbox bypass processes even with invalid signature when not production" name="POST /api/payment/webhook SECURITY: sandbox bypass processes even with invalid signature when not production" time="0.008">
+    </testcase>
+  </testsuite>
+</testsuites>

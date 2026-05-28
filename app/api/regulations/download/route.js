@@ -17,6 +17,17 @@ export async function GET(req) {
       return NextResponse.json({ error: "URL file tidak ditemukan" }, { status: 400 });
     }
 
+    // Validasi: hanya izinkan URL dari domain Supabase (cegah SSRF)
+    try {
+      const parsed = new URL(fileUrl);
+      const h = parsed.hostname;
+      if (h !== 'supabase.co' && !h.endsWith('.supabase.co')) {
+        return NextResponse.json({ error: "URL tidak diizinkan" }, { status: 400 });
+      }
+    } catch {
+      return NextResponse.json({ error: "URL tidak valid" }, { status: 400 });
+    }
+
     // Fetch the file from Supabase (server-side, no CORS issue)
     const upstream = await fetch(fileUrl, {
       headers: { Accept: "application/pdf,*/*" },

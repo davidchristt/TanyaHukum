@@ -16,14 +16,19 @@ export async function POST(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 1. Cari data User di Database untuk mengambil Email-nya
+    // 1. Cari data User di Database untuk mengambil Email dan Tier-nya
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true }
+      select: { email: true, tier: true }
     });
 
     if (!user) {
       return NextResponse.json({ error: "User tidak ditemukan" }, { status: 404 });
+    }
+
+    // Cek apakah user sudah PRO — tidak perlu bayar lagi
+    if (user.tier === "PRO") {
+      return NextResponse.json({ error: "Anda sudah berlangganan PRO." }, { status: 400 });
     }
 
     // 2. Definisikan Harga & Order ID
