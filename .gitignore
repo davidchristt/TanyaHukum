@@ -50,4 +50,4 @@ next-env.d.ts
 
 # Dataset & Raw Files
 golden-dataset/
-*.pdf
+*.pdfragas_eval/
