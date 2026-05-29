@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { loginUser, loginWithGoogle } from "../../../src/lib/auth";
+import { useGoogleSignIn } from "../../../src/lib/useGoogleSignIn";
 
 export default function LoginForm({ 
   onClose, 
@@ -25,38 +26,7 @@ export default function LoginForm({
     setShowPassword(!showPassword);
   };
 
-  // GOOGLE INIT
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
-
-    script.onload = () => {
-      if (!window.google) return;
-
-      window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-        callback: handleGoogleCallback,
-      });
-
-      const btnContainer = document.getElementById("google-btn");
-      if (btnContainer) {
-        window.google.accounts.id.renderButton(
-          btnContainer,
-          {
-            theme: "outline",
-            size: "large",
-            width: "320",
-            shape: "pill",
-          }
-        );
-      }
-    };
-  }, []);
-
-const handleGoogleCallback = async (response) => {
+  const handleGoogleCallback = async (response) => {
     try {
       const data = await loginWithGoogle({
         credentialToken: response.credential,
@@ -91,6 +61,8 @@ const handleGoogleCallback = async (response) => {
       setError(err.message);
     }
   };
+
+  useGoogleSignIn({ onCredential: handleGoogleCallback });
 
   const handleLogin = async () => {
     if (!email || !password) {

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { registerUser, loginWithGoogle } from "../../../src/lib/auth";
+import { useGoogleSignIn } from "../../../src/lib/useGoogleSignIn";
 
 export default function RegisterForm({ onClose, onSwitchToLogin, isModal = false }) {
   const router = useRouter();
@@ -18,38 +19,6 @@ export default function RegisterForm({ onClose, onSwitchToLogin, isModal = false
   const togglePassword = () => {
     setShowPassword(!showPassword);
   };
-
-  // GOOGLE INIT
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
-
-    script.onload = () => {
-      if (!window.google) return;
-
-      window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-        callback: handleGoogleCallback,
-      });
-
-      const btnContainer = document.getElementById("google-btn");
-      if (btnContainer) {
-        window.google.accounts.id.renderButton(
-          btnContainer,
-          {
-            theme: "outline",
-            size: "large",
-            width: "320",
-            shape: "pill",
-            text: "signup_with",
-          }
-        );
-      }
-    };
-  }, []);
 
   const handleGoogleCallback = async (response) => {
     try {
@@ -68,6 +37,11 @@ export default function RegisterForm({ onClose, onSwitchToLogin, isModal = false
       setError(err.message);
     }
   };
+
+  useGoogleSignIn({
+    onCredential: handleGoogleCallback,
+    buttonOptions: { text: "signup_with" },
+  });
 
   const handleSubmit = async () => {
     if (!email || !password) {
