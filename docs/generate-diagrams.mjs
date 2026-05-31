@@ -31,6 +31,7 @@ const PUML_FILES = [
   'dfd.puml',        // DFD Level 0, 1, 2
   'flowchart.puml',  // Flowchart semua alur
   'deployment.puml', // Deployment Diagram infrastruktur
+  'whitebox.puml',   // Whitebox Control Flow Diagrams (WB-01~20)
 ];
 
 const OUTPUT_DIR = join(__dirname, 'output');
